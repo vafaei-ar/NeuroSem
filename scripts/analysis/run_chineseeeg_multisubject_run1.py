@@ -2,7 +2,9 @@
 """Run ChineseEEG run-01 alignment validation, manifest building, and feature extraction across subjects.
 
 This orchestrator intentionally reuses the existing per-subject scripts so that each subject has
-its own timing manifest. It does not assume sub-04 event timings apply to other participants.
+its own timing manifest. It does not assume one participant's event timings apply to another.
+Subjects with no tracked/available run for the requested session/run are reported as unavailable,
+not treated as processing failures.
 """
 
 from __future__ import annotations
@@ -31,6 +33,17 @@ def latest_manifest(root: Path) -> Path:
     return matches[-1]
 
 
+def required_run_files(dataset: Path, derivative: str, subject: str, session: str, run_name: str) -> list[Path]:
+    base = (
+        dataset / "derivatives" / derivative / subject / session / "eeg"
+        / f"{subject}_{session}_task-reading_{run_name}"
+    )
+    return [
+        Path(str(base) + "_eeg.vhdr"),
+        Path(str(base) + "_events.tsv"),
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate and extract ChineseEEG LittlePrince run-01 features across subjects.")
     parser.add_argument("dataset", type=Path, nargs="?", default=Path("data/raw/chineseeeg"))
@@ -48,9 +61,21 @@ def main() -> int:
 
     failures: list[tuple[str, str]] = []
     completed: list[str] = []
+    unavailable: list[str] = []
 
     for subject in args.subjects:
         print(f"\n=== {subject} ===", flush=True)
+        required = required_run_files(dataset, args.derivative, subject, args.session, args.run)
+        if not any(path.exists() for path in required):
+            unavailable.append(subject)
+            print(f"UNAVAILABLE {subject}: no {args.session}/{args.run} files in this dataset checkout", flush=True)
+            continue
+        if not all(path.exists() for path in required):
+            missing = [str(path) for path in required if not path.exists()]
+            failures.append((subject, "partial/missing required files: " + ", ".join(missing)))
+            print(f"FAILED {subject}: partial/missing required files", file=sys.stderr, flush=True)
+            continue
+
         manifest_root = Path("outputs/chineseeeg_pilot_manifest") / subject
         feature_root = Path("outputs/chineseeeg_row_features") / subject
         alignment_root = Path("outputs/chineseeeg_text_alignment") / subject
@@ -96,13 +121,19 @@ def main() -> int:
 
     print("\n=== Batch summary ===")
     print(f"Completed: {len(completed)}/{len(args.subjects)} -> {' '.join(completed) if completed else 'none'}")
+    if unavailable:
+        print(f"Unavailable for requested run: {len(unavailable)} -> {' '.join(unavailable)}")
     if failures:
         print("Failures:")
         for subject, error in failures:
             print(f"  {subject}: {error}")
         return 2
 
-    print("All subjects passed alignment/manifest/feature extraction.")
+    if len(completed) < 3:
+        print("Too few completed subjects for cross-subject reliability.", file=sys.stderr)
+        return 3
+
+    print("All available subjects passed alignment/manifest/feature extraction.")
     print("Next: compare row identity/order, channel order, and neural RDM reliability across subjects.")
     return 0
 
