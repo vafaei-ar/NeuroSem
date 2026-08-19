@@ -72,6 +72,23 @@ The dataset follows EEG-BIDS. It includes:
 
 For NeuroSem, the author-provided text embeddings are a **replication baseline only**. The primary model representations must be regenerated from pinned models and tokenizers so layer-wise and model-wise comparisons are reproducible.
 
+## Verified local checkout footprint
+
+A metadata checkout was completed with OpenNeuro CLI 5.5.1 on 2026-08-19. The local working tree contains the BIDS/git-annex structure without materializing annexed data objects.
+
+Observed values from `git annex info` and the audit script:
+
+- 10 subjects detected;
+- 6,010 filesystem entries inventoried by the audit;
+- approximately 91 MB occupied locally by metadata/git structures;
+- 4,844 annexed files in the working tree;
+- total logical annexed size approximately 748.05 GB;
+- zero annex keys materialized locally at the time of audit;
+- OpenNeuro tags available through v1.2.2, while the publication cites v1.2.0;
+- local checkout was detached rather than on a named branch.
+
+**Operational consequence:** do not run `datalad get -r .` for the full dataset. NeuroSem should retrieve only the metadata and signal files needed for the first reproducibility and geometry analyses, beginning with a deliberately small subject/session subset. The exact retrieval list should be chosen after inspection of the audit bundle and annex paths.
+
 ## Initial NeuroSem unit of analysis
 
 Do not start at the full-sentence level. The first audit should determine the most defensible alignment unit from the event files and segmented text. Candidate units are:
