@@ -23,6 +23,8 @@ echo
 
 FILES=()
 TOTAL=0
+UNAVAILABLE=()
+PARTIAL=()
 for subject in "${SUBJECTS[@]}"; do
   prefix="derivatives/${DERIVATIVE}/${subject}/${SESSION}/eeg/${subject}_${SESSION}_task-reading_${RUN}"
   found=0
@@ -38,11 +40,19 @@ for subject in "${SUBJECTS[@]}"; do
       fi
     fi
   done
-  if [[ $found -ne 3 ]]; then
-    echo "WARNING: $subject has $found/3 expected BrainVision annex files for $SESSION $RUN" >&2
+  if [[ $found -eq 0 ]]; then
+    UNAVAILABLE+=("$subject")
+    echo "UNAVAILABLE: $subject has no tracked BrainVision triplet for $SESSION $RUN" >&2
+  elif [[ $found -ne 3 ]]; then
+    PARTIAL+=("$subject")
+    echo "ERROR: $subject has only $found/3 expected BrainVision annex files for $SESSION $RUN" >&2
   fi
 done
 
+if [[ ${#PARTIAL[@]} -gt 0 ]]; then
+  echo "Partial tracked triplets are a dataset/integrity error: ${PARTIAL[*]}" >&2
+  exit 2
+fi
 if [[ ${#FILES[@]} -eq 0 ]]; then
   echo "No matching annex files found." >&2
   exit 2
@@ -52,14 +62,19 @@ echo "Target annex files: ${#FILES[@]}"
 if [[ $TOTAL -gt 0 ]]; then
   echo "Total logical payload: $(numfmt --to=iec-i --suffix=B "$TOTAL" 2>/dev/null || echo "$TOTAL bytes")"
 fi
+if [[ ${#UNAVAILABLE[@]} -gt 0 ]]; then
+  echo "Structurally unavailable for this run: ${UNAVAILABLE[*]}"
+fi
 
 echo
 for subject in "${SUBJECTS[@]}"; do
   echo "$subject:"
   prefix="derivatives/${DERIVATIVE}/${subject}/${SESSION}/eeg/${subject}_${SESSION}_task-reading_${RUN}"
+  found=0
   for ext in eeg vhdr vmrk; do
     f="${prefix}_eeg.${ext}"
     if git -C "$DATASET" ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+      found=$((found + 1))
       present=no
       if git -C "$DATASET" annex find --in here --format='${file}\n' -- "$f" 2>/dev/null | grep -Fxq "$f"; then
         present=yes
@@ -73,10 +88,13 @@ for subject in "${SUBJECTS[@]}"; do
       echo "  ${ext}: $human local=$present"
     fi
   done
+  if [[ $found -eq 0 ]]; then
+    echo "  unavailable in dataset for this run"
+  fi
 done
 
 echo
-read -r -p "Retrieve all missing run-01 BrainVision objects now? [y/N] " reply
+read -r -p "Retrieve all missing available run-01 BrainVision objects now? [y/N] " reply
 case "$reply" in
   y|Y|yes|YES) ;;
   *) echo "Nothing retrieved."; exit 0 ;;
@@ -96,28 +114,32 @@ FAILED=0
 echo "Final verification:"
 for subject in "${SUBJECTS[@]}"; do
   prefix="derivatives/${DERIVATIVE}/${subject}/${SESSION}/eeg/${subject}_${SESSION}_task-reading_${RUN}"
+  tracked=0
   subject_ok=yes
   for ext in eeg vhdr vmrk; do
     f="${prefix}_eeg.${ext}"
     if git -C "$DATASET" ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+      tracked=$((tracked + 1))
       if ! git -C "$DATASET" annex find --in here --format='${file}\n' -- "$f" 2>/dev/null | grep -Fxq "$f"; then
         subject_ok=no
       elif [[ ! -e "$DATASET/$f" ]]; then
         subject_ok=no
       fi
-    else
-      subject_ok=no
     fi
   done
-  echo "  $subject: $subject_ok"
-  if [[ "$subject_ok" != "yes" ]]; then
+  if [[ $tracked -eq 0 ]]; then
+    echo "  $subject: unavailable"
+  elif [[ $tracked -eq 3 && "$subject_ok" == "yes" ]]; then
+    echo "  $subject: yes"
+  else
+    echo "  $subject: no"
     FAILED=1
   fi
 done
 
 if [[ $FAILED -ne 0 ]]; then
-  echo "One or more subjects are incomplete. Do not run the batch analysis yet." >&2
+  echo "One or more available subjects are incomplete." >&2
   exit 3
 fi
 
-echo "All requested subjects have materialized run-01 BrainVision triplets."
+echo "All available requested subjects have materialized run-01 BrainVision triplets."
