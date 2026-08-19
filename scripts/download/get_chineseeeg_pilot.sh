@@ -31,7 +31,10 @@ echo "Tracked files matching pilot prefix:"
 printf '%s\n' "${TRACKED[@]}"
 
 echo
+CURRENT_UUID=$(git -C "$DATASET" annex uuid 2>/dev/null || true)
+echo "Current annex repository UUID: ${CURRENT_UUID:-unknown}"
 
+echo
 echo "Annex-backed files among tracked pilot files:"
 ANNEXED=()
 for f in "${TRACKED[@]}"; do
@@ -47,11 +50,6 @@ done
 if [[ ${#ANNEXED[@]} -eq 0 ]]; then
   echo
   echo "No annex-backed pilot files were detected with 'git annex lookupkey'."
-  echo "Diagnostic status for the tracked paths:"
-  for f in "${TRACKED[@]}"; do
-    printf '  %s -> ' "$f"
-    git -C "$DATASET" annex status "$f" 2>/dev/null || echo "not recognized by git-annex"
-  done
   exit 2
 fi
 
@@ -95,11 +93,32 @@ case "$reply" in
 esac
 
 echo
-echo "Pilot retrieval complete. Local availability:"
+echo "Pilot retrieval verification:"
+FAILED=0
 for f in "${ANNEXED[@]}"; do
+  full="$DATASET/$f"
+  annex_here="no"
+  path_ok="no"
   if git -C "$DATASET" annex find --in here --format='${file}\n' -- "$f" 2>/dev/null | grep -Fxq "$f"; then
-    echo "  PRESENT: $f"
-  else
-    echo "  MISSING: $f"
+    annex_here="yes"
+  fi
+  if [[ -e "$full" ]]; then
+    path_ok="yes"
+  fi
+  echo "  $f  [annex-here=$annex_here, path-resolves=$path_ok]"
+  if [[ "$annex_here" != "yes" || "$path_ok" != "yes" ]]; then
+    FAILED=1
+    echo "    whereis:"
+    git -C "$DATASET" annex whereis "$f" 2>/dev/null | sed 's/^/      /' || true
   fi
 done
+
+if [[ $FAILED -ne 0 ]]; then
+  echo
+  echo "One or more annex objects are not materialized in this checkout."
+  echo "Do not run the MNE validator yet. Report this output."
+  exit 3
+fi
+
+echo
+echo "All pilot annex objects are materialized and their symlink paths resolve."
