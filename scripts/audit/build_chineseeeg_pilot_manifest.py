@@ -65,13 +65,34 @@ def main() -> int:
         if value is not None:
             workbook_rows.append((excel_row, value))
 
+    if not workbook_rows:
+        raise SystemExit("No non-empty workbook rows found")
+
+    first_is_chapter, first_chapter = is_numeric_chapter(workbook_rows[0][1])
+    if not first_is_chapter or first_chapter is None:
+        raise SystemExit("First workbook row is not a numeric chapter row; cannot anchor event parsing")
+    start_marker = f"CH{first_chapter:02d}"
+
     events = read_events(events_tsv)
+    start_event_index = None
+    for event_index, event in enumerate(events):
+        trial_type = (event.get("trial_type") or "").strip()
+        if trial_type == start_marker:
+            start_event_index = event_index
+            break
+    if start_event_index is None:
+        raise SystemExit(f"Start chapter marker not found in BIDS events: {start_marker}")
+
+    # Parse only the formal reading period beginning at the first chapter marker.
+    # Earlier calibration/preface markers can contain unmatched ROWE/ROWS events and
+    # are intentionally outside the run-level text alignment used by the authors.
     chapter_context = None
     row_segments: list[dict[str, object]] = []
     open_row: tuple[float, int, str | None] | None = None
     malformed = 0
 
-    for event_index, event in enumerate(events):
+    for event_index in range(start_event_index, len(events)):
+        event = events[event_index]
         trial_type = (event.get("trial_type") or "").strip()
         onset = float(event["onset"])
         if trial_type.startswith("CH") and len(trial_type) >= 4 and trial_type[2:].isdigit():
@@ -84,12 +105,12 @@ def main() -> int:
             if open_row is None:
                 malformed += 1
                 continue
-            start_onset, start_event_index, chapter_marker = open_row
+            start_onset, start_rows_event_index, chapter_marker = open_row
             row_segments.append({
                 "start_sec": start_onset,
                 "end_sec": onset,
                 "duration_sec": onset - start_onset,
-                "rows_event_index": start_event_index,
+                "rows_event_index": start_rows_event_index,
                 "rowe_event_index": event_index,
                 "chapter_marker": chapter_marker,
             })
@@ -102,7 +123,7 @@ def main() -> int:
     n_embeddings = int(embeddings.shape[0]) if embeddings.ndim >= 1 else 0
 
     if malformed:
-        raise SystemExit(f"Malformed ROWS/ROWE sequence count: {malformed}")
+        raise SystemExit(f"Malformed ROWS/ROWE sequence count after {start_marker}: {malformed}")
     if not (len(workbook_rows) == len(row_segments) == n_embeddings):
         raise SystemExit(
             "Count mismatch: "
@@ -154,12 +175,14 @@ def main() -> int:
         "# ChineseEEG pilot representation manifest",
         "",
         f"- Subject/session/run: `{args.subject} / {args.session} / {args.run}`",
+        f"- Formal-reading anchor: `{start_marker}` at BIDS event index **{start_event_index}**",
         f"- Canonical aligned rows: **{len(out_rows)}**",
         f"- Semantic-eligible text rows: **{len(out_rows) - chapter_rows}**",
         f"- Structural chapter rows: **{chapter_rows}**",
         f"- Author embedding shape: **{tuple(embeddings.shape)}**",
         "- Alignment invariant: workbook row index = EEG ROWS/ROWE segment index = author embedding index.",
         "- Chapter rows are preserved for index integrity and excluded from semantic analyses.",
+        "- Pre-chapter ROWS/ROWE markers are excluded because they belong to calibration/preface activity rather than the formal run text.",
         "",
         "## First rows",
         "",
@@ -172,6 +195,7 @@ def main() -> int:
     (out / "report.md").write_text("\n".join(report) + "\n", encoding="utf-8")
 
     print(f"Manifest output: {out}")
+    print(f"Formal-reading anchor: {start_marker} at BIDS event index {start_event_index}")
     print(f"Aligned rows: {len(out_rows)}")
     print(f"Semantic-eligible rows: {len(out_rows) - chapter_rows}")
     print(f"Structural chapter rows: {chapter_rows}")
