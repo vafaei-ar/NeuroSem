@@ -1,0 +1,50 @@
+dataset:
+  name: ChineseEEG
+  openneuro_accession: ds004952
+  openneuro_snapshot: 1.2.0
+  openneuro_doi: 10.18112/openneuro.ds004952.v1.2.0
+  publication_doi: 10.1038/s41597-024-03398-7
+  author_code: https://github.com/ncclabsustech/Chinese_reading_task_eeg_processing
+
+acquisition:
+  modality: EEG
+  eeg_channels: 128
+  eeg_sampling_rate_hz_raw: 1000
+  eye_tracking: true
+  eye_tracking_sampling_rate_hz: 100
+
+published_preprocessing:
+  downsample_hz: 256
+  notch_hz: 50
+  filtered_versions_hz:
+    - [0.5, 30]
+    - [0.5, 80]
+  bad_channel_method: pyprep_plus_manual_review
+  interpolation: spherical_spline
+  ica:
+    algorithm: infomax
+    n_components: 20
+    random_seed: 97
+    labeling: mne_iclabel_plus_manual_review
+  rereference: average
+
+neurosem:
+  phase: discovery
+  preferred_input: published_minimally_preprocessed
+  raw_data_sensitivity_analysis: true
+  use_author_text_embeddings_as_primary_target: false
+  required_generalization:
+    - cross_subject
+    - held_out_temporal_block
+    - held_out_stimulus_or_context
+  required_nuisance_domains:
+    - lexical_identity
+    - frequency
+    - orthography
+    - position
+    - run_session
+    - time_within_run
+    - fixation_behavior
+    - stimulus_timing
+    - surprisal_context
+    - temporal_autocorrelation
