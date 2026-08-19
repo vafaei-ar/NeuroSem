@@ -20,42 +20,73 @@ echo "Derivative: $DERIVATIVE"
 echo "Prefix:     $PREFIX"
 echo
 
-echo "Tracked files matching pilot prefix:"
-git -C "$DATASET" ls-files "${PREFIX}*" || true
+mapfile -t TRACKED < <(git -C "$DATASET" ls-files "${PREFIX}*")
 
-echo
-
-echo "Annexed objects matching pilot prefix:"
-MATCHES=$(git -C "$DATASET" annex find --format='${file}\n' | grep -F "$PREFIX" || true)
-if [[ -z "$MATCHES" ]]; then
-  echo "No annexed files matched the pilot prefix. Stop and report this output."
+if [[ ${#TRACKED[@]} -eq 0 ]]; then
+  echo "No tracked files matched the pilot prefix."
   exit 2
 fi
-printf '%s\n' "$MATCHES"
+
+echo "Tracked files matching pilot prefix:"
+printf '%s\n' "${TRACKED[@]}"
 
 echo
 
-echo "Annex size summary:"
+echo "Annex-backed files among tracked pilot files:"
+ANNEXED=()
+for f in "${TRACKED[@]}"; do
+  if key=$(git -C "$DATASET" annex lookupkey "$f" 2>/dev/null); then
+    if [[ -n "$key" ]]; then
+      ANNEXED+=("$f")
+      echo "  $f"
+      echo "    key: $key"
+    fi
+  fi
+done
+
+if [[ ${#ANNEXED[@]} -eq 0 ]]; then
+  echo
+  echo "No annex-backed pilot files were detected with 'git annex lookupkey'."
+  echo "Diagnostic status for the tracked paths:"
+  for f in "${TRACKED[@]}"; do
+    printf '  %s -> ' "$f"
+    git -C "$DATASET" annex status "$f" 2>/dev/null || echo "not recognized by git-annex"
+  done
+  exit 2
+fi
+
+echo
+echo "Annex object sizes and local availability:"
 TOTAL=0
-COUNT=0
-while IFS= read -r f; do
-  [[ -z "$f" ]] && continue
-  info=$(git -C "$DATASET" annex info "$f" 2>/dev/null || true)
-  bytes=$(printf '%s\n' "$info" | awk -F': ' '/^size:/{print $2}' | awk '{print $1}')
-  echo "  $f${bytes:+  [reported size: $bytes]}"
-  COUNT=$((COUNT + 1))
-done <<< "$MATCHES"
-echo "Objects: $COUNT"
+for f in "${ANNEXED[@]}"; do
+  key=$(git -C "$DATASET" annex lookupkey "$f")
+  size=$(printf '%s\n' "$key" | sed -n 's/.*-s\([0-9][0-9]*\)--.*/\1/p')
+  if git -C "$DATASET" annex find --in here --format='${file}\n' -- "$f" 2>/dev/null | grep -Fxq "$f"; then
+    present="yes"
+  else
+    present="no"
+  fi
+  if [[ -n "$size" ]]; then
+    TOTAL=$((TOTAL + size))
+    human=$(numfmt --to=iec-i --suffix=B "$size" 2>/dev/null || echo "${size} bytes")
+    echo "  $f  [$human, local=$present]"
+  else
+    echo "  $f  [size unknown from key, local=$present]"
+  fi
+done
+
+if [[ $TOTAL -gt 0 ]]; then
+  echo "Total annex payload: $(numfmt --to=iec-i --suffix=B "$TOTAL" 2>/dev/null || echo "$TOTAL bytes")"
+fi
 
 echo
 read -r -p "Retrieve these pilot annex objects now? [y/N] " reply
 case "$reply" in
   y|Y|yes|YES)
-    while IFS= read -r f; do
-      [[ -z "$f" ]] && continue
+    for f in "${ANNEXED[@]}"; do
       echo "Retrieving $f"
-      git -C "$DATASET" annex get "$f"
-    done <<< "$MATCHES"
+      git -C "$DATASET" annex get -- "$f"
+    done
     ;;
   *)
     echo "Nothing retrieved."
@@ -64,9 +95,11 @@ case "$reply" in
 esac
 
 echo
-echo "Pilot retrieval complete. Local presence:"
-while IFS= read -r f; do
-  [[ -z "$f" ]] && continue
-  git -C "$DATASET" annex whereis "$f" | head -20
-  echo
-done <<< "$MATCHES"
+echo "Pilot retrieval complete. Local availability:"
+for f in "${ANNEXED[@]}"; do
+  if git -C "$DATASET" annex find --in here --format='${file}\n' -- "$f" 2>/dev/null | grep -Fxq "$f"; then
+    echo "  PRESENT: $f"
+  else
+    echo "  MISSING: $f"
+  fi
+done
