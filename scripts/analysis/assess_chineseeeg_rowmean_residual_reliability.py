@@ -5,6 +5,7 @@ This remains a reliability/confound checkpoint, not a semantic RSA test.
 
 Primary neural geometry:
 - row_mean.npy, shape [rows, channels]
+- featurewise z-score across rows within each subject, matching the benchmark
 - correlation-distance RDM across rows within each subject
 
 Nuisance RDMs:
@@ -58,6 +59,14 @@ def latest_feature_dir(root: Path, subject: str) -> Path:
     if not candidates:
         raise FileNotFoundError(f"No completed row_mean feature output for {subject} under {subject_root}")
     return sorted(candidates)[-1]
+
+
+def zscore_columns(x: np.ndarray) -> np.ndarray:
+    x = np.asarray(x, dtype=np.float64)
+    mean = x.mean(axis=0)
+    sd = x.std(axis=0)
+    sd[sd == 0] = 1.0
+    return (x - mean) / sd
 
 
 def safe_spearman(a: np.ndarray, b: np.ndarray) -> float:
@@ -168,7 +177,10 @@ def main() -> int:
         if not np.isfinite(x).all():
             raise SystemExit(f"Non-finite row_mean values for {subject}")
 
-        neural = pdist(x, metric="correlation")
+        # Match benchmark_chineseeeg_neural_reliability.py exactly: standardize
+        # each sensor feature across rows within subject before correlation distance.
+        xz = zscore_columns(x)
+        neural = pdist(xz, metric="correlation")
         position = np.array([float(r["run_position_fraction"]) for r in meta])
         duration = np.array([float(r["duration_sec"]) for r in meta])
         char_count = np.array([float(r["char_count"]) for r in meta])
@@ -237,7 +249,7 @@ def main() -> int:
         "n_subjects": len(subjects),
         "n_rows": n_rows,
         "n_channels": len(ref_channels or []),
-        "representation": "row_mean correlation-distance RDM",
+        "representation": "featurewise-z-scored row_mean, correlation-distance RDM",
         "nuisances": ["run_position_lag", "duration_difference", "character_count_difference", "chapter_mismatch"],
         "raw_pairwise_mean": raw_pair,
         "raw_loo_mean": raw_loo,
@@ -257,6 +269,7 @@ def main() -> int:
         },
         "notes": [
             "This is not a semantic test.",
+            "Sensor features are z-scored across rows within subject before correlation-distance RDM construction, exactly matching the row_mean_corr benchmark definition.",
             "Residualization is performed on rank-transformed RDM vectors.",
             "Circular shifts preserve within-subject row geometry but break cross-subject row identity.",
             "Additional visual/ocular/lexical nuisance controls are still required before semantic inference.",
