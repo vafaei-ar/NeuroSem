@@ -30,6 +30,7 @@ import numpy as np
 
 
 def latest_summary(root: Path, run_number: int) -> Path:
+    """Find the latest summary for a run, including the legacy run-01 layout."""
     run_dir = root / f"run-{run_number:02d}"
     candidates = []
     if run_dir.exists():
@@ -37,9 +38,25 @@ def latest_summary(root: Path, run_number: int) -> Path:
             p = child / "summary.json"
             if child.is_dir() and p.exists():
                 candidates.append(p)
-    if not candidates:
-        raise FileNotFoundError(f"No pinned-RSA summary found for run-{run_number:02d} under {run_dir}")
-    return sorted(candidates)[-1]
+    if candidates:
+        return sorted(candidates)[-1]
+
+    # Run-01 was produced before run-scoped output directories were introduced,
+    # so its timestamped summary lives directly under the RSA root.
+    if run_number == 1 and root.exists():
+        legacy = []
+        for child in root.iterdir():
+            if not child.is_dir() or child.name.startswith("run-"):
+                continue
+            p = child / "summary.json"
+            if p.exists():
+                legacy.append(p)
+        if legacy:
+            return sorted(legacy)[-1]
+
+    raise FileNotFoundError(
+        f"No pinned-RSA summary found for run-{run_number:02d} under {run_dir}"
+    )
 
 
 def exact_signflip_p(values: np.ndarray) -> tuple[float, np.ndarray]:
@@ -171,6 +188,7 @@ def main() -> int:
             "Run-level inference uses an exact one-sided sign-flip test on run mean effects.",
             "With four runs, the minimum attainable one-sided exact run-level p-value is 0.0625.",
             "Common-subject aggregation is complementary because the same subjects contribute across runs; it does not replace run-level replication inference.",
+            "Run-01 may be loaded from the legacy unscoped output layout created before run-scoped directories were introduced.",
             "No neural representation, embedding layer, nuisance set, or permutation scheme is selected using these aggregate results.",
         ],
     }
