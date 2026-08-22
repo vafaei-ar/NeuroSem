@@ -12,6 +12,8 @@ import argparse
 import csv
 import json
 import string
+import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -95,6 +97,21 @@ def shifted_indices_within_chapter(chapters: np.ndarray, rng: np.random.Generato
             shift = int(rng.integers(1, len(loc)))
             shifted[loc] = np.roll(loc, shift)
     return shifted
+
+
+def print_progress(done: int, total: int, started: float, width: int = 36) -> None:
+    """Print a lightweight terminal progress bar with elapsed time and ETA."""
+    frac = min(max(done / total, 0.0), 1.0)
+    filled = int(round(width * frac))
+    bar = "#" * filled + "-" * (width - filled)
+    elapsed = time.monotonic() - started
+    rate = done / elapsed if elapsed > 0 else 0.0
+    eta = (total - done) / rate if rate > 0 else float("nan")
+    eta_text = f"{eta / 60:.1f}m" if np.isfinite(eta) else "--"
+    line = f"\rPermutations [{bar}] {done:>6}/{total} {100 * frac:5.1f}% | elapsed {elapsed / 60:.1f}m | ETA {eta_text}"
+    print(line, end="", flush=True)
+    if done >= total:
+        print(flush=True)
 
 
 def main() -> int:
@@ -181,6 +198,10 @@ def main() -> int:
     iu = np.triu_indices(len(ref_chapters), 1)
     square = squareform(semantic_rdm)
     null = np.empty(args.permutations, dtype=np.float64)
+    progress_every = max(1, args.permutations // 100)
+    started = time.monotonic()
+    print(f"Running {args.permutations:,} within-chapter permutations for run-{run_number:02d}...", flush=True)
+    print_progress(0, args.permutations, started)
     for p in range(args.permutations):
         perm_idx = shifted_indices_within_chapter(ref_chapters, rng)
         shifted = square[np.ix_(perm_idx, perm_idx)][iu]
@@ -189,6 +210,9 @@ def main() -> int:
             sr = residualize_ranked(shifted, nuisance_sets[subject])
             vals.append(float(np.mean(neural_resid[subject] * sr)))
         null[p] = float(np.mean(vals))
+        done = p + 1
+        if done == args.permutations or done % progress_every == 0:
+            print_progress(done, args.permutations, started)
 
     p_value = float((1 + np.sum(null >= observed_mean)) / (args.permutations + 1))
 
