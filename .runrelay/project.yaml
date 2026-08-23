@@ -65,3 +65,5 @@ tasks:
     timeout_minutes: 120
     requires_gpu: false
     working_directory: .
+    artifacts:
+      - outputs/chineseeeg_audit/**/*
