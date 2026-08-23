@@ -1,0 +1,31 @@
+{
+  "protocol": "docs/e5_neural_tuning_protocol_v1.md",
+  "model_id": "intfloat/multilingual-e5-large",
+  "model_revision": "3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3",
+  "input_prefix": "query: ",
+  "train_runs": [1, 2, 3, 4, 5],
+  "validation_run": 6,
+  "final_holdout_run": 7,
+  "seed": 20260823,
+  "max_length": 64,
+  "batch_size": 32,
+  "epochs": 5,
+  "learning_rate": 0.0002,
+  "weight_decay": 0.01,
+  "contrastive_temperature": 0.05,
+  "neural_loss_weight": 1.0,
+  "geometry_batch_size": 64,
+  "lora": {
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.05,
+    "target_modules": ["query", "value"]
+  },
+  "arms": ["base", "text_only", "neural", "shuffled_neural"],
+  "primary_embedding": "final hidden state mean over attention mask, L2 normalized, query prefix",
+  "model_rdm": "cosine distance",
+  "text_only_loss": "symmetric dropout-view InfoNCE",
+  "neural_target": "mean across subjects of nuisance-residualized rank-z row_mean correlation-distance RDM",
+  "neural_loss": "1 - Pearson correlation between standardized model pairwise cosine distances and fixed run-level residual neural target",
+  "selection_policy": "no hyperparameter sweep; no early stopping; run-07 excluded from all training/model selection"
+}
