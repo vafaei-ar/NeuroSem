@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import random
 from datetime import datetime, timezone
 from pathlib import Path
@@ -87,13 +86,18 @@ def clean_row_embeddings(model, tokenizer, texts: list[str], device: str, max_le
 
 
 def relational_loss(model, tokenizer, texts, target, device, max_length, geometry_batch_size):
+    """Differentiable geometry loss with dropout disabled for a stable clean-text target."""
     import torch
+    was_training = model.training
+    model.eval()
     emb = clean_row_embeddings(model, tokenizer, texts, device, max_length, geometry_batch_size)
     d = standardized(pairwise_cosine_distance(emb))
     target_t = torch.as_tensor(target, dtype=d.dtype, device=device)
     if target_t.numel() != d.numel():
         raise RuntimeError(f"Target/model edge mismatch: {target_t.numel()} vs {d.numel()}")
     corr = torch.mean(d * target_t)
+    if was_training:
+        model.train()
     return 1.0 - corr, corr
 
 
@@ -115,7 +119,7 @@ def main() -> int:
     args = parser.parse_args()
 
     import torch
-    from peft import LoraConfig, TaskType, get_peft_model
+    from peft import LoraConfig, get_peft_model
     from torch.optim import AdamW
     from transformers import AutoModelForMaskedLM, AutoTokenizer, DataCollatorForLanguageModeling
 
@@ -143,7 +147,6 @@ def main() -> int:
     if args.arm != "base":
         lora = cfg["lora"]
         peft_cfg = LoraConfig(
-            task_type=TaskType.FEATURE_EXTRACTION,
             r=int(lora["rank"]),
             lora_alpha=int(lora["alpha"]),
             lora_dropout=float(lora["dropout"]),
@@ -151,9 +154,14 @@ def main() -> int:
             bias="none",
         )
         model = get_peft_model(model, peft_cfg)
+        model.print_trainable_parameters()
     model.to(device)
 
-    collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=True, mlm_probability=float(cfg["mlm_probability"]))
+    collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer,
+        mlm=True,
+        mlm_probability=float(cfg["mlm_probability"]),
+    )
     history: list[dict] = []
 
     def validation_corr() -> float:
@@ -163,14 +171,17 @@ def main() -> int:
                 model, tokenizer, runs[6]["texts"], runs[6]["neural"], device,
                 int(cfg["max_length"]), args.geometry_batch_size,
             )
-        model.train()
         return float(corr.detach().cpu())
 
     initial_val = validation_corr()
     print(f"Arm={args.arm} | initial run-06 neural correlation={initial_val:.6f}")
 
     if args.arm != "base":
-        optimizer = AdamW(model.parameters(), lr=float(cfg["learning_rate"]), weight_decay=float(cfg["weight_decay"]))
+        optimizer = AdamW(
+            [p for p in model.parameters() if p.requires_grad],
+            lr=float(cfg["learning_rate"]),
+            weight_decay=float(cfg["weight_decay"]),
+        )
         batch_size = int(cfg["batch_size"])
         epochs = int(cfg["epochs"])
         rng = np.random.default_rng(int(cfg["seed"]))
@@ -258,6 +269,7 @@ def main() -> int:
             "Run 07 is not read by this training script.",
             "Every tuned arm receives the same standard MLM pass and five auxiliary optimizer steps per epoch.",
             "The text_only auxiliary steps contain MLM only; neural arms add the prespecified relational term to those same-budget steps.",
+            "The clean-text relational forward runs with dropout disabled but remains differentiable.",
             "Validation correlation is reported descriptively only; v1 uses fixed epochs and no early stopping."
         ],
     }
