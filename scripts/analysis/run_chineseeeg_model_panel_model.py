@@ -3,6 +3,7 @@
 
 Run 07 is intentionally blocked. This script reuses already extracted neural features,
 generates model embeddings for each run, and executes the locked nuisance-controlled RSA.
+The RSA stage uses the validated optimized parallel implementation.
 """
 
 from __future__ import annotations
@@ -38,8 +39,10 @@ def main() -> int:
     ])
     parser.add_argument("--runs", nargs="+", type=int, default=[1, 2, 3, 4, 5, 6])
     parser.add_argument("--permutations", type=int, default=10000)
-    parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
+    parser.add_argument("--workers", type=int, default=16)
+    parser.add_argument("--chunk-size", type=int, default=50)
     args = parser.parse_args()
 
     if any(r < 1 or r > 6 for r in args.runs):
@@ -63,16 +66,19 @@ def main() -> int:
             "--batch-size", str(args.batch_size), "--device", args.device,
         ])
         run_cmd([
-            python, "scripts/analysis/assess_chineseeeg_semantic_rsa_model_panel.py",
+            python, "scripts/analysis/assess_chineseeeg_semantic_rsa_model_panel_fast.py",
             "--embedding-root", str(emb_root),
             "--feature-root", str(feature_root),
             "--subjects", *subjects,
             "--permutations", str(args.permutations),
+            "--workers", str(args.workers),
+            "--chunk-size", str(args.chunk_size),
             "--output-dir", str(rsa_root),
         ])
 
     print("Model-panel family run complete.")
     print(f"Model key: {args.model_key} | runs: {' '.join(f'run-{r:02d}' for r in args.runs)}")
+    print(f"Fast RSA: workers={args.workers} | chunk_size={args.chunk_size}")
     print("Run-07 was not accessed.")
     return 0
 
