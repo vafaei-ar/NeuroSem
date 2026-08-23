@@ -1,0 +1,166 @@
+#!/usr/bin/env python3
+"""Evaluate frozen multilingual-E5 NeuroSem arms on run 07 without updates."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+import numpy as np
+import openpyxl
+
+ARMS = ["base", "text_only", "neural", "shuffled_neural"]
+MODEL_ID = "intfloat/multilingual-e5-large"
+MODEL_REVISION = "3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3"
+PREFIX = "query: "
+SUBJECTS = ["sub-04", "sub-05", "sub-06", "sub-07", "sub-08", "sub-09", "sub-10", "sub-13", "sub-14", "sub-15"]
+
+
+def latest_dir(root: Path, required: str) -> Path:
+    candidates = [d for d in root.iterdir() if d.is_dir() and (d / required).exists()] if root.exists() else []
+    if not candidates:
+        raise FileNotFoundError(f"No directory containing {required} under {root}")
+    return sorted(candidates)[-1]
+
+
+def read_rows(path: Path) -> list[str]:
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    ws = wb.active
+    rows = []
+    for excel_row in range(2, ws.max_row + 1):
+        value = ws.cell(row=excel_row, column=1).value
+        if value is not None:
+            rows.append(str(value))
+    return rows
+
+
+def masked_mean(hidden, mask):
+    mask = mask.to(hidden.dtype).unsqueeze(-1)
+    return (hidden * mask).sum(dim=1) / mask.sum(dim=1).clamp_min(1.0)
+
+
+def generate_embeddings(model, tokenizer, texts, device, batch_size, max_length):
+    import torch
+
+    chunks = []
+    model.eval()
+    with torch.inference_mode():
+        for start in range(0, len(texts), batch_size):
+            batch = [PREFIX + t for t in texts[start:start + batch_size]]
+            enc = tokenizer(batch, padding=True, truncation=True, max_length=max_length, return_tensors="pt")
+            attention = enc["attention_mask"]
+            enc = {k: v.to(device) for k, v in enc.items()}
+            out = model(**enc, return_dict=True)
+            pooled = masked_mean(out.last_hidden_state, attention.to(device).bool())
+            pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
+            chunks.append(pooled.cpu().numpy().astype(np.float32))
+    return np.concatenate(chunks, axis=0)
+
+
+def run(cmd):
+    print("+", " ".join(cmd), flush=True)
+    subprocess.run(cmd, check=True)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dataset", type=Path, nargs="?", default=Path("data/raw/chineseeeg"))
+    parser.add_argument("--tuning-root", type=Path, default=Path("outputs/e5_neural_tuning_v1"))
+    parser.add_argument("--feature-root", type=Path, default=Path("outputs/chineseeeg_row_features/run-07"))
+    parser.add_argument("--embedding-output", type=Path, default=Path("outputs/e5_neurosem_run07_embeddings_v1"))
+    parser.add_argument("--rsa-output", type=Path, default=Path("outputs/e5_neurosem_run07_rsa_v1"))
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--max-length", type=int, default=64)
+    parser.add_argument("--permutations", type=int, default=10000)
+    parser.add_argument("--workers", type=int, default=16)
+    parser.add_argument("--chunk-size", type=int, default=50)
+    parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
+    args = parser.parse_args()
+
+    import torch
+    from peft import PeftModel
+    from transformers import AutoModel, AutoTokenizer
+
+    dataset = args.dataset.expanduser().resolve()
+    workbook = dataset / "derivatives" / "novels" / "segmented_novel" / "LittlePrince" / "segmented_Chinense_novel_run_7.xlsx"
+    if not workbook.exists():
+        raise SystemExit(f"Run-07 workbook not materialized: {workbook}")
+    texts = read_rows(workbook)
+    if not texts:
+        raise SystemExit("No run-07 text rows found")
+
+    device = "cuda" if args.device == "auto" and torch.cuda.is_available() else args.device
+    if args.device == "auto" and not torch.cuda.is_available():
+        device = "cpu"
+    if device == "cuda" and not torch.cuda.is_available():
+        raise SystemExit("CUDA requested but unavailable")
+
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
+    for arm in ARMS:
+        print(f"\n=== {arm} | E5 run-07 final neural holdout ===", flush=True)
+        base = AutoModel.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
+        adapter_dir = None
+        if arm != "base":
+            tuned = latest_dir(args.tuning_root / arm, "summary.json")
+            adapter_dir = tuned / "adapter"
+            if not adapter_dir.exists():
+                raise SystemExit(f"Missing saved adapter for {arm}: {adapter_dir}")
+            model = PeftModel.from_pretrained(base, adapter_dir)
+        else:
+            model = base
+        model.to(device)
+
+        emb = generate_embeddings(model, tokenizer, texts, device, args.batch_size, args.max_length)
+        if emb.shape[0] != len(texts) or not np.isfinite(emb).all():
+            raise RuntimeError(f"Invalid embeddings for {arm}")
+
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        emb_dir = (args.embedding_output / arm / "run-07" / stamp).resolve()
+        emb_dir.mkdir(parents=True, exist_ok=False)
+        np.save(emb_dir / "embeddings.npy", emb)
+        (emb_dir / "texts.json").write_text(json.dumps(texts, ensure_ascii=False, indent=2), encoding="utf-8")
+        summary = {
+            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+            "arm": arm,
+            "model_id": MODEL_ID,
+            "model_revision": MODEL_REVISION,
+            "adapter_dir": None if adapter_dir is None else str(adapter_dir.resolve()),
+            "run_number": 7,
+            "n_rows": len(texts),
+            "embedding_shape": list(emb.shape),
+            "pooling": "attention-mask mean, L2 normalized",
+            "input_prefix": PREFIX,
+            "max_length": args.max_length,
+            "device": device,
+            "evaluation_only": True,
+        }
+        (emb_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        print(f"Embedding output: {emb_dir}")
+
+        run([
+            sys.executable,
+            "scripts/analysis/assess_chineseeeg_run07_holdout_fast.py",
+            "--embedding-root", str(args.embedding_output / arm / "run-07"),
+            "--feature-root", str(args.feature_root),
+            "--subjects", *SUBJECTS,
+            "--permutations", str(args.permutations),
+            "--workers", str(args.workers),
+            "--chunk-size", str(args.chunk_size),
+            "--output-dir", str(args.rsa_output / arm / "run-07"),
+        ])
+
+        del model, base
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+    print("\nFrozen E5 four-arm run-07 evaluation complete.")
+    print("No parameter updates were performed.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
