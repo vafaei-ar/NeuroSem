@@ -13,8 +13,9 @@ This repository uses RunRelay for workstation execution.
 - Project id: `neurosem`
 - RunRelay control repository: `vafaei-ar/RunRelay`
 - Execution manifest: `.runrelay/project.yaml`
+- Bound RunRelay machine: `pshjl4vf24`
 - Treat `.runrelay/project.yaml` as the authoritative list of named tasks and execution policy.
-- Use the repository's configured/bound RunRelay machine. Do not borrow a machine id from another project.
+- For every RunRelay job for this repository, set `requested_machine_id` to `pshjl4vf24`. Never create or claim to queue a job with a missing, null, empty, inferred-from-another-project, or different machine id.
 - For public-repository safe-mode execution, require exact commits and Telegram human approval through the private RunRelay control repository.
 - Prefer RunRelay over asking the user to execute shell commands manually when an equivalent named task can be used safely.
 
@@ -24,10 +25,13 @@ When a new execution operation is needed, add a narrowly scoped named task to `.
 
 1. Modify NeuroSem code/configuration in this repository.
 2. Commit the intended state and retrieve the exact full commit SHA.
-3. Create a unique job JSON under `jobs/` in `vafaei-ar/RunRelay` using project id `neurosem`, the exact NeuroSem commit, an allowed task, and the project-bound machine.
-4. Let Telegram provide the approval boundary.
-5. After approval, inspect the actual RunRelay result and safe declared artifacts before deciding the next change.
-6. If a fix is needed, create a new commit and a new exact-commit job rather than weakening validation.
+3. Re-read the committed `.runrelay/project.yaml` and this `AGENTS.md` before creating the job.
+4. Create a unique job JSON under `jobs/` in `vafaei-ar/RunRelay` using project id `neurosem`, the exact NeuroSem commit, an allowed task, and `requested_machine_id: "pshjl4vf24"`.
+5. Verify the created job file in the RunRelay repository. Do not tell the user that Telegram approval is pending unless the saved job has a non-empty machine id and all required fields.
+6. Let Telegram provide the approval boundary.
+7. After approval, RunRelay may safely fast-forward the clean local NeuroSem checkout to the requested exact commit. It must refuse dirty tracked files, divergent history, or non-fast-forward movement rather than overwrite local work.
+8. Inspect the actual RunRelay result and safe declared artifacts before deciding the next change.
+9. If a fix is needed, create a new commit and a new exact-commit job rather than weakening validation.
 
 ## Artifacts and sensitive data
 
