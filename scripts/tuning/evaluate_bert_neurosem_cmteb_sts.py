@@ -3,6 +3,12 @@
 
 Primary endpoint: unweighted mean Spearman correlation across eight frozen C-MTEB STS tasks.
 No task-specific tuning, pooling changes, whitening, or calibration are performed.
+
+Some public C-MTEB repositories expose hidden test labels as a constant sentinel value.
+Before any model is scored, this script therefore chooses the first public split with
+non-constant gold scores using the fixed priority test -> validation -> train. The chosen
+split is determined from labels only, is shared by all four arms, and is recorded in the
+output provenance.
 """
 
 from __future__ import annotations
@@ -18,15 +24,16 @@ from scipy.stats import spearmanr
 MODEL_ID = "google-bert/bert-base-chinese"
 MODEL_REVISION = "8d2a91f91cc38c96bb8b4556ba70c392f8d5ee55"
 ARMS = ("base", "text_only", "neural", "shuffled_neural")
+SPLIT_PRIORITY = ("test", "validation", "train")
 TASKS = {
-    "AFQMC": {"repo": "mteb/AFQMC", "config": None, "split": "test"},
-    "ATEC": {"repo": "mteb/ATEC", "config": None, "split": "test"},
-    "BQ": {"repo": "mteb/BQ", "config": None, "split": "test"},
-    "LCQMC": {"repo": "mteb/LCQMC", "config": None, "split": "test"},
-    "PAWSX": {"repo": "mteb/PAWSX", "config": None, "split": "test"},
-    "QBQTC": {"repo": "mteb/QBQTC", "config": None, "split": "test"},
-    "STS22 (zh)": {"repo": "mteb/sts22-crosslingual-sts", "config": "zh", "split": "test"},
-    "STSB": {"repo": "mteb/STSB", "config": None, "split": "test"},
+    "AFQMC": {"repo": "mteb/AFQMC", "config": None},
+    "ATEC": {"repo": "mteb/ATEC", "config": None},
+    "BQ": {"repo": "mteb/BQ", "config": None},
+    "LCQMC": {"repo": "mteb/LCQMC", "config": None},
+    "PAWSX": {"repo": "mteb/PAWSX", "config": None},
+    "QBQTC": {"repo": "mteb/QBQTC", "config": None},
+    "STS22 (zh)": {"repo": "mteb/sts22-crosslingual-sts", "config": "zh"},
+    "STSB": {"repo": "mteb/STSB", "config": None},
 }
 
 
@@ -39,7 +46,6 @@ def latest_adapter(root: Path, arm: str) -> Path:
 
 
 def load_arm_model(arm: str, tuning_root: Path, device: str):
-    import torch
     from peft import PeftModel
     from transformers import AutoModelForMaskedLM, AutoTokenizer
 
@@ -81,10 +87,10 @@ def encode(model, tokenizer, texts: list[str], device: str, batch_size: int, max
     return np.concatenate(chunks, axis=0)
 
 
-def load_task_dataset(spec: dict, revision: str):
+def load_split(spec: dict, revision: str, split: str):
     from datasets import load_dataset
 
-    kwargs = {"path": spec["repo"], "split": spec["split"], "revision": revision}
+    kwargs = {"path": spec["repo"], "split": split, "revision": revision}
     if spec["config"] is not None:
         kwargs["name"] = spec["config"]
     ds = load_dataset(**kwargs)
@@ -93,6 +99,27 @@ def load_task_dataset(spec: dict, revision: str):
     if missing:
         raise RuntimeError(f"Dataset {spec['repo']} missing columns: {sorted(missing)}")
     return ds
+
+
+def load_public_labeled_split(spec: dict, revision: str):
+    """Choose a public evaluation split using labels only, before any model scoring."""
+    failures = []
+    for split in SPLIT_PRIORITY:
+        try:
+            ds = load_split(spec, revision, split)
+        except Exception as exc:
+            failures.append(f"{split}: unavailable ({type(exc).__name__})")
+            continue
+        gold = np.asarray(ds["score"], dtype=np.float64)
+        finite = gold[np.isfinite(gold)]
+        unique = np.unique(finite)
+        if finite.size == len(ds) and unique.size >= 2:
+            return ds, split, int(unique.size)
+        failures.append(f"{split}: non-usable labels (finite={finite.size}/{len(ds)}, unique={unique.size})")
+    raise RuntimeError(
+        f"No public labeled split with >=2 unique finite scores for {spec['repo']}. "
+        + "; ".join(failures)
+    )
 
 
 def resolve_dataset_revisions() -> dict[str, str]:
@@ -130,12 +157,14 @@ def main() -> int:
 
     revisions = resolve_dataset_revisions()
     loaded = {}
-    print("Resolved frozen dataset revisions:")
+    selected_splits = {}
+    print("Resolved frozen dataset revisions and public labeled splits:")
     for task, spec in TASKS.items():
         rev = revisions[task]
-        ds = load_task_dataset(spec, rev)
+        ds, split, n_unique = load_public_labeled_split(spec, rev)
         loaded[task] = ds
-        print(f"  {task}: {spec['repo']}@{rev} | n={len(ds)}")
+        selected_splits[task] = split
+        print(f"  {task}: {spec['repo']}@{rev} | split={split} | n={len(ds)} | unique_scores={n_unique}")
 
     results: dict[str, dict] = {}
     tuning_root = args.tuning_root.resolve()
@@ -159,7 +188,7 @@ def main() -> int:
                 raise RuntimeError(f"Non-finite Spearman for {arm}/{task}")
             task_scores[task] = rho
             task_sizes[task] = len(ds)
-            print(f"  {task}: Spearman={rho:.6f} | n={len(ds)}", flush=True)
+            print(f"  {task}: Spearman={rho:.6f} | split={selected_splits[task]} | n={len(ds)}", flush=True)
 
         mean_score = float(np.mean(list(task_scores.values())))
         results[arm] = {
@@ -203,6 +232,8 @@ def main() -> int:
         "datasets_version": datasets.__version__,
         "peft_version": peft.__version__,
         "dataset_revisions": revisions,
+        "selected_splits": selected_splits,
+        "split_selection_rule": "Before model scoring, choose first split in test -> validation -> train with all-finite and >=2 unique gold scores.",
         "results": results,
         "contrasts": contrasts,
         "neural_task_wins_vs_text_only": int(neural_vs_text_wins),
@@ -211,6 +242,7 @@ def main() -> int:
         "notes": [
             "This evaluation performs no parameter updates.",
             "The eight tasks and unweighted-mean primary endpoint were frozen before tuning results were interpreted.",
+            "The public-label split rule was added after the first run stopped at base/AFQMC because its public test score column was constant; no arm-level benchmark score had been produced.",
             "Dataset repository HEAD revisions are resolved once at evaluation start and recorded for reproducibility.",
         ],
     }
