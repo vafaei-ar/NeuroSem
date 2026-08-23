@@ -21,6 +21,17 @@ security:
   destructive_operations: false
 
 tasks:
+  smoke_test:
+    description: Non-destructive RunRelay connectivity test.
+    command:
+      - python3
+      - -c
+      - "import os,platform; print('RUNRELAY_SMOKE_OK'); print('host='+platform.node()); print('cwd='+os.getcwd())"
+    approval: manual
+    timeout_minutes: 5
+    requires_gpu: false
+    working_directory: .
+
   setup_venv:
     description: Create or refresh the NeuroSem Python virtual environment.
     command:
