@@ -37,7 +37,7 @@ do
 done
 
 echo "=== E5 exploratory Pareto evaluation ==="
-"$PY" scripts/tuning/evaluate_e5_pareto_v1.py \
+"$PY" scripts/tuning/evaluate_e5_pareto_v1_wrapper.py \
   data/raw/chineseeeg \
   --batch-size 64 \
   --permutations 10000 \
