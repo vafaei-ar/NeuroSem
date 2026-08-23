@@ -9,9 +9,12 @@ if [[ ! -x "$PY" ]]; then
 fi
 
 $PY - <<'PY'
-import importlib
+import importlib.util
+import sys
+
 mods = ["torch", "transformers", "peft", "datasets", "scipy", "numpy", "openpyxl"]
 missing = [m for m in mods if importlib.util.find_spec(m) is None]
+print(f"E5 replication preflight: python={sys.version.split()[0]} missing={missing}")
 if missing:
     raise SystemExit("Missing required Python packages: " + ", ".join(missing))
 PY
