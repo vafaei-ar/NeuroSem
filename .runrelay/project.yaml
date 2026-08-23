@@ -94,3 +94,16 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/e5_replication_report/latest/combined_summary.json
+
+  run_e5_pareto_exploratory:
+    description: Run the prespecified exploratory E5 neural-loss dose-response/Pareto experiment using four new intermediate lambdas and reusing the completed lambda 0 and 1 anchors.
+    command:
+      - bash
+      - scripts/tuning/run_e5_pareto_exploratory_v1.sh
+    approval: manual
+    timeout_minutes: 360
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/e5_pareto_v1/latest/combined_summary.json
+      - outputs/e5_pareto_v1/latest/pareto_points.csv
