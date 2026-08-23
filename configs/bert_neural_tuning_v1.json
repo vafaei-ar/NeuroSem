@@ -1,0 +1,28 @@
+{
+  "protocol": "docs/bert_neural_tuning_protocol_v1.md",
+  "model_id": "google-bert/bert-base-chinese",
+  "model_revision": "8d2a91f91cc38c96bb8b4556ba70c392f8d5ee55",
+  "train_runs": [1, 2, 3, 4, 5],
+  "validation_run": 6,
+  "final_holdout_run": 7,
+  "seed": 20260823,
+  "max_length": 64,
+  "mlm_probability": 0.15,
+  "batch_size": 32,
+  "epochs": 5,
+  "learning_rate": 0.0002,
+  "weight_decay": 0.01,
+  "neural_loss_weight": 1.0,
+  "lora": {
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.05,
+    "target_modules": ["query", "value"]
+  },
+  "arms": ["base", "text_only", "neural", "shuffled_neural"],
+  "primary_embedding": "final hidden layer mean over non-special non-padding tokens",
+  "model_rdm": "cosine distance",
+  "neural_target": "mean across subjects of nuisance-residualized rank-z row_mean correlation-distance RDM",
+  "neural_loss": "1 - Pearson correlation between standardized model pairwise cosine distances and fixed run-level residual neural target",
+  "selection_policy": "no primary hyperparameter sweep; no early stopping; run-07 excluded from all training/model selection"
+}
