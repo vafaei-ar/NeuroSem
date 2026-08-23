@@ -19,6 +19,20 @@ For every model arm, generate sentence embeddings with the same representation r
 
 The primary external endpoint is the unweighted mean of the eight task-level Spearman correlation scores. Report all eight task scores separately as secondary endpoints.
 
+## Public-label split rule
+
+Some public benchmark repositories may expose hidden evaluation labels in a nominal `test` split as a constant sentinel value. A Spearman correlation is undefined in that case.
+
+To keep the benchmark executable without using model performance to choose data, determine the evaluation split **before scoring any arm** and using gold labels only. For each task, choose the first available split in this fixed order:
+
+1. `test`
+2. `validation`
+3. `train`
+
+A split is usable only when every score is finite and the score column has at least two unique values. The same selected split is then used for all four arms and is written to the evaluation provenance.
+
+This rule was added after the first benchmark execution stopped at `base/AFQMC` because the public AFQMC test score column was constant. No arm-level C-MTEB task score or primary endpoint had been produced at that point. The task set, model arms, representation rule, endpoint, and comparisons were not changed.
+
 ## Arms
 
 Evaluate exactly the following four models:
