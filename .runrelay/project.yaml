@@ -112,3 +112,16 @@ tasks:
     artifacts:
       - outputs/e5_pareto_v1/latest/combined_summary.json
       - outputs/e5_pareto_v1/latest/pareto_points.csv
+
+  evaluate_e5_pareto_existing:
+    description: Evaluate the already-trained E5 Pareto grid and frozen anchors without retraining any model.
+    command:
+      - bash
+      - scripts/tuning/run_e5_pareto_evaluation_only_v1.sh
+    approval: manual
+    timeout_minutes: 240
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/e5_pareto_v1/latest/combined_summary.json
+      - outputs/e5_pareto_v1/latest/pareto_points.csv
