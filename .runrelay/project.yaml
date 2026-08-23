@@ -67,3 +67,18 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/chineseeeg_audit/**/*
+
+  run_e5_replication:
+    description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
+    command:
+      - bash
+      - scripts/tuning/run_e5_neurosem_replication.sh
+    approval: manual
+    timeout_minutes: 360
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/e5_neural_tuning_v1/**/summary.json
+      - outputs/e5_neurosem_run07_embeddings_v1/**/summary.json
+      - outputs/e5_neurosem_run07_rsa_v1/**/summary.json
+      - outputs/e5_neurosem_cmteb_sts_v1/**/summary.json
