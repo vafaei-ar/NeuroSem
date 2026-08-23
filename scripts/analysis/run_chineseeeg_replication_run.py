@@ -6,7 +6,7 @@ For one run number this script:
 2. validates text/EEG alignment per subject;
 3. builds subject-specific manifests;
 4. extracts the prespecified row-level neural features;
-5. generates pinned BERT embeddings for that run; and
+5. optionally stops after preprocessing; otherwise generates pinned BERT embeddings; and
 6. runs the pinned nuisance-controlled semantic RSA with the available subjects.
 
 Outputs are run-scoped so later runs cannot silently overwrite or become the "latest"
@@ -61,6 +61,11 @@ def main() -> int:
     parser.add_argument("--relative-bins", type=int, default=8)
     parser.add_argument("--onset-ms", type=float, default=500.0)
     parser.add_argument("--permutations", type=int, default=10000)
+    parser.add_argument(
+        "--preprocess-only",
+        action="store_true",
+        help="Stop after alignment validation, manifest construction, and neural feature extraction.",
+    )
     args = parser.parse_args()
 
     if args.run_number < 1:
@@ -142,6 +147,12 @@ def main() -> int:
         for subject, error in failures:
             print(f"  FAILED {subject}: {error}")
         raise SystemExit("Replication preprocessing had subject failures; semantic RSA not run.")
+
+    if args.preprocess_only:
+        print("\nPreprocessing-only mode complete.")
+        print(f"Run: {run_label} | subjects: {len(completed)}")
+        print("No semantic embeddings or RSA were generated.")
+        return 0
 
     run([
         py, "scripts/embeddings/generate_chineseeeg_pinned_embeddings.py", str(dataset),
