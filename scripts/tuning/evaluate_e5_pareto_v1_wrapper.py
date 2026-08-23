@@ -10,7 +10,15 @@ any model, statistic, nuisance, permutation, or evaluation logic.
 from __future__ import annotations
 
 import shutil
+import sys
 from pathlib import Path
+
+# When this file is executed as ``python scripts/tuning/...py``, Python places
+# ``scripts/tuning`` rather than the repository root first on sys.path. Add the
+# repository root explicitly so the namespace-package import below is stable.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.tuning import evaluate_e5_pareto_v1 as mod
 
