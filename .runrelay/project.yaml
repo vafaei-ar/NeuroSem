@@ -82,3 +82,15 @@ tasks:
       - outputs/e5_neurosem_run07_embeddings_v1/**/summary.json
       - outputs/e5_neurosem_run07_rsa_v1/**/summary.json
       - outputs/e5_neurosem_cmteb_sts_v1/**/summary.json
+
+  collect_e5_results:
+    description: Collect already-completed E5 replication summaries into one safe derived report without rerunning training or evaluation.
+    command:
+      - .venv/bin/python
+      - scripts/tuning/collect_e5_replication_results.py
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/e5_replication_report/latest/combined_summary.json
