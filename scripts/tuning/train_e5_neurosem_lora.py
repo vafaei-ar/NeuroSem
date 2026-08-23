@@ -116,6 +116,12 @@ def main() -> int:
     parser.add_argument("--target-root", type=Path, default=Path("outputs/bert_neural_tuning_targets_v1"))
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/e5_neural_tuning_v1"))
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
+    parser.add_argument(
+        "--neural-loss-weight",
+        type=float,
+        default=None,
+        help="Optional explicit override for exploratory dose-response work. The effective value is written into the saved config summary.",
+    )
     args = parser.parse_args()
 
     import torch
@@ -126,6 +132,13 @@ def main() -> int:
     cfg = json.loads(args.config.read_text(encoding="utf-8"))
     if list(cfg["train_runs"]) != [1, 2, 3, 4, 5] or int(cfg["validation_run"]) != 6 or int(cfg["final_holdout_run"]) != 7:
         raise SystemExit("Frozen E5 split must be train 01-05, validation 06, holdout 07")
+    if args.neural_loss_weight is not None:
+        if args.arm != "neural":
+            raise SystemExit("--neural-loss-weight override is only allowed with --arm neural")
+        if not np.isfinite(args.neural_loss_weight) or args.neural_loss_weight < 0:
+            raise SystemExit("--neural-loss-weight must be finite and >= 0")
+        cfg["neural_loss_weight"] = float(args.neural_loss_weight)
+        cfg["neural_loss_weight_override"] = float(args.neural_loss_weight)
 
     set_seed(int(cfg["seed"]))
     if args.device == "auto":
@@ -170,7 +183,10 @@ def main() -> int:
         return float(corr.detach().cpu())
 
     initial_val = validation_corr()
-    print(f"Arm={args.arm} | initial run-06 neural correlation={initial_val:.6f}")
+    print(
+        f"Arm={args.arm} | neural_loss_weight={float(cfg['neural_loss_weight']):.6g} | "
+        f"initial run-06 neural correlation={initial_val:.6f}"
+    )
     history = []
 
     if args.arm != "base":
@@ -265,7 +281,10 @@ def main() -> int:
     }
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Tuning output: {out}")
-    print(f"Arm={args.arm} | initial run06 corr={initial_val:.6f} | final={final_val:.6f}")
+    print(
+        f"Arm={args.arm} | neural_loss_weight={float(cfg['neural_loss_weight']):.6g} | "
+        f"initial run06 corr={initial_val:.6f} | final={final_val:.6f}"
+    )
     print("Run-07 was not accessed.")
     return 0
 
