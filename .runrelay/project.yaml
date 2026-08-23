@@ -1,0 +1,56 @@
+schema_version: 1
+
+project:
+  id: neurosem
+  repo: vafaei-ar/NeuroSem
+  visibility: public
+
+execution:
+  profile: safe
+  approval_default: manual
+  machine_binding: fixed
+  machine_id: null
+  runner_source: runrelay_control_repo
+  exact_commit: true
+  allow_arbitrary_commands: false
+
+security:
+  project_only_filesystem: true
+  network_access: true
+  inherit_environment: false
+  destructive_operations: false
+
+tasks:
+  setup_venv:
+    description: Create or refresh the NeuroSem Python virtual environment.
+    command:
+      - bash
+      - scripts/setup_venv.sh
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+
+  download_chineseeeg:
+    description: Download the ChineseEEG dataset using the project download script.
+    command:
+      - bash
+      - scripts/download/download_chineseeeg.sh
+    approval: manual
+    timeout_minutes: 720
+    requires_gpu: false
+    working_directory: .
+
+  audit_chineseeeg:
+    description: Run the structural and metadata audit and create the audit ZIP.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_chineseeeg.py
+      - data/raw/chineseeeg
+      - --output-dir
+      - outputs/chineseeeg_audit
+      - --make-zip
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
