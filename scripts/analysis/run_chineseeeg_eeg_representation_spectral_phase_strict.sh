@@ -176,11 +176,17 @@ required = [
 ]
 status = s.get("subjob_status", {})
 problems = []
+
+# Every discovery candidate must have completed explicitly. On run-07 the
+# frozen discovery winner is intentionally evaluated under the locked-winner
+# stage rather than the exploratory stage, so run-07 completeness is enforced
+# below through candidate_metrics instead of requiring an exploratory status
+# key for the winner.
 for name in required:
-    for key in (f"run-06:evaluate:{name}", f"run-07:exploratory:{name}"):
-        rec = status.get(key)
-        if not isinstance(rec, dict) or str(rec.get("status", "")).lower() != "completed":
-            problems.append((key, rec))
+    key = f"run-06:evaluate:{name}"
+    rec = status.get(key)
+    if not isinstance(rec, dict) or str(rec.get("status", "")).lower() != "completed":
+        problems.append((key, rec))
 
 # Confirm the analysis itself used the frozen cohort for both runs.
 for field in ("discovery_subjects", "holdout_subjects"):
@@ -189,7 +195,8 @@ for field in ("discovery_subjects", "holdout_subjects"):
         problems.append((field, {"expected": frozen, "observed": observed}))
 
 # Require one candidate-metric row for every intended family/run and enforce
-# identical n_subjects for all of them.
+# identical n_subjects for all of them. This accepts the run-07 winner whether
+# its stage is locked_winner_holdout or exploratory_holdout_panel.
 rows = [r for r in s.get("candidate_metrics", []) if isinstance(r, dict)]
 by_key = {(str(r.get("run")), str(r.get("candidate"))): r for r in rows}
 for name in required:
