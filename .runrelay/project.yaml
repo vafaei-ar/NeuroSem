@@ -9,7 +9,7 @@ execution:
   profile: safe
   approval_default: manual
   machine_binding: fixed
-  machine_id: null
+  machine_id: pshjl4vf24
   runner_source: runrelay_control_repo
   exact_commit: true
   allow_arbitrary_commands: false
@@ -36,6 +36,18 @@ tasks:
     timeout_minutes: 5
     requires_gpu: false
     working_directory: .
+
+  drive_artifact_smoke:
+    description: Create one harmless JSON artifact to verify RunRelay Google Drive delivery and ChatGPT retrieval.
+    command:
+      - python3
+      - scripts/runrelay/drive_smoke.py
+    approval: manual
+    timeout_minutes: 5
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/runrelay_drive_smoke/latest/summary.json
 
   setup_venv:
     description: Create or refresh the NeuroSem Python virtual environment.
