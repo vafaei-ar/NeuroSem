@@ -167,3 +167,18 @@ tasks:
     artifacts:
       - outputs/nature_directional_event_probe/latest/summary.json
       - outputs/nature_directional_event_probe/latest/event_counts.csv
+
+  probe_nature_directional_docs:
+    description: Inspect only the downloaded README and data dictionary to resolve event-label condition mapping before any model comparison.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_nature_directional_docs.py
+      - data/raw/nature_directional_eeg/extracted/inner_speech_v2
+      - --output-dir
+      - outputs/nature_directional_docs_probe/latest
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/nature_directional_docs_probe/latest/summary.json
