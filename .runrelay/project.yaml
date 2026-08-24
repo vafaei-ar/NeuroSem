@@ -85,6 +85,25 @@ tasks:
     artifacts:
       - outputs/chineseeeg_audit/**/*
 
+  audit_chineseeeg_time_resolved_inputs:
+    description: Model-blind inventory of locally available ChineseEEG time-resolved EEG, event, eye-tracking, filtered-derivative, and ICA/component inputs for representation refinement.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_chineseeeg_time_resolved_inputs.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --outputs-root
+      - outputs
+      - --output-dir
+      - outputs/chineseeeg_time_resolved_input_audit/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/chineseeeg_time_resolved_input_audit/latest/summary.json
+      - outputs/chineseeeg_time_resolved_input_audit/latest/file_inventory.csv
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
