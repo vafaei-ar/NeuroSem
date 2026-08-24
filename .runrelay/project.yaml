@@ -144,6 +144,33 @@ tasks:
       - outputs/chineseeeg_eeg_representation_overnight/latest/subject_metrics.csv
       - outputs/chineseeeg_eeg_representation_overnight/latest/sensor_groups.json
 
+  download_tmnred:
+    description: Create a pinned OpenNeuro ds005383 TMNRED DataLad/git-annex checkout without recursively materializing EEG payloads.
+    command:
+      - bash
+      - scripts/download/download_tmnred.sh
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+
+  audit_tmnred:
+    description: Run the prospective model-blind structural and materialization audit for TMNRED before any signal-level representation or model analysis.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_tmnred.py
+      - --data-root
+      - data/raw/tmnred
+      - --output-dir
+      - outputs/tmnred_audit/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/tmnred_audit/latest/summary.json
+      - outputs/tmnred_audit/latest/file_inventory.csv
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
