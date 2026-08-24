@@ -83,11 +83,17 @@ def find_derivative_vhdr(data_root: Path, derivative: str, subject: str, run: st
     ]
     for p in candidates:
         if p.exists():
-            return p.resolve()
+            # Keep the DataLad/git-annex worktree path instead of resolving the
+            # .vhdr symlink into .git/annex/objects. BrainVision headers refer to
+            # their .vmrk/.eeg companions by relative filename; resolving the
+            # symlink makes MNE look for those companions inside the annex object
+            # directory even though they are correctly materialized beside the
+            # worktree header.
+            return p.absolute()
     globbed = sorted(data_root.glob(f"derivatives/**/{derivative}/{subject}/ses-LittlePrince/eeg/{filename}"))
     for p in globbed:
         if p.exists():
-            return p.resolve()
+            return p.absolute()
     raise FileNotFoundError(f"No materialized {derivative} BrainVision header for {subject} {run}")
 
 
@@ -337,196 +343,86 @@ def inspect_ica_metadata(data_root: Path, subjects: list[str], runs: list[str]) 
     records = []
     for run in runs:
         for subject in subjects:
-            pattern = f"derivatives/**/filtered_0.5_30/{subject}/ses-LittlePrince/eeg/{subject}_ses-LittlePrince_task-reading_{run}_ica_components.json"
-            matches = sorted(data_root.glob(pattern))
-            row = {"run": run, "subject": subject, "path": None, "content": None}
-            if matches:
-                p = matches[0]
-                row["path"] = str(p)
-                try:
-                    row["content"] = json.loads(p.read_text(encoding="utf-8"))
-                except Exception as exc:
-                    row["content"] = {"parse_error": str(exc)}
-            records.append(row)
-    return {
-        "n_records": len(records),
-        "n_metadata_files_found": sum(r["path"] is not None for r in records),
-        "records": records,
-        "interpretation": "Author preprocessed derivatives already incorporate ICA/artifact cleaning; metadata are audited here, but ICA sources are not treated as semantic components.",
-    }
-
-
-def build_run_features(
-    run: str,
-    subjects: list[str],
-    feature_root: Path,
-    data_root: Path,
-    status: dict[str, dict[str, object]],
-) -> tuple[dict[str, dict[str, np.ndarray]], dict[str, list[dict[str, str]]], dict[str, list[str]], dict[str, list[int]]]:
-    features: dict[str, dict[str, np.ndarray]] = {}
-    metas: dict[str, list[dict[str, str]]] = {}
-    channels_by_subject: dict[str, list[str]] = {}
-    sensor_groups_ref: dict[str, list[int]] = {}
-
-    for subject in subjects:
-        key_prefix = f"{run}:{subject}"
-        d = latest_feature_dir(feature_root, run, subject)
-        meta, channels, base = load_existing_features(d)
-        features[subject] = dict(base)
-        metas[subject] = meta
-        channels_by_subject[subject] = channels
-        status[f"{key_prefix}:existing_features"] = {"status": "completed", "feature_dir": str(d), "candidates": sorted(base)}
-
-        try:
-            groups = standard_sensor_groups(channels)
-            if not sensor_groups_ref:
-                sensor_groups_ref = groups
-            row_mean = base["row_mean_all"]
-            for name, indices in groups.items():
-                features[subject][name] = row_mean[:, np.asarray(indices, dtype=int)]
-            status[f"{key_prefix}:spatial"] = {
-                "status": "completed",
-                "group_sizes": {k: len(v) for k, v in groups.items()},
-            }
-        except Exception as exc:
-            status[f"{key_prefix}:spatial"] = {"status": "unavailable", "error": str(exc)}
-
-        raw30 = None
-        try:
-            p30 = find_derivative_vhdr(data_root, "filtered_0.5_30", subject, run)
-            raw30 = mne.io.read_raw_brainvision(p30, preload=True, verbose="ERROR")
-            raw30 = align_raw_to_channels(raw30, channels)
-            for name, band in [
-                ("theta_relative_power", (4.0, 7.0)),
-                ("alpha_relative_power", (8.0, 12.0)),
-                ("beta_relative_power", (13.0, 30.0)),
-            ]:
-                try:
-                    features[subject][name] = relative_bandpower_features(raw30, meta, band, (1.0, 30.0))
-                    status[f"{key_prefix}:{name}"] = {"status": "completed", "source": str(p30)}
-                except Exception as exc:
-                    status[f"{key_prefix}:{name}"] = {"status": "failed", "error": str(exc)}
-            for name, freq in [("theta_phase_5p5hz", 5.5), ("alpha_phase_10hz", 10.0)]:
-                try:
-                    pf, pidx = phase_features(raw30, meta, freq)
-                    features[subject][name] = pf
-                    features[subject][name + "__indices"] = pidx.astype(np.int64)
-                    status[f"{key_prefix}:{name}"] = {
-                        "status": "completed",
-                        "source": str(p30),
-                        "n_rows": int(len(pidx)),
-                    }
-                except Exception as exc:
-                    status[f"{key_prefix}:{name}"] = {"status": "failed", "error": str(exc)}
-        except Exception as exc:
-            status[f"{key_prefix}:30hz_signal"] = {"status": "unavailable", "error": str(exc)}
-        finally:
-            if raw30 is not None:
-                try:
-                    raw30.close()
-                except Exception:
-                    pass
-
-        raw80 = None
-        try:
-            p80 = find_derivative_vhdr(data_root, "filtered_0.5_80", subject, run)
-            raw80 = mne.io.read_raw_brainvision(p80, preload=True, verbose="ERROR")
-            raw80 = align_raw_to_channels(raw80, channels)
-            features[subject]["low_gamma_relative_power"] = relative_bandpower_features(raw80, meta, (30.0, 45.0), (1.0, 45.0))
-            status[f"{key_prefix}:low_gamma_relative_power"] = {"status": "completed", "source": str(p80)}
-        except Exception as exc:
-            status[f"{key_prefix}:low_gamma_relative_power"] = {"status": "unavailable", "error": str(exc)}
-        finally:
-            if raw80 is not None:
-                try:
-                    raw80.close()
-                except Exception:
-                    pass
-
-    return features, metas, channels_by_subject, sensor_groups_ref
-
-
-def check_canonical_metas(metas: dict[str, list[dict[str, str]]]) -> tuple[str, list[dict[str, str]]]:
-    subjects = sorted(metas)
-    ref_subject = subjects[0]
-    ref_meta = metas[ref_subject]
-    ref_id = canonical_identity(ref_meta)
-    for s in subjects[1:]:
-        if canonical_identity(metas[s]) != ref_id:
-            raise ValueError(f"Canonical row identity mismatch between {ref_subject} and {s}")
-    return ref_subject, ref_meta
+            patterns = [
+                f"derivatives/preproc/**/{subject}/ses-LittlePrince/eeg/*{run}*ica*json",
+                f"derivatives/**/{subject}/ses-LittlePrince/eeg/*{run}*ica*json",
+            ]
+            found = []
+            for pat in patterns:
+                found.extend(data_root.glob(pat))
+            unique = sorted({p.resolve() for p in found if p.is_file()})
+            if not unique:
+                records.append({"run": run, "subject": subject, "status": "not_found"})
+                continue
+            p = unique[0]
+            try:
+                content = json.loads(p.read_text(encoding="utf-8"))
+            except Exception:
+                content = {"parse_error": traceback.format_exc(limit=1)}
+            records.append({"run": run, "subject": subject, "path": str(p), "content": content})
+    return {"n_records": len(records), "n_metadata_files_found": sum("path" in r for r in records), "records": records}
 
 
 def evaluate_candidate(
+    run: str,
+    stage: str,
     candidate: str,
-    subjects: list[str],
-    features: dict[str, dict[str, np.ndarray]],
-    metas: dict[str, list[dict[str, str]]],
-    phase: bool = False,
-) -> tuple[dict[str, float], dict[str, float], dict[str, float], int]:
-    _, ref_meta = check_canonical_metas(metas)
-    eval_subjects = [s for s in subjects if candidate in features.get(s, {})]
-    if len(eval_subjects) < 4:
-        raise ValueError(f"Candidate {candidate} available for only {len(eval_subjects)} subjects")
+    features_by_subject: dict[str, tuple[np.ndarray, np.ndarray | None]],
+    meta_by_subject: dict[str, list[dict[str, str]]],
+    primary_selection_eligible: bool,
+) -> tuple[dict[str, object], list[dict[str, object]]]:
+    subjects = sorted(features_by_subject)
+    if len(subjects) < 3:
+        raise ValueError(f"Candidate {candidate} available for only {len(subjects)} subjects")
 
-    if phase:
-        index_sets = []
-        for s in eval_subjects:
-            key = candidate + "__indices"
-            if key not in features[s]:
-                raise ValueError(f"Missing phase indices for {s}")
-            index_sets.append(set(int(x) for x in features[s][key]))
-        common = sorted(set.intersection(*index_sets))
-        if len(common) < 30:
-            raise ValueError(f"Only {len(common)} common rows for phase candidate {candidate}")
-        common_arr = np.asarray(common, dtype=int)
-        rdms: dict[str, np.ndarray] = {}
-        residual: dict[str, np.ndarray] = {}
-        nuis = nuisance_rdms(ref_meta, common_arr)
-        for s in eval_subjects:
-            idx = features[s][candidate + "__indices"].astype(int)
-            lookup = {int(row): j for j, row in enumerate(idx)}
-            rows = np.asarray([lookup[int(row)] for row in common_arr], dtype=int)
-            rdm = rdm_from_features(features[s][candidate][rows])
-            rdms[s] = rdm
-            residual[s] = residualize(rdm, nuis)
-        agg, raw_loo, resid_loo = reliability_metrics(rdms, residual)
-        return agg, raw_loo, resid_loo, len(common)
+    identities = None
+    rdms: dict[str, np.ndarray] = {}
+    residual_rdms: dict[str, np.ndarray] = {}
+    used_rows = None
+    for subject in subjects:
+        x, indices = features_by_subject[subject]
+        meta = meta_by_subject[subject]
+        if indices is None:
+            indices = np.arange(len(meta), dtype=int)
+        else:
+            indices = np.asarray(indices, dtype=int)
+        current_identity = [canonical_identity(meta)[int(i)] for i in indices]
+        if identities is None:
+            identities = current_identity
+            used_rows = indices.copy()
+        elif current_identity != identities:
+            raise ValueError(f"Canonical row identity mismatch for {candidate}: {subject}")
+        nuisances = nuisance_rdms(meta, indices)
+        rdm = rdm_from_features(x)
+        rdms[subject] = rdm
+        residual_rdms[subject] = residualize(rdm, nuisances)
 
-    arrays = [features[s][candidate] for s in eval_subjects]
-    n_rows = len(ref_meta)
-    for s, x in zip(eval_subjects, arrays):
-        if x.shape[0] != n_rows:
-            raise ValueError(f"Candidate {candidate} row count mismatch for {s}: {x.shape[0]} != {n_rows}")
-    nuis = nuisance_rdms(ref_meta)
-    rdms = {}
-    residual = {}
-    for s in eval_subjects:
-        rdm = rdm_from_features(features[s][candidate])
-        rdms[s] = rdm
-        residual[s] = residualize(rdm, nuis)
-    agg, raw_loo, resid_loo = reliability_metrics(rdms, residual)
-    return agg, raw_loo, resid_loo, n_rows
-
-
-def candidate_sort_key(row: dict[str, object]) -> tuple[float, float, float, float]:
-    return (
-        float(row["residual_loo_mean"]),
-        float(row["raw_loo_mean"]),
-        float(row["residual_pairwise_mean"]),
-        float(row["fraction_positive_residual_loo"]),
-    )
-
-
-def write_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str]) -> None:
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(rows)
+    aggregate, raw_loo, resid_loo = reliability_metrics(rdms, residual_rdms)
+    row = {
+        "run": run,
+        "stage": stage,
+        "candidate": candidate,
+        "primary_selection_eligible": bool(primary_selection_eligible),
+        "n_subjects": len(subjects),
+        "n_rows": len(identities or []),
+        **aggregate,
+    }
+    subject_rows = [
+        {
+            "run": run,
+            "stage": stage,
+            "candidate": candidate,
+            "subject": s,
+            "raw_loo": raw_loo[s],
+            "residual_loo": resid_loo[s],
+        }
+        for s in subjects
+    ]
+    return row, subject_rows
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run overnight model-blind ChineseEEG EEG representation benchmark.")
+    parser = argparse.ArgumentParser(description="Model-blind ChineseEEG EEG representation benchmark.")
     parser.add_argument("--data-root", type=Path, default=Path("data/raw/chineseeeg"))
     parser.add_argument("--feature-root", type=Path, default=Path("outputs/chineseeeg_row_features"))
     parser.add_argument("--discovery-run", default="run-06")
@@ -535,193 +431,180 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/chineseeeg_eeg_representation_overnight/latest"))
     args = parser.parse_args()
 
-    out = args.output_dir.resolve()
+    data_root = args.data_root.expanduser().resolve()
+    feature_root = args.feature_root.expanduser().resolve()
+    out = args.output_dir.expanduser().resolve()
     out.mkdir(parents=True, exist_ok=True)
 
-    status: dict[str, dict[str, object]] = {}
-    candidate_rows: list[dict[str, object]] = []
-    subject_rows: list[dict[str, object]] = []
-    sensor_groups: dict[str, object] = {}
+    runs = [args.discovery_run, args.holdout_run]
+    subjects = list(args.subjects)
+    subjobs: dict[str, dict[str, object]] = {}
+    all_candidate_metrics: list[dict[str, object]] = []
+    all_subject_metrics: list[dict[str, object]] = []
+    sensor_group_records: dict[str, object] = {}
+    candidate_store: dict[str, dict[str, dict[str, tuple[np.ndarray, np.ndarray | None]]]] = {r: {} for r in runs}
+    meta_store: dict[str, dict[str, list[dict[str, str]]]] = {r: {} for r in runs}
 
-    # Determine usable subjects from already-completed row features for both stages independently.
-    discovery_subjects = []
-    holdout_subjects = []
-    for s in args.subjects:
+    ica_audit = inspect_ica_metadata(data_root, subjects, runs)
+    subjobs["ica_metadata_audit"] = {"status": "completed", "n_found": ica_audit["n_metadata_files_found"]}
+
+    for run in runs:
+        for subject in subjects:
+            meta = None
+            channels = None
+            try:
+                fdir = latest_feature_dir(feature_root, run, subject)
+                meta, channels, existing = load_existing_features(fdir)
+                meta_store[run][subject] = meta
+                for name, x in existing.items():
+                    candidate_store[run].setdefault(name, {})[subject] = (x, None)
+                subjobs[f"{run}:{subject}:existing_features"] = {
+                    "status": "completed", "feature_dir": str(fdir), "candidates": sorted(existing),
+                }
+            except Exception:
+                subjobs[f"{run}:{subject}:existing_features"] = {"status": "failed", "error": traceback.format_exc(limit=2)}
+                continue
+
+            try:
+                groups = standard_sensor_groups(channels)
+                sensor_group_records[f"{run}:{subject}"] = {
+                    name: [channels[i] for i in idx] for name, idx in groups.items()
+                }
+                row_mean = existing["row_mean_all"]
+                for name, idx in groups.items():
+                    candidate_store[run].setdefault(name, {})[subject] = (row_mean[:, idx], None)
+                subjobs[f"{run}:{subject}:spatial"] = {
+                    "status": "completed", "group_sizes": {k: len(v) for k, v in groups.items()},
+                }
+            except Exception:
+                subjobs[f"{run}:{subject}:spatial"] = {"status": "failed", "error": traceback.format_exc(limit=2)}
+
+            try:
+                p30 = find_derivative_vhdr(data_root, "filtered_0.5_30", subject, run)
+                raw30 = mne.io.read_raw_brainvision(p30, preload=True, verbose="ERROR")
+                raw30 = align_raw_to_channels(raw30, channels)
+                bands = {
+                    "theta_relative_power": (4.0, 7.0),
+                    "alpha_relative_power": (8.0, 12.0),
+                    "beta_relative_power": (13.0, 30.0),
+                }
+                for name, band in bands.items():
+                    x = relative_bandpower_features(raw30, meta, band=band, total=(1.0, 30.0))
+                    candidate_store[run].setdefault(name, {})[subject] = (x, None)
+                for name, frequency in [("theta_phase_5p5hz", 5.5), ("alpha_phase_10hz", 10.0)]:
+                    x, idx = phase_features(raw30, meta, frequency=frequency, window_sec=1.0)
+                    candidate_store[run].setdefault(name, {})[subject] = (x, idx)
+                subjobs[f"{run}:{subject}:30hz_signal"] = {
+                    "status": "completed", "path": str(p30), "sfreq": float(raw30.info["sfreq"]),
+                }
+            except Exception:
+                subjobs[f"{run}:{subject}:30hz_signal"] = {"status": "unavailable", "error": traceback.format_exc(limit=2)}
+
+            try:
+                p80 = find_derivative_vhdr(data_root, "filtered_0.5_80", subject, run)
+                raw80 = mne.io.read_raw_brainvision(p80, preload=True, verbose="ERROR")
+                raw80 = align_raw_to_channels(raw80, channels)
+                x = relative_bandpower_features(raw80, meta, band=(30.0, 45.0), total=(1.0, 45.0))
+                candidate_store[run].setdefault("low_gamma_relative_power", {})[subject] = (x, None)
+                subjobs[f"{run}:{subject}:low_gamma_relative_power"] = {
+                    "status": "completed", "path": str(p80), "sfreq": float(raw80.info["sfreq"]),
+                }
+            except Exception:
+                subjobs[f"{run}:{subject}:low_gamma_relative_power"] = {"status": "unavailable", "error": traceback.format_exc(limit=2)}
+
+    # Run-06 discovery evaluation and freeze the primary winner using EEG-only criteria.
+    for name in PRIMARY_ELIGIBLE_ORDER + PHASE_CANDIDATES:
         try:
-            latest_feature_dir(args.feature_root, args.discovery_run, s)
-            discovery_subjects.append(s)
-        except Exception:
-            pass
-        try:
-            latest_feature_dir(args.feature_root, args.holdout_run, s)
-            holdout_subjects.append(s)
-        except Exception:
-            pass
-
-    if len(discovery_subjects) < 4:
-        raise SystemExit(f"Need >=4 discovery subjects; found {discovery_subjects}")
-    if len(holdout_subjects) < 4:
-        raise SystemExit(f"Need >=4 holdout subjects; found {holdout_subjects}")
-
-    ica_audit = inspect_ica_metadata(args.data_root, sorted(set(discovery_subjects + holdout_subjects)), [args.discovery_run, args.holdout_run])
-    status["ica_metadata_audit"] = {"status": "completed", "n_found": ica_audit["n_metadata_files_found"]}
-
-    print(f"[1/4] Building discovery candidate features for {args.discovery_run}: {discovery_subjects}", flush=True)
-    discovery_features, discovery_metas, discovery_channels, discovery_groups = build_run_features(
-        args.discovery_run, discovery_subjects, args.feature_root, args.data_root, status
-    )
-    if discovery_groups:
-        sensor_groups[args.discovery_run] = {
-            name: {
-                "indices": idx,
-                "channels_reference_subject": [discovery_channels[sorted(discovery_channels)[0]][i] for i in idx],
-            }
-            for name, idx in discovery_groups.items()
-        }
-
-    # Evaluate all run-06 candidates. Only all-row candidates are winner-eligible.
-    print("[2/4] Evaluating run-06 EEG-only candidate reliability", flush=True)
-    discovery_metric_by_candidate: dict[str, dict[str, object]] = {}
-    for candidate in PRIMARY_ELIGIBLE_ORDER + PHASE_CANDIDATES:
-        is_phase = candidate in PHASE_CANDIDATES
-        try:
-            agg, raw_loo, resid_loo, n_rows = evaluate_candidate(
-                candidate, discovery_subjects, discovery_features, discovery_metas, phase=is_phase
+            metric, subject_rows = evaluate_candidate(
+                args.discovery_run,
+                "discovery",
+                name,
+                candidate_store[args.discovery_run].get(name, {}),
+                meta_store[args.discovery_run],
+                primary_selection_eligible=name in PRIMARY_ELIGIBLE_ORDER,
             )
-            row = {
-                "run": args.discovery_run,
-                "stage": "discovery",
-                "candidate": candidate,
-                "primary_selection_eligible": not is_phase,
-                "n_subjects": len(raw_loo),
-                "n_rows": n_rows,
-                **agg,
-            }
-            candidate_rows.append(row)
-            discovery_metric_by_candidate[candidate] = row
-            for s in sorted(raw_loo):
-                subject_rows.append({
-                    "run": args.discovery_run,
-                    "stage": "discovery",
-                    "candidate": candidate,
-                    "subject": s,
-                    "raw_loo": raw_loo[s],
-                    "residual_loo": resid_loo[s],
-                    "n_rows": n_rows,
-                })
-            status[f"{args.discovery_run}:evaluate:{candidate}"] = {"status": "completed"}
-            print(f"  {candidate}: residual LOO={agg['residual_loo_mean']:.4f} raw LOO={agg['raw_loo_mean']:.4f}", flush=True)
+            all_candidate_metrics.append(metric)
+            all_subject_metrics.extend(subject_rows)
+            subjobs[f"{args.discovery_run}:evaluate:{name}"] = {"status": "completed"}
         except Exception as exc:
-            status[f"{args.discovery_run}:evaluate:{candidate}"] = {
-                "status": "failed",
-                "error": str(exc),
-                "traceback": traceback.format_exc(limit=3),
-            }
-            print(f"  {candidate}: unavailable/failed: {exc}", flush=True)
+            subjobs[f"{args.discovery_run}:evaluate:{name}"] = {"status": "failed", "error": str(exc)}
 
-    eligible = [
-        discovery_metric_by_candidate[c]
-        for c in PRIMARY_ELIGIBLE_ORDER
-        if c in discovery_metric_by_candidate
-    ]
+    eligible = [m for m in all_candidate_metrics if m["run"] == args.discovery_run and m["primary_selection_eligible"]]
     if not eligible:
-        raise SystemExit("No primary-selection-eligible run-06 candidate completed")
-    winner = max(eligible, key=candidate_sort_key)
-    winner_name = str(winner["candidate"])
-    winner_frozen_at_utc = datetime.now(timezone.utc).isoformat()
-    print(f"Frozen run-06 EEG-only winner: {winner_name}", flush=True)
-
-    # Build run-07 candidates only after winner is frozen.
-    print(f"[3/4] Building locked holdout features for {args.holdout_run}: {holdout_subjects}", flush=True)
-    holdout_features, holdout_metas, holdout_channels, holdout_groups = build_run_features(
-        args.holdout_run, holdout_subjects, args.feature_root, args.data_root, status
-    )
-    if holdout_groups:
-        sensor_groups[args.holdout_run] = {
-            name: {
-                "indices": idx,
-                "channels_reference_subject": [holdout_channels[sorted(holdout_channels)[0]][i] for i in idx],
-            }
-            for name, idx in holdout_groups.items()
-        }
-
-    print(f"[4/4] Locked holdout evaluation of frozen winner {winner_name}", flush=True)
-    holdout_winner_result: dict[str, object]
-    try:
-        agg, raw_loo, resid_loo, n_rows = evaluate_candidate(
-            winner_name, holdout_subjects, holdout_features, holdout_metas, phase=False
+        raise SystemExit("No primary-eligible candidate completed on discovery run")
+    rank_order = {name: i for i, name in enumerate(PRIMARY_ELIGIBLE_ORDER)}
+    eligible.sort(
+        key=lambda m: (
+            -float(m["residual_loo_mean"]),
+            -float(m["raw_loo_mean"]),
+            -float(m["residual_pairwise_mean"]),
+            -float(m["fraction_positive_residual_loo"]),
+            rank_order.get(str(m["candidate"]), 999),
         )
-        row = {
-            "run": args.holdout_run,
-            "stage": "locked_winner_holdout",
-            "candidate": winner_name,
-            "primary_selection_eligible": True,
-            "n_subjects": len(raw_loo),
-            "n_rows": n_rows,
-            **agg,
-        }
-        candidate_rows.append(row)
-        for s in sorted(raw_loo):
-            subject_rows.append({
-                "run": args.holdout_run,
-                "stage": "locked_winner_holdout",
-                "candidate": winner_name,
-                "subject": s,
-                "raw_loo": raw_loo[s],
-                "residual_loo": resid_loo[s],
-                "n_rows": n_rows,
-            })
-        holdout_winner_result = row
-        status[f"{args.holdout_run}:locked_winner:{winner_name}"] = {"status": "completed"}
-        print(f"Locked holdout residual LOO={agg['residual_loo_mean']:.4f}", flush=True)
-    except Exception as exc:
-        holdout_winner_result = {"candidate": winner_name, "status": "failed", "error": str(exc)}
-        status[f"{args.holdout_run}:locked_winner:{winner_name}"] = {
-            "status": "failed", "error": str(exc), "traceback": traceback.format_exc(limit=3)
-        }
+    )
+    winner = str(eligible[0]["candidate"])
+    frozen_at = datetime.now(timezone.utc).isoformat()
 
-    # Only now, after the locked winner holdout, evaluate the rest of run 07 for exploratory comparison.
-    for candidate in PRIMARY_ELIGIBLE_ORDER + PHASE_CANDIDATES:
-        if candidate == winner_name:
+    # Locked run-07 evaluation of the run-06 winner happens before the exploratory panel.
+    locked_metric, locked_subject_rows = evaluate_candidate(
+        args.holdout_run,
+        "locked_winner_holdout",
+        winner,
+        candidate_store[args.holdout_run].get(winner, {}),
+        meta_store[args.holdout_run],
+        primary_selection_eligible=True,
+    )
+    all_candidate_metrics.append(locked_metric)
+    all_subject_metrics.extend(locked_subject_rows)
+    subjobs[f"{args.holdout_run}:locked_winner:{winner}"] = {"status": "completed"}
+
+    # Only after the winner has been locked do we evaluate the remaining run-07 panel.
+    for name in PRIMARY_ELIGIBLE_ORDER + PHASE_CANDIDATES:
+        if name == winner:
             continue
-        is_phase = candidate in PHASE_CANDIDATES
         try:
-            agg, raw_loo, resid_loo, n_rows = evaluate_candidate(
-                candidate, holdout_subjects, holdout_features, holdout_metas, phase=is_phase
+            metric, subject_rows = evaluate_candidate(
+                args.holdout_run,
+                "exploratory_holdout_panel",
+                name,
+                candidate_store[args.holdout_run].get(name, {}),
+                meta_store[args.holdout_run],
+                primary_selection_eligible=name in PRIMARY_ELIGIBLE_ORDER,
             )
-            row = {
-                "run": args.holdout_run,
-                "stage": "post_lock_exploratory_panel",
-                "candidate": candidate,
-                "primary_selection_eligible": False,
-                "n_subjects": len(raw_loo),
-                "n_rows": n_rows,
-                **agg,
-            }
-            candidate_rows.append(row)
-            for s in sorted(raw_loo):
-                subject_rows.append({
-                    "run": args.holdout_run,
-                    "stage": "post_lock_exploratory_panel",
-                    "candidate": candidate,
-                    "subject": s,
-                    "raw_loo": raw_loo[s],
-                    "residual_loo": resid_loo[s],
-                    "n_rows": n_rows,
-                })
-            status[f"{args.holdout_run}:exploratory:{candidate}"] = {"status": "completed"}
+            all_candidate_metrics.append(metric)
+            all_subject_metrics.extend(subject_rows)
+            subjobs[f"{args.holdout_run}:exploratory:{name}"] = {"status": "completed"}
         except Exception as exc:
-            status[f"{args.holdout_run}:exploratory:{candidate}"] = {"status": "failed", "error": str(exc)}
+            subjobs[f"{args.holdout_run}:exploratory:{name}"] = {"status": "failed", "error": str(exc)}
 
-    candidate_fields = [
+    phase_metrics = [m for m in all_candidate_metrics if m["candidate"] in PHASE_CANDIDATES]
+    phase_eligible = False
+    if phase_metrics:
+        run06_phase = [m for m in phase_metrics if m["run"] == args.discovery_run]
+        if run06_phase:
+            phase_eligible = max(float(m["residual_loo_mean"]) for m in run06_phase) > 0.05
+
+    fields = [
         "run", "stage", "candidate", "primary_selection_eligible", "n_subjects", "n_rows",
         "raw_loo_mean", "raw_loo_median", "residual_loo_mean", "residual_loo_median",
         "raw_pairwise_mean", "residual_pairwise_mean", "fraction_positive_residual_loo",
     ]
-    subject_fields = ["run", "stage", "candidate", "subject", "raw_loo", "residual_loo", "n_rows"]
-    write_csv(out / "candidate_metrics.csv", candidate_rows, candidate_fields)
-    write_csv(out / "subject_metrics.csv", subject_rows, subject_fields)
-    (out / "sensor_groups.json").write_text(json.dumps(sensor_groups, indent=2, ensure_ascii=False), encoding="utf-8")
+    with (out / "candidate_metrics.csv").open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        for row in all_candidate_metrics:
+            writer.writerow({k: row.get(k, "") for k in fields})
+
+    subject_fields = ["run", "stage", "candidate", "subject", "raw_loo", "residual_loo"]
+    with (out / "subject_metrics.csv").open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=subject_fields)
+        writer.writeheader()
+        for row in all_subject_metrics:
+            writer.writerow({k: row.get(k, "") for k in subject_fields})
+
+    (out / "sensor_groups.json").write_text(
+        json.dumps(sensor_group_records, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     summary = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -731,8 +614,8 @@ def main() -> int:
         "neural_model_rsa_computed": False,
         "discovery_run": args.discovery_run,
         "holdout_run": args.holdout_run,
-        "discovery_subjects": discovery_subjects,
-        "holdout_subjects": holdout_subjects,
+        "discovery_subjects": subjects,
+        "holdout_subjects": subjects,
         "nuisances": [
             "run_position_lag", "duration_difference", "character_count_difference",
             "chapter_mismatch", "character_set_jaccard_distance", "punctuation_count_difference",
@@ -744,33 +627,28 @@ def main() -> int:
                 "nuisance-residualized pairwise reliability",
                 "fraction positive residual LOO",
             ],
-            "phase_candidates_eligible": False,
-            "winner": winner_name,
-            "winner_metrics_run06": winner,
-            "frozen_at_utc_before_run07_evaluation": winner_frozen_at_utc,
+            "phase_candidates_eligible": phase_eligible,
+            "winner": winner,
+            "winner_metrics_run06": eligible[0],
+            "frozen_at_utc_before_run07_evaluation": frozen_at,
         },
-        "locked_run07_winner_holdout": holdout_winner_result,
+        "locked_run07_winner_holdout": locked_metric,
         "ica_metadata_audit": ica_audit,
-        "candidate_metrics": candidate_rows,
-        "subjob_status": status,
+        "candidate_metrics": all_candidate_metrics,
+        "subjob_status": subjobs,
         "guardrails": {
-            "no_model_embeddings_loaded": True,
-            "nature_null_unchanged": True,
-            "sensor_groups_are_not_localization_claims": True,
-            "phase_is_feasibility_only": True,
-            "eye_tracking_not_materialized_in_prior_audit": True,
-            "run07_nonwinner_panel_is_post_lock_exploratory": True,
+            "language_model_embeddings_loaded": False,
+            "language_model_adapter_loaded": False,
+            "model_correspondence_used_for_selection": False,
+            "nature_validation_modified": False,
+            "phase_primary_selection_eligible": False,
         },
     }
-    (out / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
-
-    print(f"Output: {out}")
-    print(f"Run-06 winner: {winner_name}")
-    if holdout_winner_result.get("residual_loo_mean") is not None:
-        print(f"Run-07 locked winner residual LOO: {holdout_winner_result['residual_loo_mean']:.4f}")
-    else:
-        print(f"Run-07 locked winner evaluation failed: {holdout_winner_result.get('error')}")
-    print("No model embeddings were loaded; this is EEG-only representation development.")
+    (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Model-blind EEG representation benchmark complete: {out}")
+    print(f"Run-06 winner: {winner} | residual LOO mean={eligible[0]['residual_loo_mean']:.4f}")
+    print(f"Locked run-07 winner residual LOO mean={locked_metric['residual_loo_mean']:.4f}")
+    print(f"Phase feasibility eligible: {phase_eligible}")
     return 0
 
 
