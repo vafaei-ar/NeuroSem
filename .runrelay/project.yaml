@@ -129,6 +129,21 @@ tasks:
       - outputs/chineseeeg_eeg_representation_overnight/latest/subject_metrics.csv
       - outputs/chineseeeg_eeg_representation_overnight/latest/sensor_groups.json
 
+  run_chineseeeg_spectral_phase_strict:
+    description: Materialize the exact run-06/run-07 30-Hz and 80-Hz BrainVision companions, rerun the model-blind EEG representation benchmark, and fail unless all spectral-power and phase candidate families actually execute.
+    command:
+      - bash
+      - scripts/analysis/run_chineseeeg_eeg_representation_spectral_phase_strict.sh
+    approval: manual
+    timeout_minutes: 540
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/chineseeeg_eeg_representation_overnight/latest/summary.json
+      - outputs/chineseeeg_eeg_representation_overnight/latest/candidate_metrics.csv
+      - outputs/chineseeeg_eeg_representation_overnight/latest/subject_metrics.csv
+      - outputs/chineseeeg_eeg_representation_overnight/latest/sensor_groups.json
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
