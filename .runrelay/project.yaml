@@ -182,3 +182,17 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/nature_directional_docs_probe/latest/summary.json
+
+  run_nature_directional_validation:
+    description: Run the frozen prospective Nature directional-word EEG external validation comparing E5 lambda 0.10 against lambda 0 text-only, with secondary frozen E5 controls.
+    command:
+      - bash
+      - scripts/tuning/run_nature_directional_validation_v1.sh
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/nature_directional_neurosem_v1/latest/summary.json
+      - outputs/nature_directional_neurosem_v1/latest/subject_results.csv
+      - outputs/nature_directional_neurosem_v1/latest/model_rdm_edges.csv
