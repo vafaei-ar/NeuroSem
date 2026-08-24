@@ -104,6 +104,31 @@ tasks:
       - outputs/chineseeeg_time_resolved_input_audit/latest/summary.json
       - outputs/chineseeeg_time_resolved_input_audit/latest/file_inventory.csv
 
+  run_chineseeeg_eeg_representation_overnight:
+    description: Run the model-blind overnight ChineseEEG representation benchmark with amplitude, spatial, spectral-power, phase-feasibility, run-06 selection, and locked run-07 EEG-only holdout subjobs.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_chineseeeg_eeg_representation_overnight.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --feature-root
+      - outputs/chineseeeg_row_features
+      - --discovery-run
+      - run-06
+      - --holdout-run
+      - run-07
+      - --output-dir
+      - outputs/chineseeeg_eeg_representation_overnight/latest
+    approval: manual
+    timeout_minutes: 540
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/chineseeeg_eeg_representation_overnight/latest/summary.json
+      - outputs/chineseeeg_eeg_representation_overnight/latest/candidate_metrics.csv
+      - outputs/chineseeeg_eeg_representation_overnight/latest/subject_metrics.csv
+      - outputs/chineseeeg_eeg_representation_overnight/latest/sensor_groups.json
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
