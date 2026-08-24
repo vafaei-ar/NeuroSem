@@ -151,3 +151,19 @@ tasks:
     artifacts:
       - outputs/nature_directional_eeg_audit/latest/summary.json
       - outputs/nature_directional_eeg_audit/latest/subject_inventory.csv
+
+  probe_nature_directional_events:
+    description: Inspect only event labels and public metadata needed to freeze the Nature directional EEG validation; does not load models or compute neural-model RSA.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_nature_directional_event_mapping.py
+      - data/raw/nature_directional_eeg/extracted/inner_speech_v2
+      - --output-dir
+      - outputs/nature_directional_event_probe/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/nature_directional_event_probe/latest/summary.json
+      - outputs/nature_directional_event_probe/latest/event_counts.csv
