@@ -130,7 +130,9 @@ payload = {
 out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 PY
 
-.venv/bin/python scripts/analysis/run_chineseeeg_eeg_representation_overnight.py \
+# Use a narrow compatibility entrypoint so NumPy 2.x systems provide the
+# removed np.trapz alias as np.trapezoid without changing benchmark intent.
+.venv/bin/python scripts/analysis/run_chineseeeg_eeg_representation_compat.py \
   --data-root "$DATASET" \
   --feature-root "$FEATURE_ROOT" \
   --discovery-run run-06 \
