@@ -235,6 +235,25 @@ tasks:
     artifacts:
       - outputs/tmnred_stimulus_metadata_probe/latest/summary.json
 
+  materialize_tmnred_representation_inputs:
+    description: Materialize the prospectively frozen TMNRED artifact-rejected epoched z.set inputs and exact external companions for all 30 participants and eight sessions, then freeze the model-blind ready cohort.
+    command:
+      - .venv/bin/python
+      - scripts/audit/materialize_tmnred_representation_inputs.py
+      - --data-root
+      - data/raw/tmnred
+      - --output-dir
+      - outputs/tmnred_representation_input_materialization/latest
+      - --min-retained-trials
+      - "30"
+    approval: manual
+    timeout_minutes: 240
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/tmnred_representation_input_materialization/latest/summary.json
+      - outputs/tmnred_representation_input_materialization/latest/session_inventory.csv
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
