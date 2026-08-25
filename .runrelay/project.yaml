@@ -187,6 +187,22 @@ tasks:
     artifacts:
       - outputs/tmnred_docs_probe/latest/summary.json
 
+  probe_tmnred_preproc_format:
+    description: Materialize only one representative TMNRED subject/session preprocessed file set and inspect EEGLAB/MAT metadata before freezing the full signal-level representation source.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_tmnred_preproc_format.py
+      - --data-root
+      - data/raw/tmnred
+      - --output-dir
+      - outputs/tmnred_preproc_format_probe/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/tmnred_preproc_format_probe/latest/summary.json
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
