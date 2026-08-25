@@ -254,6 +254,22 @@ tasks:
       - outputs/tmnred_representation_input_materialization/latest/summary.json
       - outputs/tmnred_representation_input_materialization/latest/session_inventory.csv
 
+  probe_tmnred_materialization_failures:
+    description: Model-blind structural probe for TMNRED z.set materialization failures, including exact scipy errors, MATLAB/HDF5 format detection, and canonical neighboring z.fdt companion checks.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_tmnred_materialization_failures.py
+      - --data-root
+      - data/raw/tmnred
+      - --output-dir
+      - outputs/tmnred_materialization_failure_probe/latest
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/tmnred_materialization_failure_probe/latest/summary.json
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
