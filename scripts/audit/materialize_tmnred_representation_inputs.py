@@ -47,12 +47,6 @@ def _simplify_value(v):
 
 
 def load_eeg_meta(set_path: Path) -> dict:
-    """Load both EEGLAB save layouts present in the published TMNRED z.set files.
-
-    Most files contain a top-level EEG struct. A minority contain the EEGLAB fields
-    directly at MATLAB top level, with the epoch data embedded in the .set file.
-    This distinction is structural only and must not alter the scientific QC rule.
-    """
     d = loadmat(set_path, simplify_cells=True)
     eeg = d.get("EEG")
     if isinstance(eeg, dict):
@@ -72,13 +66,6 @@ def load_eeg_meta(set_path: Path) -> dict:
 
 
 def data_companion(root: Path, meta: dict, set_rel: str):
-    """Resolve only a canonical tracked external .fdt companion when needed.
-
-    Some published EEG structs retain the workstation-era original EEG.data basename,
-    while OpenNeuro renamed the tracked companion to match the BIDS-like z.set name.
-    Prefer the canonical neighboring <set-stem>.fdt when tracked. If the data array is
-    embedded in the .set file, no external companion is required.
-    """
     data = meta.get("data")
     if isinstance(data, dict):
         return None
@@ -110,7 +97,8 @@ def main():
     outdir.mkdir(parents=True, exist_ok=True)
 
     rows = []
-    failures = []
+    infrastructure_failures = []
+    qc_exclusions = []
     subjects = [f"sub-{i:02d}" for i in range(1, 31)]
     sessions = [f"ses-{i}" for i in range(1, 9)]
 
@@ -132,20 +120,22 @@ def main():
                 "srate": "",
                 "xmin": "",
                 "xmax": "",
+                "requires_resampling_to_200hz": False,
                 "passes_min_trials": False,
                 "status": "",
             }
             if set_rec.get("status") != "materialized":
                 row["status"] = "set_unavailable"
-                failures.append(dict(row))
+                infrastructure_failures.append(dict(row))
                 rows.append(row)
                 continue
+
             try:
                 meta = load_eeg_meta(root / set_rel)
                 row["layout"] = meta.get("layout", "")
             except Exception as exc:
                 row["status"] = f"metadata_error:{type(exc).__name__}:{exc}"
-                failures.append(dict(row))
+                infrastructure_failures.append(dict(row))
                 rows.append(row)
                 continue
 
@@ -156,7 +146,7 @@ def main():
                 companion_rel = data_companion(root, meta, set_rel)
             except Exception as exc:
                 row["status"] = f"companion_resolution_error:{type(exc).__name__}:{exc}"
-                failures.append(dict(row))
+                infrastructure_failures.append(dict(row))
                 rows.append(row)
                 continue
 
@@ -167,25 +157,34 @@ def main():
             else:
                 row["companion_status"] = "embedded_or_not_required"
 
-            trials = meta.get("trials")
             try:
-                n_trials = int(trials)
+                n_trials = int(meta.get("trials", -1))
+                nbchan = int(meta.get("nbchan", -1))
+                srate = float(meta.get("srate", -1))
+                xmin = float(meta.get("xmin", 999))
+                xmax = float(meta.get("xmax", -999))
             except Exception:
-                n_trials = -1
+                n_trials, nbchan, srate, xmin, xmax = -1, -1, -1.0, 999.0, -999.0
+
             row["passes_min_trials"] = n_trials >= args.min_retained_trials
+            row["requires_resampling_to_200hz"] = abs(srate - 200.0) > 1e-6
 
             structural_ok = (
-                int(meta.get("nbchan", -1)) == 30
-                and abs(float(meta.get("srate", -1)) - 200.0) < 1e-6
+                nbchan == 30
+                and srate > 0
                 and n_trials > 0
+                and xmin <= -0.19
+                and xmax >= 1.99
                 and (not companion_rel or row["companion_status"] == "materialized")
             )
             if not structural_ok:
                 row["status"] = "structural_failure"
-                failures.append(dict(row))
+                infrastructure_failures.append(dict(row))
             elif not row["passes_min_trials"]:
-                row["status"] = "below_min_retained_trials"
-                failures.append(dict(row))
+                row["status"] = "qc_excluded_below_min_retained_trials"
+                qc_exclusions.append(dict(row))
+            elif row["requires_resampling_to_200hz"]:
+                row["status"] = "ready_requires_resampling"
             else:
                 row["status"] = "ready"
             rows.append(row)
@@ -196,14 +195,18 @@ def main():
         w.writeheader()
         w.writerows(rows)
 
+    ready_statuses = {"ready", "ready_requires_resampling"}
     ready_subjects = []
+    excluded_subjects = []
     for subject in subjects:
         sr = [r for r in rows if r["subject"] == subject]
-        if len(sr) == 8 and all(r["status"] == "ready" for r in sr):
+        if len(sr) == 8 and all(r["status"] in ready_statuses for r in sr):
             ready_subjects.append(subject)
+        else:
+            excluded_subjects.append(subject)
 
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "TMNRED",
         "openneuro_accession": "ds005383",
         "published_snapshot": "1.0.0",
@@ -215,27 +218,46 @@ def main():
         "expected_sessions": 240,
         "min_retained_trials_per_session": args.min_retained_trials,
         "ready_subjects_all_8_sessions": ready_subjects,
+        "excluded_subjects": excluded_subjects,
         "n_ready_subjects_all_8_sessions": len(ready_subjects),
-        "n_ready_sessions": sum(r["status"] == "ready" for r in rows),
-        "n_failed_sessions": sum(r["status"] != "ready" for r in rows),
+        "n_ready_sessions": sum(r["status"] in ready_statuses for r in rows),
+        "n_qc_excluded_sessions": len(qc_exclusions),
+        "n_infrastructure_failure_sessions": len(infrastructure_failures),
+        "sessions_requiring_resampling_to_200hz": sum(bool(r["requires_resampling_to_200hz"]) and r["status"] in ready_statuses for r in rows),
+        "subjects_requiring_resampling_to_200hz": sorted({r["subject"] for r in rows if r["status"] == "ready_requires_resampling"}),
         "layout_counts": {
             layout: sum(r["layout"] == layout for r in rows)
             for layout in sorted({r["layout"] for r in rows if r["layout"]})
         },
-        "failures": failures,
+        "sampling_rate_counts": {
+            str(rate): sum(str(r["srate"]) == str(rate) for r in rows)
+            for rate in sorted({r["srate"] for r in rows if r["srate"] != ""}, key=float)
+        },
+        "qc_exclusions": qc_exclusions,
+        "infrastructure_failures": infrastructure_failures,
         "notes": [
             "No EEG reliability, candidate ranking, language-model embedding, or neural-model RSA is computed.",
-            "The published TMNRED z.set files use two EEGLAB save layouts: EEG-struct files with canonical tracked .fdt companions and flat top-level files with embedded epoch data.",
-            "For EEG-struct files, the tracked canonical neighboring <set-stem>.fdt is used rather than stale original workstation basenames retained in EEG.data.",
-            "Subject readiness is defined before representation outcomes: all eight sessions materializable and at least 30 retained trials per session.",
+            "The published TMNRED z.set files use both EEG-struct/external-FDT and flat-top-level/embedded-data layouts.",
+            "Sampling-rate heterogeneity is treated as an acquisition/preprocessing harmonization issue, not a subject-exclusion criterion; non-200-Hz ready sessions are flagged for deterministic resampling during feature extraction.",
+            "The prospectively frozen subject QC remains unchanged: every session must contain at least 30 retained artifact-rejected trials.",
+            "A subject failing the retained-trial threshold in any of the eight sessions is excluded from the common primary cohort rather than causing an execution failure.",
             "The later primary TMNRED RDM analysis will be within session to avoid conflating broad semantic category with session/block effects."
         ],
     }
     (outdir / "summary.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-    if failures:
-        raise SystemExit(f"TMNRED representation input materialization had {len(failures)} non-ready sessions; inspect derived inventory before analysis.")
-    print(json.dumps({"status": "ok", "n_ready_subjects": len(ready_subjects), "output_dir": str(outdir)}, indent=2))
+    if infrastructure_failures:
+        raise SystemExit(
+            f"TMNRED representation input materialization had {len(infrastructure_failures)} infrastructure/structural failures; inspect derived inventory before analysis."
+        )
+
+    print(json.dumps({
+        "status": "ok",
+        "n_ready_subjects": len(ready_subjects),
+        "excluded_subjects": excluded_subjects,
+        "subjects_requiring_resampling_to_200hz": payload["subjects_requiring_resampling_to_200hz"],
+        "output_dir": str(outdir),
+    }, indent=2))
 
 
 if __name__ == "__main__":
