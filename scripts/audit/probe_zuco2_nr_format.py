@@ -13,6 +13,7 @@ import csv
 import json
 import time
 import urllib.request
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -121,55 +122,63 @@ def summarize_mat(path, load_small=False):
     return out
 
 
-def ordered_unique(values):
-    out = []
-    seen = set()
-    for v in values:
-        if v and v not in seen:
-            seen.add(v)
-            out.append(v)
-    return out
+def _intlike(s):
+    try:
+        int(str(s).strip())
+        return True
+    except Exception:
+        return False
 
 
 def summarize_material_csv(path: Path, expected_sentences: int):
+    # ZuCo task materials are semicolon-delimited and have no header row. Quoted text
+    # may contain commas, so DictReader's default comma delimiter corrupts the schema.
     with path.open("r", encoding="utf-8-sig", newline="") as f:
-        rows = list(csv.DictReader(f))
-    fields = list(rows[0].keys()) if rows else []
-    stats = []
-    for field in fields:
-        vals = [str(r.get(field) or "").strip() for r in rows]
+        rows = [r for r in csv.reader(f, delimiter=";", quotechar='"') if any(str(x).strip() for x in r)]
+
+    widths = Counter(len(r) for r in rows)
+    previews = [r[:5] for r in rows[:5]]
+    maxw = max((len(r) for r in rows), default=0)
+    col_stats = []
+    for j in range(maxw):
+        vals = [str(r[j]).strip() if j < len(r) else "" for r in rows]
         nonempty = [v for v in vals if v]
-        uniq = ordered_unique(nonempty)
-        lengths = sorted(len(v) for v in nonempty)
-        stats.append({
-            "field": field,
+        col_stats.append({
+            "column_index": j,
             "n_nonempty": len(nonempty),
             "n_unique": len(set(nonempty)),
-            "n_ordered_unique": len(uniq),
-            "median_length": lengths[len(lengths)//2] if lengths else 0,
-            "max_length": max(lengths) if lengths else 0,
-            "preview": nonempty[:3],
-            "ordered_unique_preview": uniq[:3],
-            "unique_count_matches_expected_sentences": len(uniq) == expected_sentences,
+            "all_nonempty_intlike": bool(nonempty) and all(_intlike(v) for v in nonempty),
+            "median_length": sorted(len(v) for v in nonempty)[len(nonempty)//2] if nonempty else 0,
+            "max_length": max((len(v) for v in nonempty), default=0),
+            "preview": nonempty[:5],
         })
 
-    # These public CSVs can be word-level or fixation-oriented, so total row count need not
-    # equal sentence count. A plausible sentence-text field should instead yield exactly the
-    # frozen number of distinct sentence strings in first-occurrence order. Among such fields,
-    # prefer longer strings. This remains a model-blind structural heuristic.
-    eligible = [s for s in stats if s["n_ordered_unique"] == expected_sentences]
-    candidate = max(eligible, key=lambda s: (s["median_length"], s["max_length"], s["n_nonempty"]), default=None)
+    standard_rows = [r for r in rows if len(r) >= 3 and _intlike(r[0]) and _intlike(r[1])]
+    text_values = [str(r[2]).strip() for r in standard_rows]
+    control_flags = [str(r[3]).strip() if len(r) > 3 else "" for r in standard_rows]
+    control_idx = [i + 1 for i, x in enumerate(control_flags) if x]
+
     return {
         "file": path.name,
+        "delimiter": ";",
+        "header_mode": "none",
         "n_rows": len(rows),
-        "expected_sentences": expected_sentences,
-        "row_count_matches": len(rows) == expected_sentences,
-        "row_count_interpretation": "diagnostic only; repeated rows are allowed because task-material CSVs may be word/fixation level",
-        "fields": fields,
-        "field_stats": stats,
-        "candidate_sentence_text_field": candidate["field"] if candidate else None,
-        "candidate_rule": "ordered distinct nonempty values equal frozen sentence count; prefer longest median string",
-        "candidate_ordered_sentence_preview": candidate["ordered_unique_preview"] if candidate else [],
+        "expected_eeg_sentences": expected_sentences,
+        "row_minus_expected": len(rows) - expected_sentences,
+        "row_width_counts": {str(k): v for k, v in sorted(widths.items())},
+        "row_preview": previews,
+        "column_stats": col_stats,
+        "n_standard_rows_first_two_integer": len(standard_rows),
+        "n_nonempty_text_col2": sum(bool(x) for x in text_values),
+        "n_unique_text_col2": len(set(x for x in text_values if x)),
+        "n_flagged_rows_col3": len(control_idx),
+        "flagged_row_indices_1based": control_idx,
+        "flag_values": sorted(set(x for x in control_flags if x)),
+        "text_preview": text_values[:5],
+        "diagnostic_interpretation": (
+            "Compare the semicolon-parsed material rows and optional fourth-column flags with the already frozen EEG sentence count. "
+            "Do not drop rows or select a mapping in this probe."
+        ),
     }
 
 
@@ -201,10 +210,9 @@ def main():
     counts = {f"NR{i+1}": row["n_sentences"] for i, row in enumerate(word_alignment)}
     material = [summarize_material_csv(root / f"task_materials/nr_{i}.csv", counts[f"NR{i}"]) for i in range(1, 8)]
 
-    fields = [m["candidate_sentence_text_field"] for m in material]
     summary = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
-        "analysis_status": "model-blind format/alignment/stimulus-material diagnostic probe; no EEG signal samples or model quantities read",
+        "analysis_status": "model-blind semicolon task-material diagnostic; no EEG signal samples or model quantities read",
         "release": "ZuCo 2.0",
         "osf_node": NODE,
         "task": "task1 - NR",
@@ -215,24 +223,13 @@ def main():
         "wordbound_alignment_metadata": word_alignment,
         "representative_eeg_alignment_metadata": eeg_alignment,
         "task_materials": material,
-        "candidate_text_fields_by_run": fields,
-        "all_runs_have_candidate_text_field": all(fields),
-        "intended_nuisance_freeze": [
-            "absolute within-run sentence-order difference",
-            "word-count difference from the frozen public NR sentence text",
-            "punctuation-count difference from the frozen public NR sentence text",
-            "lowercased lexical-set Jaccard distance from the frozen public NR sentence text"
-        ],
-        "guardrail": "Use only to identify public stimulus text and freeze nuisance RDM construction before EEG reliability. Row-count mismatch is diagnostic, not an exclusion criterion. No EEG sample values, model quantities, or outcome statistics are computed."
+        "guardrail": (
+            "Use this probe only to determine the deterministic relationship between public NR task-material rows and frozen EEG sentence identities. "
+            "No task-material row is excluded here; no EEG sample values, model quantities, or outcome statistics are computed."
+        ),
     }
     (outdir / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({
-        "status": "ok",
-        "total_shared_sentences": summary["total_shared_sentences"],
-        "candidate_text_fields_by_run": fields,
-        "all_runs_have_candidate_text_field": summary["all_runs_have_candidate_text_field"],
-        "output_dir": str(outdir)
-    }, indent=2))
+    print(json.dumps({"status": "ok", "total_shared_sentences": summary["total_shared_sentences"], "output_dir": str(outdir)}, indent=2))
 
 
 if __name__ == "__main__":
