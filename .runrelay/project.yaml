@@ -490,3 +490,20 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/zuco2_nr_format_probe/latest/summary.json
+
+  materialize_zuco2_nr_inputs:
+    description: Materialize all public ZuCo 2.0 Task 1 normal-reading preprocessed EEG runs, verify the frozen sentence-event mapping across the full cohort, and freeze structurally ready subjects before any reliability analysis.
+    command:
+      - .venv/bin/python
+      - scripts/audit/materialize_zuco2_nr_inputs.py
+      - --data-root
+      - data/raw/zuco2_nr
+      - --output-dir
+      - outputs/zuco2_nr_input_materialization/latest
+    approval: manual
+    timeout_minutes: 720
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/zuco2_nr_input_materialization/latest/summary.json
+      - outputs/zuco2_nr_input_materialization/latest/session_inventory.csv
