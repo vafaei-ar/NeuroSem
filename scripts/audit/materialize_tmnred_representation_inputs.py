@@ -46,6 +46,40 @@ def _simplify_value(v):
     return v
 
 
+def _as_list(value):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if hasattr(value, "tolist"):
+        value = value.tolist()
+        return value if isinstance(value, list) else [value]
+    return [value]
+
+
+def _extract_bepoch_from_events(source: dict) -> list[int]:
+    """Return one retained original-trial index per artifact-rejected epoch.
+
+    In TMNRED z.set files, the prospective trial identity is stored on EEGLAB event
+    records as event.bepoch. Multiple EEGLAB events can occur within one retained
+    epoch, so we preserve first-seen order and deduplicate bepoch values. This matches
+    the mapping established by the model-blind event-alignment probe.
+    """
+    out = []
+    seen = set()
+    for event in _as_list(source.get("event")):
+        if not isinstance(event, dict):
+            continue
+        try:
+            value = int(event.get("bepoch"))
+        except Exception:
+            continue
+        if value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
+
+
 def load_eeg_meta(set_path: Path) -> dict:
     d = loadmat(set_path, simplify_cells=True)
     eeg = d.get("EEG")
@@ -62,13 +96,7 @@ def load_eeg_meta(set_path: Path) -> dict:
     for k in ["nbchan", "trials", "pnts", "srate", "xmin", "xmax", "data", "item", "bin"]:
         if k in source:
             out[k] = _simplify_value(source[k])
-    if "bepoch" in source:
-        b = source["bepoch"]
-        if hasattr(b, "tolist"):
-            b = b.tolist()
-        if not isinstance(b, list):
-            b = [b]
-        out["bepoch"] = [int(x) for x in b]
+    out["bepoch"] = _extract_bepoch_from_events(source)
     return out
 
 
@@ -169,22 +197,28 @@ def main():
             for subject in ready_subjects:
                 set_rel = f"derivatives/preproc/{subject}/{session}/{subject}-{session}z.set"
                 try:
-                    b = load_eeg_meta(root / set_rel).get("bepoch")
-                    if not b or len(b) != len(set(b)):
-                        raise RuntimeError("missing or duplicate bepoch values")
+                    meta = load_eeg_meta(root / set_rel)
+                    b = meta.get("bepoch", [])
+                    n_trials = int(meta.get("trials", -1))
+                    if not b:
+                        raise RuntimeError("missing bepoch values in EEGLAB event records")
+                    if len(b) != len(set(b)):
+                        raise RuntimeError("duplicate retained bepoch values after event deduplication")
+                    if len(b) != n_trials:
+                        raise RuntimeError(f"bepoch count {len(b)} does not match retained trial count {n_trials}")
                     retained_sets.append(set(b))
                 except Exception as exc:
                     common_item_failures.append({"subject": subject, "session": session, "error": f"{type(exc).__name__}:{exc}"})
-            if retained_sets:
+            if len(retained_sets) == len(ready_subjects) and retained_sets:
                 common = sorted(set.intersection(*retained_sets))
                 common_items_by_session[session] = {"n_common_items": len(common), "common_bepoch": common}
                 if len(common) < args.min_common_items:
                     common_item_failures.append({"session": session, "error": f"common item intersection below {args.min_common_items}: {len(common)}"})
 
     payload = {
-        "schema_version": 3, "dataset": "TMNRED", "openneuro_accession": "ds005383", "published_snapshot": "1.0.0",
+        "schema_version": 4, "dataset": "TMNRED", "openneuro_accession": "ds005383", "published_snapshot": "1.0.0",
         "model_blind": True, "analysis_source": "published artifact-rejected epoched EEGLAB z.set derivative",
-        "trial_identity_mapping": "EEGLAB bepoch -> original BIDS event row -> session-specific source-material row",
+        "trial_identity_mapping": "unique EEGLAB event.bepoch values -> original BIDS event row -> session-specific source-material row",
         "candidate_subjects": subjects, "sessions_per_subject": 8, "expected_sessions": 240,
         "min_retained_trials_per_session": args.min_retained_trials, "ready_subjects_all_8_sessions": ready_subjects,
         "excluded_subjects": excluded_subjects, "n_ready_subjects_all_8_sessions": len(ready_subjects),
@@ -195,13 +229,14 @@ def main():
         "layout_counts": {layout: sum(r["layout"] == layout for r in rows) for layout in sorted({r["layout"] for r in rows if r["layout"]})},
         "sampling_rate_counts": {str(rate): sum(str(r["srate"]) == str(rate) for r in rows) for rate in sorted({r["srate"] for r in rows if r["srate"] != ""}, key=float)},
         "qc_exclusions": qc_exclusions, "infrastructure_failures": infrastructure_failures,
-        "primary_item_cohort_rule": "within each session, exact intersection of retained bepoch item indices across all frozen ready subjects",
+        "primary_item_cohort_rule": "within each session, exact intersection of unique retained EEGLAB event.bepoch indices across all frozen ready subjects",
         "min_common_items_required": args.min_common_items, "common_items_by_session": common_items_by_session,
         "common_item_failures": common_item_failures,
         "notes": [
             "No EEG reliability, candidate ranking, language-model embedding, or neural-model RSA is computed.",
             "Sampling-rate heterogeneity is harmonized by deterministic resampling during feature extraction rather than subject exclusion.",
             "The prospectively frozen subject QC remains every session >=30 retained artifact-rejected trials.",
+            "Retained trial identity is read from unique EEGLAB event.bepoch values, as established prospectively by the event-alignment probe.",
             "Primary representation comparisons will use the exact same common retained item set within each session across all frozen ready subjects."
         ],
     }
