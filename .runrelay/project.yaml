@@ -474,3 +474,19 @@ tasks:
     artifacts:
       - outputs/zuco_osf_inventory/latest/summary.json
       - outputs/zuco_osf_inventory/latest/inventory.csv
+
+  probe_zuco2_nr_format:
+    description: Materialize only the seven shared ZuCo 2.0 Task 1 normal-reading word-boundary files and one representative preprocessed EEG run (YDG NR1), then inspect MATLAB structure without computing EEG reliability or model alignment.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_zuco2_nr_format.py
+      - --data-root
+      - data/raw/zuco2_probe
+      - --output-dir
+      - outputs/zuco2_nr_format_probe/latest
+    approval: manual
+    timeout_minutes: 90
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/zuco2_nr_format_probe/latest/summary.json
