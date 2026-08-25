@@ -219,6 +219,22 @@ tasks:
     artifacts:
       - outputs/tmnred_event_alignment_probe/latest/summary.json
 
+  probe_tmnred_stimulus_metadata:
+    description: Materialize only the public TMNRED source-material spreadsheet/CSV and inspect their schema to freeze the semantic analysis unit before any EEG reliability or model analysis.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_tmnred_stimulus_metadata.py
+      - --data-root
+      - data/raw/tmnred
+      - --output-dir
+      - outputs/tmnred_stimulus_metadata_probe/latest
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/tmnred_stimulus_metadata_probe/latest/summary.json
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
