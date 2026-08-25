@@ -459,3 +459,18 @@ tasks:
       - outputs/nature_directional_neurosem_v1/latest/summary.json
       - outputs/nature_directional_neurosem_v1/latest/subject_results.csv
       - outputs/nature_directional_neurosem_v1/latest/model_rdm_edges.csv
+
+  probe_zuco_osf_inventory:
+    description: Model-blind inventory of the public ZuCo 1.0 and ZuCo 2.0 OSF storage trees to choose a feasible normal-reading signal source before downloading EEG payloads.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_zuco_osf_inventory.py
+      - --output-dir
+      - outputs/zuco_osf_inventory/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/zuco_osf_inventory/latest/summary.json
+      - outputs/zuco_osf_inventory/latest/inventory.csv
