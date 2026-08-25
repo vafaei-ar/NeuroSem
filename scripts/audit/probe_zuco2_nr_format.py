@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Model-blind ZuCo 2.0 task1-NR format and alignment-metadata probe.
+"""Model-blind ZuCo 2.0 task1-NR format, alignment, and stimulus-text probe.
 
-Downloads only seven tiny shared wordbounds files and one representative preprocessed
-EEG run (YDG NR1), then inspects MATLAB/EEGLAB metadata. It never reads EEG signal
-samples and does not compute reliability or model alignment.
+Downloads the seven shared word-boundary files, one representative preprocessed EEG
+run (YDG NR1), and the seven small corrected eye-tracking files for YDG. It inspects
+MATLAB/EEGLAB metadata and string-valued stimulus fields only. It never reads EEG
+signal samples and does not compute EEG reliability or model alignment.
 """
 from __future__ import annotations
 
@@ -11,19 +12,22 @@ import argparse
 import json
 import time
 import urllib.request
+from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
 import h5py
+import numpy as np
 from scipy.io import loadmat, whosmat
 
 from probe_zuco2_nr_alignment import summarize_eeg, summarize_wordbounds
 
 NODE = "2urht"
-UA = "NeuroSem-ZuCo2-format-probe/1.2"
-TARGETS = [f"task1 - NR/Preprocessed/wordbounds_NR{i}.mat" for i in range(1, 8)] + [
-    "task1 - NR/Preprocessed/YDG/gip_YDG_NR1_EEG.mat"
-]
+UA = "NeuroSem-ZuCo2-format-probe/1.3"
+WORDBOUND_TARGETS = [f"task1 - NR/Preprocessed/wordbounds_NR{i}.mat" for i in range(1, 8)]
+EEG_TARGET = "task1 - NR/Preprocessed/YDG/gip_YDG_NR1_EEG.mat"
+ET_TARGETS = [f"task1 - NR/Preprocessed/YDG/YDG_NR{i}_corrected_ET.mat" for i in range(1, 8)]
+TARGETS = WORDBOUND_TARGETS + [EEG_TARGET] + ET_TARGETS
 
 
 def get_json(url, retries=4):
@@ -122,6 +126,91 @@ def summarize_mat(path, load_small=False):
     return out
 
 
+def _collect_strings(value, path, out, depth=0):
+    """Collect string leaves only; numeric arrays are never serialized or inspected elementwise."""
+    if depth > 12:
+        return
+    if isinstance(value, str):
+        s = value.strip()
+        if s:
+            out[path].append(s)
+        return
+    if isinstance(value, bytes):
+        try:
+            s = value.decode("utf-8").strip()
+        except Exception:
+            return
+        if s:
+            out[path].append(s)
+        return
+    if isinstance(value, dict):
+        for k, v in value.items():
+            _collect_strings(v, f"{path}.{k}" if path else str(k), out, depth + 1)
+        return
+    if isinstance(value, (list, tuple)):
+        for i, v in enumerate(value):
+            _collect_strings(v, f"{path}[{i}]", out, depth + 1)
+        return
+    if isinstance(value, np.ndarray):
+        if value.dtype.kind in "US":
+            for i, v in enumerate(value.ravel()):
+                _collect_strings(str(v), f"{path}[{i}]", out, depth + 1)
+        elif value.dtype == object and value.size <= 20000:
+            for i, v in enumerate(value.ravel()):
+                _collect_strings(v, f"{path}[{i}]", out, depth + 1)
+
+
+def summarize_stimulus_strings(path: Path):
+    if h5py.is_hdf5(path):
+        return {
+            "file": path.name,
+            "format": "matlab_v7.3_hdf5",
+            "status": "not_loaded_for_string_probe",
+            "candidate_groups": [],
+        }
+    d = loadmat(path, simplify_cells=True)
+    grouped = defaultdict(list)
+    for k, v in d.items():
+        if not k.startswith("__"):
+            _collect_strings(v, k, grouped)
+
+    # Collapse indexed leaf paths to a stable structural path so repeated sentence/word
+    # fields can be recognized without relying on one exact MATLAB nesting layout.
+    collapsed = defaultdict(list)
+    for p, vals in grouped.items():
+        base = p
+        while "[" in base:
+            left = base.find("[")
+            right = base.find("]", left)
+            if right < 0:
+                break
+            base = base[:left] + "[]" + base[right + 1 :]
+        collapsed[base].extend(vals)
+
+    rows = []
+    for p, vals in collapsed.items():
+        unique = []
+        seen = set()
+        for s in vals:
+            if s not in seen:
+                seen.add(s)
+                unique.append(s)
+        rows.append({
+            "path": p,
+            "n_strings": len(vals),
+            "n_unique": len(unique),
+            "max_length": max((len(s) for s in unique), default=0),
+            "preview": unique[:12],
+        })
+    rows.sort(key=lambda r: (-r["n_strings"], -r["max_length"], r["path"]))
+    return {
+        "file": path.name,
+        "format": "matlab_pre_v7.3",
+        "status": "string_fields_only",
+        "candidate_groups": rows[:100],
+    }
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-root", type=Path, default=Path("data/raw/zuco2_probe"))
@@ -149,10 +238,11 @@ def main():
     word_alignment = [summarize_wordbounds(base / f"wordbounds_NR{i}.mat") for i in range(1, 8)]
     eeg_alignment = summarize_eeg(base / "YDG" / "gip_YDG_NR1_EEG.mat")
     counts = {f"NR{i+1}": row["n_sentences"] for i, row in enumerate(word_alignment)}
+    stimulus_probe = [summarize_stimulus_strings(base / "YDG" / f"YDG_NR{i}_corrected_ET.mat") for i in range(1, 8)]
 
     summary = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
-        "analysis_status": "model-blind format/alignment metadata probe; no EEG signal samples or model quantities read",
+        "analysis_status": "model-blind format/alignment/stimulus-text metadata probe; no EEG signal samples or model quantities read",
         "release": "ZuCo 2.0",
         "osf_node": NODE,
         "task": "task1 - NR",
@@ -163,9 +253,16 @@ def main():
         "total_shared_sentences": int(sum(counts.values())),
         "wordbound_alignment_metadata": word_alignment,
         "representative_eeg_alignment_metadata": eeg_alignment,
+        "stimulus_text_string_probe": stimulus_probe,
+        "intended_nuisance_freeze": [
+            "absolute within-run sentence-order difference",
+            "word-count difference",
+            "punctuation-count difference",
+            "lowercased lexical-set Jaccard distance",
+        ],
         "guardrail": (
-            "Use only to freeze signal structure, sentence timing/alignment, and materialization plan before any EEG reliability. "
-            "No EEG sample values are read by the alignment metadata helper."
+            "Use only to identify the public stimulus-text field and freeze English nuisance RDM construction before any EEG reliability. "
+            "No EEG sample values are read; no candidate EEG representation, time window, or language-model condition is selected here."
         ),
     }
     (outdir / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
