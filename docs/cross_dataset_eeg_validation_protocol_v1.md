@@ -67,6 +67,28 @@ For each new dataset, first produce a model-blind audit covering:
 
 No language-model embeddings or neural-model RSA may be loaded during this audit.
 
+## Frozen TMNRED analysis unit and source
+
+The TMNRED metadata probes were completed before any TMNRED EEG-reliability or model-alignment analysis. The confirmatory TMNRED design is frozen as follows.
+
+- Signal source: the published artifact-rejected epoched EEGLAB `z.set` derivative for each participant/session, using its external data companion when referenced.
+- Trial identity: EEGLAB `bepoch` maps each retained epoch to the original BIDS event-table row. That row maps to the session-specific source-material row.
+- Semantic item: one individual sentence, uniquely identified by session/block 1-8 and source-material row 1-50. The dataset therefore supplies up to 400 distinct sentence items per participant before artifact rejection.
+- Published source material provides the Chinese sentence and an English translation. The translation may be used later for frozen language-model evaluation, but it is not used for EEG representation selection.
+- Artifact rejection creates participant-specific missing trials. Missing trials are treated as data availability, not as a reason to change the representation family.
+- Subject readiness is determined before reliability outcomes: all eight sessions must be materializable and each must retain at least 30 of 50 trials. This threshold is a data-quality floor, not an outcome-optimized cutoff.
+- Primary neural-geometry analysis is within session/block. This prevents broad semantic category differences from being inseparable from session/block effects. Session-level reliability estimates are then aggregated across the eight blocks.
+- Cross-session sentence-pair geometry is secondary only because session and broad semantic domain are partially confounded by design.
+
+Primary within-session nuisance RDMs are frozen as:
+
+- absolute trial-position difference within the 50-item block;
+- Chinese character-count difference;
+- punctuation-count difference;
+- character-set Jaccard distance.
+
+If the BIDS event table contains a stable target/non-target or condition flag after alignment, condition mismatch may be included as an additional prespecified experimental-structure nuisance. No semantic embedding RDM is used as a nuisance in the primary representation-selection analysis because that would remove part of the scientific semantic signal of interest.
+
 ## Stage B: model-blind EEG representation reliability
 
 For each feasible frozen candidate, compute subject-level item/stimulus features and construct correlation-distance RDMs after feature-wise z-scoring across items.
@@ -85,6 +107,8 @@ Secondary endpoints:
 - permutation nulls with exchangeability constraints matching the dataset design.
 
 All candidates compared within a dataset must use an explicitly frozen common subject/item cohort whenever feasible. If a representation necessarily uses a different item set, such as duration-limited phase features, it must be labeled non-primary for direct ranking unless a common-item comparison is also provided.
+
+For TMNRED, the primary aggregation unit is participant x session. A participant's overall reliability is the Fisher-z aggregated session reliability across available qualifying sessions. Candidate comparison uses the same frozen ready-subject cohort and the same retained-trial availability mask within each session. Reliability computations compare only RDM edges that are simultaneously defined for the held-out participant and the leave-one-subject-out reference for that session.
 
 ## Nuisance control
 
