@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -54,6 +55,7 @@ def summarize_wordbounds(path: Path):
         "file": path.name,
         "n_sentences": len(rows),
         "sentences": rows,
+        "interpretation": "screen/text spatial bounds only; not used as EEG temporal boundaries",
     }
 
 
@@ -69,6 +71,61 @@ def h5_meta(obj):
     else:
         rec.update({"kind": "group", "n_children": len(obj.keys()), "children": list(obj.keys())[:100]})
     return rec
+
+
+def _decode_matlab_value(f: h5py.File, ref):
+    if not ref:
+        return None
+    obj = f[ref]
+    if not isinstance(obj, h5py.Dataset):
+        return {"kind": "group", "path": obj.name}
+    a = np.asarray(obj[()])
+    if a.size == 0:
+        return None
+    # MATLAB char arrays in v7.3 files are commonly uint16 code points.
+    if a.dtype.kind in "ui" and a.ndim <= 2:
+        vals = a.ravel(order="F")
+        if vals.size and np.all((vals == 0) | ((vals >= 9) & (vals <= 0x10FFFF))):
+            nonzero = [int(v) for v in vals if int(v) != 0]
+            if nonzero and sum(32 <= v <= 126 for v in nonzero) / len(nonzero) >= 0.7:
+                try:
+                    return "".join(chr(v) for v in nonzero)
+                except ValueError:
+                    pass
+    if a.size == 1 and a.dtype.kind in "biuf":
+        return float(a.ravel()[0])
+    if a.size <= 16 and a.dtype.kind in "biuf":
+        return [float(v) for v in a.ravel()]
+    return {"shape": list(a.shape), "dtype": str(a.dtype)}
+
+
+def summarize_events(f: h5py.File, eeg: h5py.Group):
+    ev = eeg.get("event")
+    if not isinstance(ev, h5py.Group):
+        return {"available": False}
+    fields = [k for k in ("type", "value", "latency", "duration", "urevent") if k in ev]
+    n = min(int(ev[k].size) for k in fields) if fields else 0
+    rows = []
+    for i in range(n):
+        row = {"event_index": i + 1}
+        for k in fields:
+            ds = ev[k]
+            flat = np.asarray(ds[()]).ravel(order="F")
+            row[k] = _decode_matlab_value(f, flat[i])
+        rows.append(row)
+    type_counts = Counter(str(r.get("type")) for r in rows)
+    value_counts = Counter(str(r.get("value")) for r in rows)
+    latencies = [r.get("latency") for r in rows if isinstance(r.get("latency"), (int, float))]
+    return {
+        "available": True,
+        "n_events": n,
+        "fields": fields,
+        "type_counts": dict(type_counts),
+        "value_counts": dict(value_counts),
+        "latency_samples_summary": _numeric_summary(latencies) if latencies else {"n": 0},
+        "records": rows,
+        "signal_samples_read": False,
+    }
 
 
 def summarize_eeg(path: Path):
@@ -99,6 +156,7 @@ def summarize_eeg(path: Path):
         else:
             out["data_shape"] = None
             out["likely_epoched"] = None
+        out["event_records"] = summarize_events(f, eeg)
     return out
 
 
