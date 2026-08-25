@@ -4,6 +4,31 @@
 
 This file is the current numerical results summary for NeuroSem. It separates EEG reliability, neural-model correspondence, model tuning, external semantic benchmarks, and independent EEG transfer. It should be updated whenever a result changes the scientific interpretation.
 
+## Evidence map
+
+```mermaid
+flowchart TD
+    A[ChineseEEG neural geometry] -->|Positive| B[Reproducible across Little Prince runs]
+    B --> C[BERT neural-guided tuning]
+    C -->|Positive| D[Sealed run-07 neural alignment]
+
+    D --> E[Generic semantic transfer]
+    E -->|Null / unstable| E1[STS / C-MTEB]
+
+    D --> F[Independent EEG transfer]
+    F -->|EEG geometry positive| F1[TMNRED reliability]
+    F -->|Model transfer null| F2[TMNRED E5]
+    F -->|Pending| F3[ZuCo English reading]
+
+    A --> G[Different-text replication]
+    G -->|Pending| G1[Garnett Dream]
+
+    F --> H[Out-of-task test]
+    H -->|Not convincing; task differs| H1[Nature directional inner speech]
+```
+
+The diagram summarizes direction and status only. Exact effect sizes, confidence intervals, and p-values remain in the sections below.
+
 ## 3.1 ChineseEEG neural geometry and BERT correspondence
 
 The initial flattened sensor-time representation had weak cross-subject reliability. A simpler whole-row temporal-mean representation was selected based on neural reliability before semantic testing.
