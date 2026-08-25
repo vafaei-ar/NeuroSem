@@ -23,7 +23,7 @@ from scipy.io import loadmat, whosmat
 from probe_zuco2_nr_alignment import summarize_eeg, summarize_wordbounds
 
 NODE = "2urht"
-UA = "NeuroSem-ZuCo2-format-probe/1.6"
+UA = "NeuroSem-ZuCo2-format-probe/1.7"
 WORDBOUND_TARGETS = [f"task1 - NR/Preprocessed/wordbounds_NR{i}.mat" for i in range(1, 8)]
 EEG_TARGET = "task1 - NR/Preprocessed/YDG/gip_YDG_NR1_EEG.mat"
 MATERIAL_TARGETS = [f"task_materials/nr_{i}.csv" for i in range(1, 8)]
@@ -130,12 +130,14 @@ def _intlike(s):
         return False
 
 
-def summarize_material_csv(path: Path, expected_sentences: int):
-    # ZuCo task materials are semicolon-delimited and have no header row. Quoted text
-    # may contain commas, so DictReader's default comma delimiter corrupts the schema.
+def load_material_rows(path: Path):
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         rows = [r for r in csv.reader(f, delimiter=";", quotechar='"') if any(str(x).strip() for x in r)]
+    return rows
 
+
+def summarize_material_csv(path: Path, expected_sentences: int):
+    rows = load_material_rows(path)
     widths = Counter(len(r) for r in rows)
     previews = [r[:5] for r in rows[:5]]
     maxw = max((len(r) for r in rows), default=0)
@@ -157,6 +159,7 @@ def summarize_material_csv(path: Path, expected_sentences: int):
     text_values = [str(r[2]).strip() for r in standard_rows]
     control_flags = [str(r[3]).strip() if len(r) > 3 else "" for r in standard_rows]
     control_idx = [i + 1 for i, x in enumerate(control_flags) if x]
+    id_pairs = [[int(str(r[0]).strip()), int(str(r[1]).strip())] for r in standard_rows]
 
     return {
         "file": path.name,
@@ -174,12 +177,52 @@ def summarize_material_csv(path: Path, expected_sentences: int):
         "n_flagged_rows_col3": len(control_idx),
         "flagged_row_indices_1based": control_idx,
         "flag_values": sorted(set(x for x in control_flags if x)),
+        "id_pairs_in_order": id_pairs,
+        "first_five_id_pairs": id_pairs[:5],
+        "last_five_id_pairs": id_pairs[-5:],
         "text_preview": text_values[:5],
         "diagnostic_interpretation": (
-            "Compare the semicolon-parsed material rows and optional fourth-column flags with the already frozen EEG sentence count. "
+            "Compare the semicolon-parsed material rows and identifiers with the already frozen EEG sentence count. "
             "Do not drop rows or select a mapping in this probe."
         ),
     }
+
+
+def overlap_diagnostics(material_rows):
+    out = []
+    for i in range(len(material_rows) - 1):
+        a = material_rows[i]
+        b = material_rows[i + 1]
+        amap = {(str(r[0]).strip(), str(r[1]).strip()): (j + 1, str(r[2]).strip())
+                for j, r in enumerate(a) if len(r) >= 3 and _intlike(r[0]) and _intlike(r[1])}
+        bmap = {(str(r[0]).strip(), str(r[1]).strip()): (j + 1, str(r[2]).strip())
+                for j, r in enumerate(b) if len(r) >= 3 and _intlike(r[0]) and _intlike(r[1])}
+        shared_ids = sorted(set(amap) & set(bmap), key=lambda x: (int(x[0]), int(x[1])))
+        exact = []
+        for key in shared_ids:
+            ai, at = amap[key]
+            bi, bt = bmap[key]
+            exact.append({
+                "id_pair": [int(key[0]), int(key[1])],
+                "run_a_row_1based": ai,
+                "run_b_row_1based": bi,
+                "text_exact_match": at == bt,
+            })
+        atexts = {str(r[2]).strip(): j + 1 for j, r in enumerate(a) if len(r) >= 3 and str(r[2]).strip()}
+        btexts = {str(r[2]).strip(): j + 1 for j, r in enumerate(b) if len(r) >= 3 and str(r[2]).strip()}
+        shared_text = sorted(set(atexts) & set(btexts))
+        out.append({
+            "run_a": f"NR{i+1}",
+            "run_b": f"NR{i+2}",
+            "n_shared_id_pairs": len(shared_ids),
+            "shared_id_pairs": exact,
+            "n_shared_exact_texts": len(shared_text),
+            "shared_text_row_pairs": [
+                {"run_a_row_1based": atexts[t], "run_b_row_1based": btexts[t]}
+                for t in shared_text
+            ],
+        })
+    return out
 
 
 def main():
@@ -208,11 +251,13 @@ def main():
     word_alignment = [summarize_wordbounds(base / f"wordbounds_NR{i}.mat") for i in range(1, 8)]
     eeg_alignment = summarize_eeg(base / "YDG" / "gip_YDG_NR1_EEG.mat")
     counts = {f"NR{i+1}": row["n_sentences"] for i, row in enumerate(word_alignment)}
-    material = [summarize_material_csv(root / f"task_materials/nr_{i}.csv", counts[f"NR{i}"]) for i in range(1, 8)]
+    material_paths = [root / f"task_materials/nr_{i}.csv" for i in range(1, 8)]
+    raw_material = [load_material_rows(p) for p in material_paths]
+    material = [summarize_material_csv(p, counts[f"NR{i}"]) for i, p in enumerate(material_paths, start=1)]
 
     summary = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
-        "analysis_status": "model-blind semicolon task-material diagnostic; no EEG signal samples or model quantities read",
+        "analysis_status": "model-blind task-material identifier/overlap diagnostic; no EEG signal samples or model quantities read",
         "release": "ZuCo 2.0",
         "osf_node": NODE,
         "task": "task1 - NR",
@@ -223,6 +268,7 @@ def main():
         "wordbound_alignment_metadata": word_alignment,
         "representative_eeg_alignment_metadata": eeg_alignment,
         "task_materials": material,
+        "adjacent_run_overlap_diagnostics": overlap_diagnostics(raw_material),
         "guardrail": (
             "Use this probe only to determine the deterministic relationship between public NR task-material rows and frozen EEG sentence identities. "
             "No task-material row is excluded here; no EEG sample values, model quantities, or outcome statistics are computed."
