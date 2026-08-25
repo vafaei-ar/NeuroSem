@@ -6,6 +6,24 @@ This document explains what each dataset contributes to NeuroSem, what participa
 
 ## Dataset map
 
+```mermaid
+flowchart LR
+    LP[ChineseEEG<br/>Little Prince<br/>Chinese silent reading]
+    GD[ChineseEEG<br/>Garnett Dream<br/>Chinese silent reading]
+    TM[TMNRED<br/>Chinese sentence reading]
+    ZU[ZuCo 2.0<br/>English normal reading]
+    ND[Nature directional<br/>Covert / inner speech]
+    CORE[NeuroSem<br/>reading-related neural geometry]
+
+    LP -->|Discovery / training| CORE
+    GD -->|Different-text replication| CORE
+    TM -->|Independent Chinese-reading replication| CORE
+    ZU -->|Independent English / cross-language replication| CORE
+    ND -->|Out-of-task generalization only| CORE
+```
+
+The central reading evidence chain is therefore Little Prince -> Garnett Dream -> TMNRED -> ZuCo. The Nature directional dataset remains useful, but it tests a substantially different task.
+
 | Dataset | Participant task | Language | Recording | Current NeuroSem role | Status |
 |---|---|---|---|---|---|
 | ChineseEEG: Little Prince | Silent natural reading | Chinese | 128-channel EEG + eye tracking | Primary discovery and model-development dataset | Core analyses complete |
