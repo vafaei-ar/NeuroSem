@@ -4,6 +4,28 @@
 
 This is the chronological audit trail for major NeuroSem analyses. It records what was run, why it was run, whether it was confirmatory or exploratory, and what changed afterward. It is not a replacement for the detailed protocol files or raw RunRelay results.
 
+## Project chronology at a glance
+
+```mermaid
+flowchart LR
+    A[ChineseEEG audit] --> B[EEG representation selection]
+    B --> C[BERT residual RSA]
+    C --> D[BERT neural-guided tuning]
+    D --> E[Sealed run-07 evaluation]
+    E --> F[External semantic benchmark]
+    F --> G[E5 architecture replication]
+    G --> H[E5 Pareto exploration]
+    H --> I[Nature directional validation]
+    I --> J[ChineseEEG representation refinement]
+    J --> K[TMNRED EEG reliability]
+    K --> L[TMNRED E5 transfer]
+    L --> M[TMNRED alternative representations]
+    M --> N[ZuCo 2.0 audit / materialization]
+    N --> O[Garnett Dream different-text replication]
+```
+
+This diagram shows the scientific progression, not every individual debugging job. The detailed ledger below preserves the important failures, protocol corrections, and exact RunRelay job identifiers.
+
 ## How to use this ledger
 
 - **Confirmatory / frozen** means the key analysis choices were fixed before inspecting the target outcome.
