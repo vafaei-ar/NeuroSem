@@ -38,28 +38,63 @@ def annex_get(root: Path, rel: str) -> dict:
     return rec
 
 
+def _simplify_value(v):
+    if hasattr(v, "shape") and getattr(v, "size", 0) > 20:
+        return {"shape": list(v.shape), "dtype": str(v.dtype)}
+    if hasattr(v, "tolist"):
+        return v.tolist()
+    return v
+
+
 def load_eeg_meta(set_path: Path) -> dict:
+    """Load both EEGLAB save layouts present in the published TMNRED z.set files.
+
+    Most files contain a top-level EEG struct. A minority contain the EEGLAB fields
+    directly at MATLAB top level, with the epoch data embedded in the .set file.
+    This distinction is structural only and must not alter the scientific QC rule.
+    """
     d = loadmat(set_path, simplify_cells=True)
     eeg = d.get("EEG")
-    if not isinstance(eeg, dict):
-        raise RuntimeError(f"EEG structure missing in {set_path}")
-    out = {}
+    if isinstance(eeg, dict):
+        source = eeg
+        layout = "EEG_struct"
+    elif all(k in d for k in ["nbchan", "trials", "pnts", "srate", "xmin", "xmax", "data"]):
+        source = d
+        layout = "flat_top_level"
+    else:
+        raise RuntimeError(f"Recognized EEGLAB fields missing in {set_path}")
+
+    out = {"layout": layout}
     for k in ["nbchan", "trials", "pnts", "srate", "xmin", "xmax", "data", "bepoch", "item", "bin"]:
-        if k in eeg:
-            v = eeg[k]
-            if hasattr(v, "shape") and getattr(v, "size", 0) > 20:
-                out[k] = {"shape": list(v.shape), "dtype": str(v.dtype)}
-            elif hasattr(v, "tolist"):
-                out[k] = v.tolist()
-            else:
-                out[k] = v
+        if k in source:
+            out[k] = _simplify_value(source[k])
     return out
 
 
-def data_companion(meta: dict, set_rel: str):
+def data_companion(root: Path, meta: dict, set_rel: str):
+    """Resolve only a canonical tracked external .fdt companion when needed.
+
+    Some published EEG structs retain the workstation-era original EEG.data basename,
+    while OpenNeuro renamed the tracked companion to match the BIDS-like z.set name.
+    Prefer the canonical neighboring <set-stem>.fdt when tracked. If the data array is
+    embedded in the .set file, no external companion is required.
+    """
     data = meta.get("data")
+    if isinstance(data, dict):
+        return None
+
+    canonical_rel = str(Path(set_rel).with_suffix(".fdt"))
+    if is_tracked(root, canonical_rel):
+        return canonical_rel
+
     if isinstance(data, str) and data.strip():
-        return str(Path(set_rel).parent / data.strip())
+        legacy_rel = str(Path(set_rel).parent / data.strip())
+        if is_tracked(root, legacy_rel):
+            return legacy_rel
+        raise RuntimeError(
+            f"External EEG data referenced by {set_rel}, but neither canonical companion "
+            f"{canonical_rel} nor legacy path {legacy_rel} is tracked"
+        )
     return None
 
 
@@ -88,6 +123,7 @@ def main():
                 "session": session,
                 "set_path": set_rel,
                 "set_status": set_rec.get("status"),
+                "layout": "",
                 "companion_path": "",
                 "companion_status": "",
                 "nbchan": "",
@@ -106,8 +142,9 @@ def main():
                 continue
             try:
                 meta = load_eeg_meta(root / set_rel)
+                row["layout"] = meta.get("layout", "")
             except Exception as exc:
-                row["status"] = f"metadata_error:{type(exc).__name__}"
+                row["status"] = f"metadata_error:{type(exc).__name__}:{exc}"
                 failures.append(dict(row))
                 rows.append(row)
                 continue
@@ -115,7 +152,14 @@ def main():
             for key in ["nbchan", "trials", "pnts", "srate", "xmin", "xmax"]:
                 row[key] = meta.get(key, "")
 
-            companion_rel = data_companion(meta, set_rel)
+            try:
+                companion_rel = data_companion(root, meta, set_rel)
+            except Exception as exc:
+                row["status"] = f"companion_resolution_error:{type(exc).__name__}:{exc}"
+                failures.append(dict(row))
+                rows.append(row)
+                continue
+
             if companion_rel:
                 comp_rec = annex_get(root, companion_rel)
                 row["companion_path"] = companion_rel
@@ -174,10 +218,15 @@ def main():
         "n_ready_subjects_all_8_sessions": len(ready_subjects),
         "n_ready_sessions": sum(r["status"] == "ready" for r in rows),
         "n_failed_sessions": sum(r["status"] != "ready" for r in rows),
+        "layout_counts": {
+            layout: sum(r["layout"] == layout for r in rows)
+            for layout in sorted({r["layout"] for r in rows if r["layout"]})
+        },
         "failures": failures,
         "notes": [
             "No EEG reliability, candidate ranking, language-model embedding, or neural-model RSA is computed.",
-            "This step materializes only the prespecified artifact-rejected epoched derivatives and any exact external data companion referenced by each z.set file.",
+            "The published TMNRED z.set files use two EEGLAB save layouts: EEG-struct files with canonical tracked .fdt companions and flat top-level files with embedded epoch data.",
+            "For EEG-struct files, the tracked canonical neighboring <set-stem>.fdt is used rather than stale original workstation basenames retained in EEG.data.",
             "Subject readiness is defined before representation outcomes: all eight sessions materializable and at least 30 retained trials per session.",
             "The later primary TMNRED RDM analysis will be within session to avoid conflating broad semantic category with session/block effects."
         ],
