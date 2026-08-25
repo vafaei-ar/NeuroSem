@@ -171,6 +171,22 @@ tasks:
       - outputs/tmnred_audit/latest/summary.json
       - outputs/tmnred_audit/latest/file_inventory.csv
 
+  probe_tmnred_docs:
+    description: Read only already-materialized TMNRED documentation, sidecars, event schemas, and stimulus/derivative path metadata before freezing signal-level analysis.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_tmnred_docs.py
+      - --data-root
+      - data/raw/tmnred
+      - --output-dir
+      - outputs/tmnred_docs_probe/latest
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/tmnred_docs_probe/latest/summary.json
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
