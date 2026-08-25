@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Model-blind ZuCo 2.0 task1-NR format, alignment, and stimulus-text probe.
+"""Model-blind ZuCo 2.0 task1-NR format, alignment, and stimulus-source probe.
 
-Downloads the seven shared word-boundary files, one representative preprocessed EEG
-run (YDG NR1), and the seven small corrected eye-tracking files for YDG. It inspects
-MATLAB/EEGLAB metadata and string-valued stimulus fields only. It never reads EEG
-signal samples and does not compute EEG reliability or model alignment.
+Downloads only the seven shared word-boundary files and one representative preprocessed
+EEG run (YDG NR1), then inspects MATLAB/EEGLAB metadata. It also performs a metadata-only
+OSF inventory for likely stimulus/text/material files. It never downloads eye-tracking
+payloads, reads EEG signal samples, or computes EEG reliability/model alignment.
 """
 from __future__ import annotations
 
@@ -12,22 +12,21 @@ import argparse
 import json
 import time
 import urllib.request
-from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
 import h5py
-import numpy as np
 from scipy.io import loadmat, whosmat
 
 from probe_zuco2_nr_alignment import summarize_eeg, summarize_wordbounds
 
 NODE = "2urht"
-UA = "NeuroSem-ZuCo2-format-probe/1.3"
+UA = "NeuroSem-ZuCo2-format-probe/1.4"
 WORDBOUND_TARGETS = [f"task1 - NR/Preprocessed/wordbounds_NR{i}.mat" for i in range(1, 8)]
 EEG_TARGET = "task1 - NR/Preprocessed/YDG/gip_YDG_NR1_EEG.mat"
-ET_TARGETS = [f"task1 - NR/Preprocessed/YDG/YDG_NR{i}_corrected_ET.mat" for i in range(1, 8)]
-TARGETS = WORDBOUND_TARGETS + [EEG_TARGET] + ET_TARGETS
+TARGETS = WORDBOUND_TARGETS + [EEG_TARGET]
+STIM_TOKENS = ("sentence", "sentences", "stim", "stimulus", "stimuli", "text", "material")
+TEXT_EXTS = (".txt", ".csv", ".tsv", ".json", ".xlsx", ".xls", ".mat")
 
 
 def get_json(url, retries=4):
@@ -55,7 +54,7 @@ def child_url(row):
     return rel.get("href") if isinstance(rel, dict) else rel
 
 
-def walk(url, prefix="", out=None):
+def walk_targets(url, prefix="", out=None):
     out = {} if out is None else out
     for row in paged(url):
         a = row.get("attributes") or {}
@@ -67,17 +66,57 @@ def walk(url, prefix="", out=None):
         elif kind == "folder" and any(t.startswith(p + "/") or t == p for t in TARGETS):
             u = child_url(row)
             if u:
-                walk(u, p, out)
+                walk_targets(u, p, out)
     return out
 
 
-def inventory():
+def target_inventory():
     out = {}
     for prov in paged(f"https://api.osf.io/v2/nodes/{NODE}/files/"):
         u = child_url(prov)
         if u:
-            walk(u, "", out)
+            walk_targets(u, "", out)
     return out
+
+
+def walk_stimulus_metadata(url, prefix, rows):
+    for row in paged(url):
+        a = row.get("attributes") or {}
+        name = str(a.get("name") or "")
+        kind = str(a.get("kind") or "")
+        p = f"{prefix}/{name}" if prefix else name
+        if kind == "file":
+            low = p.lower()
+            ext = "." + name.rsplit(".", 1)[-1].lower() if "." in name else ""
+            hits = sorted({t for t in STIM_TOKENS if t in low})
+            if hits or ext in TEXT_EXTS:
+                rows.append({
+                    "path": p,
+                    "size_bytes": a.get("size"),
+                    "extension": ext,
+                    "token_hits": hits,
+                    "download_url_present": bool((row.get("links") or {}).get("download")),
+                })
+        elif kind == "folder":
+            u = child_url(row)
+            if u:
+                walk_stimulus_metadata(u, p, rows)
+
+
+def stimulus_inventory():
+    rows = []
+    for prov in paged(f"https://api.osf.io/v2/nodes/{NODE}/files/"):
+        u = child_url(prov)
+        if u:
+            walk_stimulus_metadata(u, "", rows)
+    def score(r):
+        low = r["path"].lower()
+        semantic = sum(tok in low for tok in STIM_TOKENS)
+        text_ext = int(r["extension"] in TEXT_EXTS)
+        size = int(r["size_bytes"] or 10**18)
+        return (-semantic, -text_ext, size, r["path"])
+    rows.sort(key=score)
+    return rows[:500]
 
 
 def download(url, path):
@@ -126,98 +165,13 @@ def summarize_mat(path, load_small=False):
     return out
 
 
-def _collect_strings(value, path, out, depth=0):
-    """Collect string leaves only; numeric arrays are never serialized or inspected elementwise."""
-    if depth > 12:
-        return
-    if isinstance(value, str):
-        s = value.strip()
-        if s:
-            out[path].append(s)
-        return
-    if isinstance(value, bytes):
-        try:
-            s = value.decode("utf-8").strip()
-        except Exception:
-            return
-        if s:
-            out[path].append(s)
-        return
-    if isinstance(value, dict):
-        for k, v in value.items():
-            _collect_strings(v, f"{path}.{k}" if path else str(k), out, depth + 1)
-        return
-    if isinstance(value, (list, tuple)):
-        for i, v in enumerate(value):
-            _collect_strings(v, f"{path}[{i}]", out, depth + 1)
-        return
-    if isinstance(value, np.ndarray):
-        if value.dtype.kind in "US":
-            for i, v in enumerate(value.ravel()):
-                _collect_strings(str(v), f"{path}[{i}]", out, depth + 1)
-        elif value.dtype == object and value.size <= 20000:
-            for i, v in enumerate(value.ravel()):
-                _collect_strings(v, f"{path}[{i}]", out, depth + 1)
-
-
-def summarize_stimulus_strings(path: Path):
-    if h5py.is_hdf5(path):
-        return {
-            "file": path.name,
-            "format": "matlab_v7.3_hdf5",
-            "status": "not_loaded_for_string_probe",
-            "candidate_groups": [],
-        }
-    d = loadmat(path, simplify_cells=True)
-    grouped = defaultdict(list)
-    for k, v in d.items():
-        if not k.startswith("__"):
-            _collect_strings(v, k, grouped)
-
-    # Collapse indexed leaf paths to a stable structural path so repeated sentence/word
-    # fields can be recognized without relying on one exact MATLAB nesting layout.
-    collapsed = defaultdict(list)
-    for p, vals in grouped.items():
-        base = p
-        while "[" in base:
-            left = base.find("[")
-            right = base.find("]", left)
-            if right < 0:
-                break
-            base = base[:left] + "[]" + base[right + 1 :]
-        collapsed[base].extend(vals)
-
-    rows = []
-    for p, vals in collapsed.items():
-        unique = []
-        seen = set()
-        for s in vals:
-            if s not in seen:
-                seen.add(s)
-                unique.append(s)
-        rows.append({
-            "path": p,
-            "n_strings": len(vals),
-            "n_unique": len(unique),
-            "max_length": max((len(s) for s in unique), default=0),
-            "preview": unique[:12],
-        })
-    rows.sort(key=lambda r: (-r["n_strings"], -r["max_length"], r["path"]))
-    return {
-        "file": path.name,
-        "format": "matlab_pre_v7.3",
-        "status": "string_fields_only",
-        "candidate_groups": rows[:100],
-    }
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-root", type=Path, default=Path("data/raw/zuco2_probe"))
     ap.add_argument("--output-dir", type=Path, default=Path("outputs/zuco2_nr_format_probe/latest"))
     args = ap.parse_args()
 
-    idx = inventory()
+    idx = target_inventory()
     missing = [t for t in TARGETS if t not in idx or not idx[t]]
     if missing:
         raise SystemExit(f"missing OSF targets: {missing}")
@@ -226,23 +180,21 @@ def main():
     outdir = args.output_dir.resolve()
     outdir.mkdir(parents=True, exist_ok=True)
     mats = []
-    local_paths = {}
     for t in TARGETS:
         p = root / t
         if not p.exists():
             download(idx[t], p)
-        local_paths[t] = p
         mats.append(summarize_mat(p, load_small="wordbounds_" in t))
 
     base = root / "task1 - NR" / "Preprocessed"
     word_alignment = [summarize_wordbounds(base / f"wordbounds_NR{i}.mat") for i in range(1, 8)]
     eeg_alignment = summarize_eeg(base / "YDG" / "gip_YDG_NR1_EEG.mat")
     counts = {f"NR{i+1}": row["n_sentences"] for i, row in enumerate(word_alignment)}
-    stimulus_probe = [summarize_stimulus_strings(base / "YDG" / f"YDG_NR{i}_corrected_ET.mat") for i in range(1, 8)]
+    stimulus_candidates = stimulus_inventory()
 
     summary = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
-        "analysis_status": "model-blind format/alignment/stimulus-text metadata probe; no EEG signal samples or model quantities read",
+        "analysis_status": "model-blind format/alignment plus OSF stimulus-source metadata inventory; no EEG signal samples or model quantities read",
         "release": "ZuCo 2.0",
         "osf_node": NODE,
         "task": "task1 - NR",
@@ -253,7 +205,7 @@ def main():
         "total_shared_sentences": int(sum(counts.values())),
         "wordbound_alignment_metadata": word_alignment,
         "representative_eeg_alignment_metadata": eeg_alignment,
-        "stimulus_text_string_probe": stimulus_probe,
+        "stimulus_source_candidates": stimulus_candidates,
         "intended_nuisance_freeze": [
             "absolute within-run sentence-order difference",
             "word-count difference",
@@ -261,12 +213,12 @@ def main():
             "lowercased lexical-set Jaccard distance",
         ],
         "guardrail": (
-            "Use only to identify the public stimulus-text field and freeze English nuisance RDM construction before any EEG reliability. "
-            "No EEG sample values are read; no candidate EEG representation, time window, or language-model condition is selected here."
+            "Use only to identify a small public stimulus-text/material source and freeze English nuisance RDM construction before any EEG reliability. "
+            "No eye-tracking payloads are downloaded; no EEG sample values are read; no model quantities or outcome statistics are computed."
         ),
     }
     (outdir / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({"status": "ok", "total_shared_sentences": summary["total_shared_sentences"], "output_dir": str(outdir)}, indent=2))
+    print(json.dumps({"status": "ok", "total_shared_sentences": summary["total_shared_sentences"], "n_stimulus_candidates": len(stimulus_candidates), "output_dir": str(outdir)}, indent=2))
 
 
 if __name__ == "__main__":
