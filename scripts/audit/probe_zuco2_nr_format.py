@@ -22,7 +22,7 @@ from scipy.io import loadmat, whosmat
 from probe_zuco2_nr_alignment import summarize_eeg, summarize_wordbounds
 
 NODE = "2urht"
-UA = "NeuroSem-ZuCo2-format-probe/1.5"
+UA = "NeuroSem-ZuCo2-format-probe/1.6"
 WORDBOUND_TARGETS = [f"task1 - NR/Preprocessed/wordbounds_NR{i}.mat" for i in range(1, 8)]
 EEG_TARGET = "task1 - NR/Preprocessed/YDG/gip_YDG_NR1_EEG.mat"
 MATERIAL_TARGETS = [f"task_materials/nr_{i}.csv" for i in range(1, 8)]
@@ -121,6 +121,16 @@ def summarize_mat(path, load_small=False):
     return out
 
 
+def ordered_unique(values):
+    out = []
+    seen = set()
+    for v in values:
+        if v and v not in seen:
+            seen.add(v)
+            out.append(v)
+    return out
+
+
 def summarize_material_csv(path: Path, expected_sentences: int):
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
@@ -129,78 +139,101 @@ def summarize_material_csv(path: Path, expected_sentences: int):
     for field in fields:
         vals = [str(r.get(field) or "").strip() for r in rows]
         nonempty = [v for v in vals if v]
+        uniq = ordered_unique(nonempty)
         lengths = sorted(len(v) for v in nonempty)
         stats.append({
             "field": field,
             "n_nonempty": len(nonempty),
             "n_unique": len(set(nonempty)),
+            "n_ordered_unique": len(uniq),
             "median_length": lengths[len(lengths)//2] if lengths else 0,
             "max_length": max(lengths) if lengths else 0,
             "preview": nonempty[:3],
+            "ordered_unique_preview": uniq[:3],
+            "unique_count_matches_expected_sentences": len(uniq) == expected_sentences,
         })
-    # Candidate sentence-text field: populated for every expected sentence, unique per row,
-    # and longest median string. This is a structural heuristic only, not an outcome choice.
-    eligible = [s for s in stats if s["n_nonempty"] == expected_sentences and s["n_unique"] == expected_sentences]
-    candidate = max(eligible, key=lambda s: (s["median_length"], s["max_length"]), default=None)
+
+    # These public CSVs can be word-level or fixation-oriented, so total row count need not
+    # equal sentence count. A plausible sentence-text field should instead yield exactly the
+    # frozen number of distinct sentence strings in first-occurrence order. Among such fields,
+    # prefer longer strings. This remains a model-blind structural heuristic.
+    eligible = [s for s in stats if s["n_ordered_unique"] == expected_sentences]
+    candidate = max(eligible, key=lambda s: (s["median_length"], s["max_length"], s["n_nonempty"]), default=None)
     return {
         "file": path.name,
         "n_rows": len(rows),
         "expected_sentences": expected_sentences,
         "row_count_matches": len(rows) == expected_sentences,
+        "row_count_interpretation": "diagnostic only; repeated rows are allowed because task-material CSVs may be word/fixation level",
         "fields": fields,
         "field_stats": stats,
         "candidate_sentence_text_field": candidate["field"] if candidate else None,
-        "candidate_rule": "all rows nonempty + all values unique + longest median string",
+        "candidate_rule": "ordered distinct nonempty values equal frozen sentence count; prefer longest median string",
+        "candidate_ordered_sentence_preview": candidate["ordered_unique_preview"] if candidate else [],
     }
 
 
 def main():
-    ap=argparse.ArgumentParser()
+    ap = argparse.ArgumentParser()
     ap.add_argument("--data-root", type=Path, default=Path("data/raw/zuco2_probe"))
     ap.add_argument("--output-dir", type=Path, default=Path("outputs/zuco2_nr_format_probe/latest"))
-    args=ap.parse_args()
+    args = ap.parse_args()
 
-    idx=target_inventory()
-    missing=[t for t in TARGETS if t not in idx or not idx[t]]
+    idx = target_inventory()
+    missing = [t for t in TARGETS if t not in idx or not idx[t]]
     if missing:
         raise SystemExit(f"missing OSF targets: {missing}")
 
-    root=args.data_root.resolve(); outdir=args.output_dir.resolve(); outdir.mkdir(parents=True, exist_ok=True)
-    mats=[]
+    root = args.data_root.resolve()
+    outdir = args.output_dir.resolve()
+    outdir.mkdir(parents=True, exist_ok=True)
+    mats = []
     for t in TARGETS:
-        p=root/t
-        if not p.exists(): download(idx[t],p)
-        if p.suffix.lower()==".mat": mats.append(summarize_mat(p,load_small="wordbounds_" in t))
+        p = root / t
+        if not p.exists():
+            download(idx[t], p)
+        if p.suffix.lower() == ".mat":
+            mats.append(summarize_mat(p, load_small="wordbounds_" in t))
 
-    base=root/"task1 - NR"/"Preprocessed"
-    word_alignment=[summarize_wordbounds(base/f"wordbounds_NR{i}.mat") for i in range(1,8)]
-    eeg_alignment=summarize_eeg(base/"YDG"/"gip_YDG_NR1_EEG.mat")
-    counts={f"NR{i+1}":row["n_sentences"] for i,row in enumerate(word_alignment)}
-    material=[summarize_material_csv(root/f"task_materials/nr_{i}.csv", counts[f"NR{i}"]) for i in range(1,8)]
+    base = root / "task1 - NR" / "Preprocessed"
+    word_alignment = [summarize_wordbounds(base / f"wordbounds_NR{i}.mat") for i in range(1, 8)]
+    eeg_alignment = summarize_eeg(base / "YDG" / "gip_YDG_NR1_EEG.mat")
+    counts = {f"NR{i+1}": row["n_sentences"] for i, row in enumerate(word_alignment)}
+    material = [summarize_material_csv(root / f"task_materials/nr_{i}.csv", counts[f"NR{i}"]) for i in range(1, 8)]
 
-    fields=[m["candidate_sentence_text_field"] for m in material]
-    if any(not m["row_count_matches"] for m in material):
-        raise SystemExit("task-material row count does not match frozen NR sentence counts")
-
-    summary={
-        "created_at_utc":datetime.now(timezone.utc).isoformat(),
-        "analysis_status":"model-blind format/alignment/stimulus-material freeze probe; no EEG signal samples or model quantities read",
-        "release":"ZuCo 2.0","osf_node":NODE,"task":"task1 - NR",
-        "representative_subject":"YDG","representative_run":"NR1",
-        "sentence_counts_by_run":counts,"total_shared_sentences":int(sum(counts.values())),
-        "wordbound_alignment_metadata":word_alignment,
-        "representative_eeg_alignment_metadata":eeg_alignment,
-        "task_materials":material,
-        "candidate_text_fields_by_run":fields,
-        "intended_nuisance_freeze":[
+    fields = [m["candidate_sentence_text_field"] for m in material]
+    summary = {
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "analysis_status": "model-blind format/alignment/stimulus-material diagnostic probe; no EEG signal samples or model quantities read",
+        "release": "ZuCo 2.0",
+        "osf_node": NODE,
+        "task": "task1 - NR",
+        "representative_subject": "YDG",
+        "representative_run": "NR1",
+        "sentence_counts_by_run": counts,
+        "total_shared_sentences": int(sum(counts.values())),
+        "wordbound_alignment_metadata": word_alignment,
+        "representative_eeg_alignment_metadata": eeg_alignment,
+        "task_materials": material,
+        "candidate_text_fields_by_run": fields,
+        "all_runs_have_candidate_text_field": all(fields),
+        "intended_nuisance_freeze": [
             "absolute within-run sentence-order difference",
             "word-count difference from the frozen public NR sentence text",
             "punctuation-count difference from the frozen public NR sentence text",
             "lowercased lexical-set Jaccard distance from the frozen public NR sentence text"
         ],
-        "guardrail":"Use only to freeze public stimulus text and nuisance RDM construction before EEG reliability. No EEG sample values, model quantities, or outcome statistics are computed."
+        "guardrail": "Use only to identify public stimulus text and freeze nuisance RDM construction before EEG reliability. Row-count mismatch is diagnostic, not an exclusion criterion. No EEG sample values, model quantities, or outcome statistics are computed."
     }
-    (outdir/"summary.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    print(json.dumps({"status":"ok","total_shared_sentences":summary["total_shared_sentences"],"candidate_text_fields_by_run":fields,"output_dir":str(outdir)},indent=2))
+    (outdir / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(json.dumps({
+        "status": "ok",
+        "total_shared_sentences": summary["total_shared_sentences"],
+        "candidate_text_fields_by_run": fields,
+        "all_runs_have_candidate_text_field": summary["all_runs_have_candidate_text_field"],
+        "output_dir": str(outdir)
+    }, indent=2))
 
-if __name__=="__main__": main()
+
+if __name__ == "__main__":
+    main()
