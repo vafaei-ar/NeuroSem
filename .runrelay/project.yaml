@@ -254,6 +254,28 @@ tasks:
       - outputs/tmnred_representation_input_materialization/latest/summary.json
       - outputs/tmnred_representation_input_materialization/latest/session_inventory.csv
 
+  run_tmnred_primary_representation_reliability:
+    description: Run the prospectively frozen model-blind TMNRED primary EEG representation reliability analysis for the ChineseEEG-selected all-sensor temporal mean, with amplitude-SD and 8-bin sensitivity controls.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_tmnred_primary_representation_reliability.py
+      - --data-root
+      - data/raw/tmnred
+      - --input-freeze
+      - outputs/tmnred_representation_input_materialization/latest/summary.json
+      - --output-dir
+      - outputs/tmnred_primary_representation_reliability/latest
+      - --min-reference-edge-subjects
+      - "18"
+    approval: manual
+    timeout_minutes: 180
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/tmnred_primary_representation_reliability/latest/summary.json
+      - outputs/tmnred_primary_representation_reliability/latest/candidate_metrics.csv
+      - outputs/tmnred_primary_representation_reliability/latest/subject_metrics.csv
+
   probe_tmnred_materialization_failures:
     description: Model-blind structural probe for TMNRED z.set materialization failures, including exact scipy errors, MATLAB/HDF5 format detection, and canonical neighboring z.fdt companion checks.
     command:
