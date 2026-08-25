@@ -5,12 +5,14 @@ Downloads only seven tiny shared wordbounds files and one representative preproc
 EEG run (YDG NR1), then inspects MATLAB metadata/keys. No reliability or model analysis.
 """
 from __future__ import annotations
-import argparse, json, urllib.request, urllib.error, time
+import argparse, json, urllib.request, time
 from pathlib import Path
 from datetime import datetime, timezone
+
+import h5py
 from scipy.io import whosmat, loadmat
 
-NODE='2urht'; UA='NeuroSem-ZuCo2-format-probe/1.0'
+NODE='2urht'; UA='NeuroSem-ZuCo2-format-probe/1.1'
 TARGETS=[f'task1 - NR/Preprocessed/wordbounds_NR{i}.mat' for i in range(1,8)] + ['task1 - NR/Preprocessed/YDG/gip_YDG_NR1_EEG.mat']
 
 def get_json(url,retries=4):
@@ -54,14 +56,33 @@ def inventory():
 def download(url,path):
     path.parent.mkdir(parents=True,exist_ok=True)
     req=urllib.request.Request(url,headers={'User-Agent':UA})
-    with urllib.request.urlopen(req,timeout=180) as r, path.open('wb') as f:
+    with urllib.request.urlopen(req,timeout=300) as r, path.open('wb') as f:
         while True:
             b=r.read(1024*1024)
             if not b: break
             f.write(b)
 
+def summarize_hdf5(path: Path):
+    out={'format':'matlab_v7.3_hdf5','top_level':[]}
+    with h5py.File(path,'r') as f:
+        for name,obj in f.items():
+            rec={'name':name,'kind':'dataset' if isinstance(obj,h5py.Dataset) else 'group'}
+            if isinstance(obj,h5py.Dataset):
+                rec['shape']=list(obj.shape)
+                rec['dtype']=str(obj.dtype)
+            else:
+                rec['n_children']=len(obj.keys())
+                rec['children_preview']=list(obj.keys())[:25]
+            out['top_level'].append(rec)
+    return out
+
 def summarize_mat(path,load_small=False):
-    out={'path':str(path),'size_bytes':path.stat().st_size,'whosmat':[]}
+    out={'path':str(path),'size_bytes':path.stat().st_size}
+    if h5py.is_hdf5(path):
+        out.update(summarize_hdf5(path))
+        return out
+    out['format']='matlab_pre_v7.3'
+    out['whosmat']=[]
     for name,shape,cls in whosmat(path): out['whosmat'].append({'name':name,'shape':list(shape),'class':cls})
     if load_small:
         d=loadmat(path,simplify_cells=True)
