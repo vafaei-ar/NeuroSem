@@ -298,6 +298,28 @@ tasks:
       - outputs/tmnred_e5_transfer_v1/latest/subject_results.csv
       - outputs/tmnred_e5_transfer_v1/latest/session_results.csv
 
+  run_tmnred_e5_alternative_representations:
+    description: Run the frozen post-confirmatory exploratory TMNRED E5 transfer analysis for the two already-defined sensitivity EEG representations, row_std_all and relative_8bin_all, without TMNRED tuning.
+    command:
+      - .venv/bin/python
+      - scripts/tuning/evaluate_tmnred_e5_alternative_representations_v1.py
+      - --data-root
+      - data/raw/tmnred
+      - --input-freeze
+      - outputs/tmnred_representation_input_materialization/latest/summary.json
+      - --output-dir
+      - outputs/tmnred_e5_alternative_representations_v1/latest
+      - --device
+      - auto
+    approval: manual
+    timeout_minutes: 180
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/tmnred_e5_alternative_representations_v1/latest/summary.json
+      - outputs/tmnred_e5_alternative_representations_v1/latest/subject_results.csv
+      - outputs/tmnred_e5_alternative_representations_v1/latest/session_results.csv
+
   probe_tmnred_materialization_failures:
     description: Model-blind structural probe for TMNRED z.set materialization failures, including exact scipy errors, MATLAB/HDF5 format detection, and canonical neighboring z.fdt companion checks.
     command:
