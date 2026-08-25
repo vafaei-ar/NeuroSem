@@ -16,6 +16,25 @@ The project now separates three claims that must not be conflated:
 
 Current evidence supports claims 1 and 2 more strongly than claim 3.
 
+## Scientific logic at a glance
+
+```mermaid
+flowchart TD
+    A[Reading EEG contains reproducible geometry] --> B[Does neural geometry align with language-model geometry?]
+    B --> C[Can neural supervision improve held-out neural alignment?]
+    C --> D[Does the improvement transfer beyond the development setting?]
+
+    A -->|Supported: ChineseEEG + TMNRED| A1[Reproducible neural geometry]
+    B -->|Supported: small residual correspondence| B1[BERT / E5 alignment]
+    C -->|Supported within ChineseEEG| C1[Run-07 neural improvement]
+    D -->|Not supported so far| D1[Generic STS / C-MTEB]
+    D -->|Not supported so far| D2[TMNRED model transfer]
+    D -->|Pending| D3[ZuCo English reading]
+    A -->|Pending different-text replication| A2[Garnett Dream]
+```
+
+The diagram is a conceptual summary. Numerical evidence and uncertainty are documented in `3_RESULTS_AND_COMPARISONS.md`.
+
 ## Current scientific status
 
 ### Supported so far
