@@ -10,9 +10,10 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import time
 import urllib.request
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -20,8 +21,9 @@ import h5py
 import numpy as np
 
 NODE = "2urht"
-UA = "NeuroSem-ZuCo2-materialize/1.0"
+UA = "NeuroSem-ZuCo2-materialize/1.1"
 EXPECTED = {1: 50, 2: 50, 3: 51, 4: 50, 5: 50, 6: 49, 7: 49}
+EEG_NAME_RE = re.compile(r"(?P<prefix>[A-Za-z]+)_(?P<subject>[A-Za-z0-9]+)_NR(?P<run>[1-7])_EEG\.mat$")
 
 
 def get_json(url, retries=4):
@@ -83,22 +85,6 @@ def download(url, path):
             if not b:
                 break
             f.write(b)
-
-
-def deref_scalar(f, ref):
-    obj = f[ref]
-    arr = np.asarray(obj[()])
-    if arr.dtype.kind in "uifb":
-        vals = arr.ravel()
-        return float(vals[0]) if vals.size else None
-    if arr.dtype.kind in "SU":
-        return str(arr.ravel()[0]) if arr.size else None
-    if arr.dtype.kind == "u" and arr.ndim >= 1:
-        try:
-            return "".join(chr(int(x)) for x in arr.ravel() if int(x) != 0)
-        except Exception:
-            pass
-    return None
 
 
 def decode_text_dataset(f, ds):
@@ -210,22 +196,28 @@ def main():
     inv = osf_inventory()
     prefix = "task1 - NR/Preprocessed/"
     candidates = {}
+    filename_prefix_counts = Counter()
+    ignored_eeg_paths = []
     for p, meta in inv.items():
         if not p.startswith(prefix) or not p.endswith("_EEG.mat"):
             continue
         rel = p[len(prefix):]
         parts = rel.split("/")
         if len(parts) != 2:
+            ignored_eeg_paths.append(p)
             continue
-        subj, fname = parts
-        if not fname.startswith(f"gip_{subj}_NR"):
+        subj_folder, fname = parts
+        m = EEG_NAME_RE.fullmatch(fname)
+        if m is None or m.group("subject") != subj_folder:
+            ignored_eeg_paths.append(p)
             continue
-        try:
-            run = int(fname.split("_NR", 1)[1].split("_", 1)[0])
-        except Exception:
-            continue
-        if run in EXPECTED:
-            candidates[(subj, run)] = (p, meta)
+        run = int(m.group("run"))
+        key = (subj_folder, run)
+        if key in candidates:
+            raise SystemExit(f"ambiguous duplicate EEG files for {key}: {candidates[key][0]} and {p}")
+        file_prefix = m.group("prefix")
+        filename_prefix_counts[file_prefix] += 1
+        candidates[key] = (p, meta, file_prefix)
 
     subjects = sorted({s for s, _ in candidates})
     root = args.data_root.resolve()
@@ -240,12 +232,18 @@ def main():
                 row.update({"present_on_osf": False, "ready": False, "errors": "missing_osf_file"})
                 rows.append(row)
                 continue
-            p, meta = candidates[key]
+            p, meta, file_prefix = candidates[key]
             local = root / p
             if not local.exists():
                 download(meta["download"], local)
             qc = inspect_run(local, EXPECTED[run])
-            row.update({"present_on_osf": True, "osf_path": p, "size_bytes": local.stat().st_size, **qc})
+            row.update({
+                "present_on_osf": True,
+                "osf_path": p,
+                "filename_prefix": file_prefix,
+                "size_bytes": local.stat().st_size,
+                **qc,
+            })
             row["errors"] = ";".join(qc.get("errors", []))
             rows.append(row)
 
@@ -258,7 +256,8 @@ def main():
     fields = sorted({k for r in rows for k in r.keys()})
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fields)
-        w.writeheader(); w.writerows(rows)
+        w.writeheader()
+        w.writerows(rows)
 
     summary = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -274,6 +273,9 @@ def main():
         "n_runs_ready": sum(bool(r.get("ready")) for r in rows),
         "n_ready_subjects_all_7_runs": len(ready_subjects),
         "ready_subjects_all_7_runs": ready_subjects,
+        "published_filename_prefix_counts": dict(sorted(filename_prefix_counts.items())),
+        "n_ignored_eeg_paths": len(ignored_eeg_paths),
+        "ignored_eeg_paths": ignored_eeg_paths,
         "cohort_rule": "primary reliability cohort requires all seven runs to pass structural QC; no outcome-based exclusions",
         "guardrail": "No EEG representational reliability or language-model quantities are computed in this step.",
     }
