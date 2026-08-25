@@ -203,6 +203,22 @@ tasks:
     artifacts:
       - outputs/tmnred_preproc_format_probe/latest/summary.json
 
+  probe_tmnred_event_alignment:
+    description: Compare one representative TMNRED BIDS event table with continuous and artifact-rejected preprocessed EEGLAB event metadata to freeze trial-identity alignment before signal-level analysis.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_tmnred_event_alignment.py
+      - --data-root
+      - data/raw/tmnred
+      - --output-dir
+      - outputs/tmnred_event_alignment_probe/latest
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/tmnred_event_alignment_probe/latest/summary.json
+
   run_e5_replication:
     description: Run the frozen multilingual-E5 neural-guided replication, run-07 neural holdout, and frozen external STS benchmark.
     command:
