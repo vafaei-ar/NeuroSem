@@ -507,3 +507,30 @@ tasks:
     artifacts:
       - outputs/zuco2_nr_input_materialization/latest/summary.json
       - outputs/zuco2_nr_input_materialization/latest/session_inventory.csv
+
+  run_zuco2_nr_primary_representation_reliability:
+    description: Run the prospectively frozen model-blind ZuCo 2.0 Task 1 normal-reading EEG reliability analysis with all-retained-channel temporal mean as primary and SD/relative-8-bin sensitivity representations.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_zuco2_nr_primary_representation_reliability.py
+      - --data-root
+      - data/raw/zuco2_nr
+      - --input-freeze
+      - outputs/zuco2_nr_input_materialization/latest/summary.json
+      - --mapping-freeze
+      - outputs/zuco2_nr_format_probe/latest/summary.json
+      - --stimulus-root
+      - data/raw/zuco2_probe
+      - --output-dir
+      - outputs/zuco2_nr_primary_representation_reliability/latest
+      - --min-reference-edge-subjects
+      - "12"
+    approval: manual
+    timeout_minutes: 240
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/zuco2_nr_primary_representation_reliability/latest/summary.json
+      - outputs/zuco2_nr_primary_representation_reliability/latest/candidate_metrics.csv
+      - outputs/zuco2_nr_primary_representation_reliability/latest/subject_metrics.csv
+      - outputs/zuco2_nr_primary_representation_reliability/latest/session_metrics.csv
