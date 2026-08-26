@@ -641,3 +641,24 @@ tasks:
       - outputs/garnett_dream_primary_reliability/latest/summary.json
       - outputs/garnett_dream_primary_reliability/latest/subject_metrics.csv
       - outputs/garnett_dream_primary_reliability/latest/chapter_metrics.csv
+
+  probe_garnett_dream_row_text_mapping_v1:
+    description: Model-blind probe for an exact Garnett Dream presentation-row to text mapping using only frozen event metadata and tracked public stimulus/code files; no EEG samples or model quantities are loaded.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_garnett_dream_row_text_mapping_v1.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --input-freeze
+      - outputs/garnett_dream_input_materialization/latest/summary.json
+      - --item-identity
+      - outputs/garnett_dream_input_materialization/latest/item_identity.csv
+      - --output-dir
+      - outputs/garnett_dream_row_text_mapping_probe_v1/latest
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/garnett_dream_row_text_mapping_probe_v1/latest/summary.json
+      - outputs/garnett_dream_row_text_mapping_probe_v1/latest/candidate_file_inventory.csv
