@@ -534,3 +534,29 @@ tasks:
       - outputs/zuco2_nr_primary_representation_reliability/latest/candidate_metrics.csv
       - outputs/zuco2_nr_primary_representation_reliability/latest/subject_metrics.csv
       - outputs/zuco2_nr_primary_representation_reliability/latest/session_metrics.csv
+
+  run_zuco2_nr_e5_transfer:
+    description: Run the single frozen ChineseEEG-to-ZuCo 2.0 Task 1 normal-reading multilingual-E5 transfer test, comparing lambda 0.10 neural-guided against lambda 0 text-only on the prospectively frozen all-retained-channel temporal-mean EEG geometry with no ZuCo tuning.
+    command:
+      - .venv/bin/python
+      - scripts/tuning/evaluate_zuco2_nr_e5_transfer_v1.py
+      - --data-root
+      - data/raw/zuco2_nr
+      - --input-freeze
+      - outputs/zuco2_nr_input_materialization/latest/summary.json
+      - --mapping-freeze
+      - outputs/zuco2_nr_format_probe/latest/summary.json
+      - --stimulus-root
+      - data/raw/zuco2_probe
+      - --output-dir
+      - outputs/zuco2_nr_e5_transfer_v1/latest
+      - --device
+      - auto
+    approval: manual
+    timeout_minutes: 180
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/zuco2_nr_e5_transfer_v1/latest/summary.json
+      - outputs/zuco2_nr_e5_transfer_v1/latest/subject_results.csv
+      - outputs/zuco2_nr_e5_transfer_v1/latest/session_results.csv
