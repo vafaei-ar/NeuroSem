@@ -86,7 +86,6 @@ def code_hits(path: Path) -> list[dict]:
     for lineno, line in enumerate(path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1):
         found = [k for k in CODE_KEYWORDS if k.lower() in line.lower()]
         if found:
-            # Code is public metadata, but keep output compact and avoid any embedded stimulus string.
             hits.append({"line": lineno, "keywords": sorted(set(found)), "line_sha256": hashlib.sha256(line.encode("utf-8")).hexdigest()})
     return hits
 
@@ -124,13 +123,11 @@ def main() -> int:
     out = args.output_dir.resolve()
     out.mkdir(parents=True, exist_ok=True)
 
-    # Use one complete canonical participant only for stimulus/event structure.
     canonical_subject = "04"
     expected_counts = {int(k): int(v) for k, v in freeze.get("chapter_item_counts", {}).items()}
     if sorted(expected_counts) != list(range(1, 19)):
         raise SystemExit("Expected frozen chapters 1..18")
 
-    # Inventory all tracked small text/metadata/code paths plausibly related to presentation construction.
     tracked = git_lines(root, "ls-files")
     candidates = []
     for rel in tracked:
@@ -149,7 +146,6 @@ def main() -> int:
             rec["code_keyword_hits"] = hits
         candidates.append(rec)
 
-    # Locate the known Garnett novel text without exporting its contents.
     novel_paths = [r["path"] for r in candidates if "garnettdream" in r["path"].lower() and r["suffix"] == ".txt" and r.get("materialized_after")]
     if len(novel_paths) != 1:
         raise SystemExit(f"Expected exactly one materialized GarnettDream .txt, got {novel_paths}")
@@ -159,7 +155,6 @@ def main() -> int:
     novel_line_hashes = Counter(hashlib.sha256(x.encode("utf-8")).hexdigest() for x in novel_lines_norm)
     novel_norm = norm_text(novel_raw)
 
-    # Reconstruct canonical subject event paths from frozen item identity rows.
     with args.item_identity.open("r", encoding="utf-8-sig", newline="") as f:
         item_rows = list(csv.DictReader(f))
     by_chapter = defaultdict(list)
@@ -178,10 +173,13 @@ def main() -> int:
         if len(rows) != expected_counts[chapter]:
             raise SystemExit(f"Canonical subject chapter {chapter} item mismatch")
         run = int(rows[0]["run"])
-        event_rel = f"derivatives/filtered_0.5_30/sub-{canonical_subject}/ses-GarnettDream/eeg/sub-{canonical_subject}_ses-GarnettDream_task-reading_run-{run:02d}_events.tsv"
+        # The frozen materialization and successful reliability analysis use the
+        # preproc/filtered_0.5_30 event family. The prior probe accidentally read
+        # derivatives/filtered_0.5_30, whose row indices are not the frozen ones.
+        event_rel = f"derivatives/preproc/filtered_0.5_30/sub-{canonical_subject}/ses-GarnettDream/eeg/sub-{canonical_subject}_ses-GarnettDream_task-reading_run-{run:02d}_events.tsv"
         event_path = root / event_rel
         if not event_path.exists():
-            raise SystemExit(f"Missing canonical event table: {event_rel}")
+            raise SystemExit(f"Missing canonical frozen event table: {event_rel}")
         events = read_tsv(event_path)
 
         rows_values = []
@@ -191,6 +189,11 @@ def main() -> int:
         for item in rows:
             si = int(item["rows_event_row"]) - 1
             ei = int(item["rowe_event_row"]) - 1
+            if not (0 <= si < len(events) and 0 <= ei < len(events)):
+                raise SystemExit(
+                    f"Frozen event-row index outside canonical event table: chapter={chapter} run={run} "
+                    f"item={item['item_index']} rows={si + 1} rowe={ei + 1} n_events={len(events)}"
+                )
             sv = str(events[si].get("value", "") or "").strip()
             ev = str(events[ei].get("value", "") or "").strip()
             rows_values.append(sv)
@@ -204,7 +207,6 @@ def main() -> int:
                     substring += 1
 
         vp = value_profile(rows_values)
-        # A text-bearing value should be largely nonnumeric and have meaningful lengths.
         looks_text = bool(vp["fraction_nonempty"] >= 0.95 and vp["fraction_numeric_nonempty"] <= 0.05 and (vp["length_median"] or 0) >= 2)
         all_values_look_like_text = all_values_look_like_text and looks_text
         total_rows += len(rows)
@@ -214,6 +216,7 @@ def main() -> int:
             "chapter": chapter,
             "run": run,
             "n_items": len(rows),
+            "event_source": event_rel,
             "rows_value_profile": vp,
             "rowe_value_profile": value_profile(rowe_values),
             "rows_values_look_text_bearing": looks_text,
@@ -227,14 +230,13 @@ def main() -> int:
         and substring_match_total == total_rows
     )
 
-    # Export only safe structural inventory and hashes/counts.
     with (out / "candidate_file_inventory.csv").open("w", encoding="utf-8", newline="") as f:
         fields = ["path", "suffix", "materialized_before", "materialized_after", "size_bytes", "sha256", "n_lines", "n_nonempty_lines", "n_characters", "n_code_keyword_hits"]
         w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
         w.writeheader(); w.writerows(candidates)
 
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "ChineseEEG Garnett Dream",
         "purpose": "model-blind exact presentation-row to text mapping probe before any Garnett model validation",
         "loads_eeg_samples": False,
@@ -242,6 +244,7 @@ def main() -> int:
         "computes_model_quantities": False,
         "exports_novel_text": False,
         "canonical_subject_for_event_structure": canonical_subject,
+        "frozen_event_source_family": "derivatives/preproc/filtered_0.5_30",
         "expected_items_by_chapter": {str(k): v for k, v in sorted(expected_counts.items())},
         "candidate_files": candidates,
         "novel_file": {"path": novel_paths[0], **safe_text_summary(novel_path)},
