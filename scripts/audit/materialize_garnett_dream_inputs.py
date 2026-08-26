@@ -55,6 +55,19 @@ def read_ini(path: Path) -> dict[str, str]:
     return out
 
 
+def normalized_companion_name(name: str | None) -> str | None:
+    """Normalize the dataset's published Garnett/Granett session-name typo only.
+
+    The tracked BIDS paths use ``ses-GarnettDream`` while the BrainVision header and
+    marker files internally reference companion basenames containing
+    ``ses-GranettDream``. Treat those two spellings as equivalent while preserving
+    every other character of the basename for strict companion validation.
+    """
+    if name is None:
+        return None
+    return name.replace("ses-GranettDream", "ses-GarnettDream")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-root", type=Path, default=Path("data/raw/chineseeeg"))
@@ -93,10 +106,11 @@ def main() -> int:
 
             vhdr = root / triplet[0]; vmrk = root / triplet[1]; eeg = root / triplet[2]
             h = read_ini(vhdr); m = read_ini(vmrk)
-            if h.get("DataFile") != eeg.name or h.get("MarkerFile") != vmrk.name:
+            if normalized_companion_name(h.get("DataFile")) != eeg.name or normalized_companion_name(h.get("MarkerFile")) != vmrk.name:
                 failures.append({"subject": sub, "run": run, "chapter": chapter, "reason": "header_companion_reference_mismatch", "DataFile": h.get("DataFile"), "MarkerFile": h.get("MarkerFile")})
                 continue
-            if m.get("DataFile") not in {None, "", eeg.name}:
+            marker_data = normalized_companion_name(m.get("DataFile"))
+            if marker_data not in {None, "", eeg.name}:
                 failures.append({"subject": sub, "run": run, "chapter": chapter, "reason": "marker_data_reference_mismatch", "DataFile": m.get("DataFile")})
                 continue
 
@@ -135,7 +149,7 @@ def main() -> int:
     subjects = sorted({r["subject"] for r in ready_runs})
     chapter_support = Counter(r["chapter"] for r in ready_runs)
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "ChineseEEG Garnett Dream",
         "model_blind": True,
         "loads_eeg_samples": False,
@@ -145,6 +159,7 @@ def main() -> int:
         "analysis_unit": "one highlighted presentation row, frozen as ordered ROWS->ROWE pair within chapter",
         "item_identity_rule": "CHxx + within-run ROWS->ROWE pair index; counts must agree across subjects for each chapter",
         "sub07_policy": "CH19 excluded; missing CH18 remains missing",
+        "brainvision_reference_policy": "Internal companion basenames may use the dataset-published ses-GranettDream typo; validation normalizes only GranettDream -> GarnettDream before exact basename comparison.",
         "n_ready_runs": len(ready_runs),
         "n_ready_subjects": len(subjects),
         "ready_subjects": subjects,
