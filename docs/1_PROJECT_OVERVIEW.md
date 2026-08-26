@@ -1,6 +1,6 @@
 # 1. NeuroSem Project Overview
 
-**Last updated:** 2026-08-25
+**Last updated:** 2026-08-26
 
 This is the first document to read after `README.md`. It summarizes the scientific question, how the project evolved, what is supported so far, what is not supported, and what remains in progress.
 
@@ -8,13 +8,13 @@ This is the first document to read after `README.md`. It summarizes the scientif
 
 NeuroSem asks whether human EEG contains reproducible relational structure associated with language meaning, whether that structure generalizes across people, texts, datasets, tasks, and languages, and whether the residual neural geometry can provide useful auxiliary supervision for language models.
 
-The project now separates three claims that must not be conflated:
+The project separates three claims that must not be conflated:
 
 1. **Neural geometry exists and is reproducible.** Do linguistic items evoke EEG patterns whose pairwise relationships are reproducible across participants after nuisance control?
 2. **Neural-guided training changes a model toward the training EEG geometry.** Does adding a neural relational loss improve held-out alignment to the EEG geometry used for development?
 3. **The improvement transfers.** Does the neural-guided model outperform matched text-only tuning on independent semantic benchmarks or independent EEG datasets?
 
-Current evidence supports claims 1 and 2 more strongly than claim 3.
+The current evidence now supports claim 1 strongly across multiple reading datasets, supports claim 2 within ChineseEEG, and gives one positive independent reading-EEG transfer result in ZuCo while generic semantic transfer and TMNRED transfer remain null.
 
 ## Scientific logic at a glance
 
@@ -24,38 +24,39 @@ flowchart TD
     B --> C[Can neural supervision improve held-out neural alignment?]
     C --> D[Does the improvement transfer beyond the development setting?]
 
-    A -->|Supported: ChineseEEG + TMNRED| A1[Reproducible neural geometry]
+    A -->|Supported: ChineseEEG + TMNRED + ZuCo| A1[Reproducible reading neural geometry]
     B -->|Supported: small residual correspondence| B1[BERT / E5 alignment]
     C -->|Supported within ChineseEEG| C1[Run-07 neural improvement]
-    D -->|Not supported so far| D1[Generic STS / C-MTEB]
-    D -->|Not supported so far| D2[TMNRED model transfer]
-    D -->|Pending| D3[ZuCo English reading]
-    A -->|Pending different-text replication| A2[Garnett Dream]
+    D -->|Null / unstable| D1[Generic STS / C-MTEB]
+    D -->|Null| D2[TMNRED E5 transfer]
+    D -->|Positive, frozen confirmatory test| D3[ZuCo English reading E5 transfer]
+    A -->|Pending same-participant new-text test| A2[Garnett Dream]
 ```
 
-The diagram is a conceptual summary. Numerical evidence and uncertainty are documented in `3_RESULTS_AND_COMPARISONS.md`.
+Numerical evidence and uncertainty are documented in `3_RESULTS_AND_COMPARISONS.md`.
 
 ## Current scientific status
 
-### Supported so far
+### Supported
 
 - In ChineseEEG Little Prince silent reading, the selected whole-row temporal-mean EEG representation has reproducible cross-subject geometry after nuisance control.
 - Residual correspondence between this EEG geometry and Chinese BERT representations is small but consistent across six narrative runs.
 - BERT neural-guided tuning improves held-out ChineseEEG run-07 neural alignment relative to matched text-only tuning in two seeds.
-- An independent multilingual-E5 architecture reproduces the central within-ChineseEEG neural-guided alignment phenomenon, so the effect is not only a BERT-specific implementation artifact.
-- TMNRED provides independent Chinese-reading evidence that the EEG geometry itself is reproducible, although the effect is modest.
+- An independent multilingual-E5 architecture reproduces the within-ChineseEEG neural-guided alignment phenomenon.
+- TMNRED provides independent Chinese-reading evidence that the primary temporal-mean EEG geometry itself is reproducible, although weakly.
+- ZuCo 2.0 Task 1 Normal Reading provides a much stronger independent English-reading replication of the same prospectively frozen temporal-mean representation: nuisance-residualized leave-one-subject-out reliability was about **0.0674**, 95% CI **[0.0583, 0.0769]**, with **17/17** participants positive.
+- In the single frozen ChineseEEG-to-ZuCo model-transfer test, multilingual-E5 neural-guided lambda 0.10 outperformed matched text-only lambda 0 on the frozen ZuCo temporal-mean EEG target: mean participant delta **+0.001664**, 95% CI **[+0.001229, +0.002145]**, **17/17** participants positive, exact one-sided sign-flip **p = 7.63e-06**.
 
-### Not supported so far
+### Not supported / important boundary conditions
 
 - Brain-guided tuning has not shown a stable advantage on generic external semantic similarity benchmarks.
 - The frozen ChineseEEG-trained E5 neural-guided model did not significantly outperform matched text-only tuning on independent TMNRED EEG geometry.
 - Alternative TMNRED EEG summaries, including amplitude SD and an 8-bin temporal representation, did not rescue the prespecified E5 transfer contrast.
-- The directional-word inner-speech dataset did not provide convincing transfer evidence and is not task-equivalent to the reading datasets.
+- The Nature directional-word inner-speech dataset did not provide convincing transfer evidence and is not task-equivalent to the reading datasets.
 
-### In progress / next decisive tests
+### Remaining core validation
 
-- **ZuCo 2.0 Task 1 Normal Reading:** independent English reading and cross-language EEG-geometry replication. Public-file inventory and event-format mapping are complete; full-cohort materialization/QC is the current next stage.
-- **ChineseEEG Garnett Dream:** same participants/acquisition family as Little Prince, but a different and substantially larger novel. This should be used as a strong different-text replication before making broad cross-dataset claims.
+- **ChineseEEG Garnett Dream:** same participants and acquisition family as Little Prince but a different and substantially larger text. It should be analyzed as a prospectively frozen **same-participant / new-text validation**, not as an independent cohort replication.
 
 ## Why task comparability matters
 
@@ -76,31 +77,36 @@ For one linguistic item, let the EEG epoch be a matrix with `C` channels and `T`
 
 The item becomes a `C`-dimensional vector. Pairwise distances between item vectors form the neural representational dissimilarity matrix (RDM). RSA then compares that neural RDM with a model RDM while controlling nuisance RDMs.
 
-This temporal mean is deliberately simple and reproducible, but it discards temporal dynamics. The project has therefore also examined amplitude variability, temporal bins, spectral power, and phase-oriented candidates. These alternatives are secondary unless prospectively frozen before an independent test.
+This temporal mean is deliberately simple and reproducible. Richer alternatives such as amplitude SD, temporal bins, spectral power, and phase-oriented summaries remain secondary unless prospectively frozen before an independent test.
 
 ## Current interpretation
 
-The most defensible conclusion is not "brain supervision improves language models." That claim is too broad for the evidence.
+The strongest defensible conclusion is now:
 
-The current conclusion is:
+> Reading-related EEG contains a small but reproducible relational geometry across independent datasets and languages. Neural-guided model training improves alignment to the ChineseEEG development target and, in a frozen confirmatory test, produces a small but highly consistent improvement in alignment to independent English natural-reading EEG in ZuCo. This benefit does not generalize uniformly: generic semantic benchmarks, TMNRED transfer, and the out-of-task Nature directional test remain null or weak.
 
-> Reading-related EEG contains a small but reproducible relational geometry. Neural-guided training can move model geometry toward the development EEG target, but evidence that this change transfers to generic semantic tasks or independent EEG datasets is currently weak or null.
-
-This distinction is central to the project.
+The positive ZuCo result should not be generalized into a claim that brain supervision broadly improves language-model semantics. It is evidence for transfer of neural alignment in a task-matched reading setting.
 
 ## Publication strategy
 
 Current aspirational targets are:
 
-1. **Nature Machine Intelligence**, if the final study supports a strong, general, machine-learning-relevant claim with multiple independent neural validations and a convincing model-learning result.
-2. **Nature Neuroscience**, if the strongest final contribution is the reproducibility and structure of neural language geometry rather than transferable model improvement.
+1. **Nature Machine Intelligence**, if the final manuscript can make a strong machine-learning-relevant case around transferable neural alignment while clearly respecting the null generic-semantic results.
+2. **Nature Neuroscience**, if the strongest contribution is the reproducibility and cross-language structure of reading-related neural geometry, with neural-guided modeling as a secondary mechanistic result.
 
-The target journal must follow the evidence. We should narrow the claim rather than add post-hoc analyses to force the original machine-learning story.
+The final target should follow the evidence rather than post-hoc optimization.
+
+## Immediate next steps
+
+1. Freeze the current cross-dataset evidence chain and manuscript tables.
+2. Do not tune ZuCo representations, lambda values, sensors, or windows after the confirmatory positive result.
+3. Prospectively freeze the Garnett Dream same-participant/new-text validation before examining outcomes.
+4. Build manuscript figures and Results/Methods in parallel with that final validation.
 
 ## Read next
 
 2. [`2_DATASETS_AND_TASKS.md`](2_DATASETS_AND_TASKS.md): what each dataset contains, what the participant was doing, and why each dataset is used.
-3. [`3_RESULTS_AND_COMPARISONS.md`](3_RESULTS_AND_COMPARISONS.md): numerical results and comparisons completed so far.
+3. [`3_RESULTS_AND_COMPARISONS.md`](3_RESULTS_AND_COMPARISONS.md): numerical results and the cross-dataset evidence table.
 4. [`4_EXPERIMENT_LEDGER.md`](4_EXPERIMENT_LEDGER.md): chronological analysis/job ledger, including failures, protocol changes, and current work.
 
-For detailed frozen methods, see the protocol files already present under `docs/` and `ANALYSIS_PLAN.md`.
+For detailed frozen methods, see the protocol files under `docs/` and `ANALYSIS_PLAN.md`.
