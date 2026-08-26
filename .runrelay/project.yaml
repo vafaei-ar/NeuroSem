@@ -27,10 +27,10 @@ monitoring:
 
 tasks:
   run_garnett_dream_e5_transfer:
-    description: Run the single frozen ChineseEEG-to-Garnett-Dream multilingual-E5 same-participant/new-text validation, comparing lambda 0.10 neural-guided against lambda 0 text-only on the prospectively frozen row_mean_all EEG target with the exact segmented-XLSX text mapping and full restored nuisance family.
+    description: Run the single frozen ChineseEEG-to-Garnett-Dream multilingual-E5 same-participant/new-text validation, comparing lambda 0.10 neural-guided against lambda 0 text-only on the prospectively frozen row_mean_all EEG target with the exact segmented-XLSX text mapping and full restored nuisance family. The launcher only normalizes the completed reliability artifact schema before executing the frozen analysis.
     command:
       - .venv/bin/python
-      - scripts/tuning/evaluate_garnett_dream_e5_transfer_v1.py
+      - scripts/tuning/run_garnett_dream_e5_transfer_v1_compat.py
       - --data-root
       - data/raw/chineseeeg
       - --input-freeze
@@ -73,3 +73,17 @@ tasks:
       - outputs/ahba_chineseeeg_preflight_v1/latest/summary.json
       - outputs/ahba_chineseeeg_preflight_v1/latest/spatial_metadata_inventory.csv
       - outputs/ahba_chineseeeg_preflight_v1/latest/montage_overlap.csv
+
+  setup_ahba_dependencies_v1:
+    description: Install and verify the pinned abagen 0.1.3 AHBA preprocessing dependency in the project virtual environment. No AHBA data, EEG samples, model quantities, or NeuroSem outcomes are accessed.
+    command:
+      - .venv/bin/python
+      - scripts/setup/setup_ahba_dependencies_v1.py
+      - --output-dir
+      - outputs/ahba_dependency_setup_v1/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_dependency_setup_v1/latest/summary.json
