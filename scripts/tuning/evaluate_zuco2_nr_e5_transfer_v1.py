@@ -11,11 +11,18 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
 from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
+
+# RunRelay executes this file directly (python scripts/tuning/...). Add the repository
+# root so the shared NeuroSem modules under scripts/ can be imported reliably.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.analysis.run_zuco2_nr_primary_representation_reliability import (
     EXPECTED,
