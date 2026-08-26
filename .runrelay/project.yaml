@@ -617,3 +617,27 @@ tasks:
       - outputs/garnett_dream_input_materialization/latest/summary.json
       - outputs/garnett_dream_input_materialization/latest/session_inventory.csv
       - outputs/garnett_dream_input_materialization/latest/item_identity.csv
+
+  run_garnett_dream_primary_reliability:
+    description: Run the prospectively frozen Garnett Dream EEG-only cross-subject reliability analysis with row_mean_all primary and row_std_all/relative_8bin_all sensitivities, using only the model-blind structural nuisance subset available before exact row-text mapping.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_garnett_dream_primary_reliability.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --input-freeze
+      - outputs/garnett_dream_input_materialization/latest/summary.json
+      - --session-inventory
+      - outputs/garnett_dream_input_materialization/latest/session_inventory.csv
+      - --item-identity
+      - outputs/garnett_dream_input_materialization/latest/item_identity.csv
+      - --output-dir
+      - outputs/garnett_dream_primary_reliability/latest
+    approval: manual
+    timeout_minutes: 360
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/garnett_dream_primary_reliability/latest/summary.json
+      - outputs/garnett_dream_primary_reliability/latest/subject_metrics.csv
+      - outputs/garnett_dream_primary_reliability/latest/chapter_metrics.csv
