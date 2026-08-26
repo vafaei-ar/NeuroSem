@@ -578,3 +578,22 @@ tasks:
       - outputs/garnett_dream_structure_probe/latest/summary.json
       - outputs/garnett_dream_structure_probe/latest/file_inventory.csv
       - outputs/garnett_dream_structure_probe/latest/events_summary.json
+
+  probe_garnett_dream_alignment_freeze:
+    description: Run the corrected model-blind Garnett Dream event/text/materialization freeze probe, explicitly restricted to ses-GarnettDream, before any EEG reliability or model analysis.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_garnett_dream_alignment_freeze.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --output-dir
+      - outputs/garnett_dream_alignment_freeze_probe/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/garnett_dream_alignment_freeze_probe/latest/summary.json
+      - outputs/garnett_dream_alignment_freeze_probe/latest/event_structure.json
+      - outputs/garnett_dream_alignment_freeze_probe/latest/text_candidates.json
+      - outputs/garnett_dream_alignment_freeze_probe/latest/materialization_inventory.csv
