@@ -21,7 +21,11 @@ flowchart LR
     K --> L[ZuCo audit / structural freeze]
     L --> M[ZuCo EEG reliability]
     M --> N[ZuCo frozen E5 transfer]
-    N --> O[Garnett Dream prospective validation]
+    N --> O[Garnett structural freeze]
+    O --> P[Garnett EEG reliability]
+    P --> Q[Garnett exact row-text mapping]
+    Q --> R[Garnett frozen E5 transfer pending]
+    N --> S[AHBA model-blind mechanistic preparation]
 ```
 
 ## Ledger conventions
@@ -201,8 +205,6 @@ Frozen sensitivities:
 - `row_std_all` residual LOO about 0.04087;
 - `relative_8bin_all` residual LOO about 0.04682.
 
-Interpretation: the prospectively inherited temporal mean replicates strongly in independent English normal reading and is the strongest of the three predeclared ZuCo representations.
-
 ### `NEUROSEM-ZUCO2-NR-E5-TRANSFER-0001`
 
 Status: failed immediately before any scientific outcome.
@@ -234,20 +236,155 @@ Guardrail: stop ZuCo lambda/representation/window/sensor searches after this con
 
 ## Phase G. ChineseEEG Garnett Dream
 
-Status: pending.
-
 Role: **same-participant / new-text validation**, not independent-cohort replication.
 
-Next action: use a dedicated prospective protocol that freezes the Little Prince temporal-mean representation, nuisance controls, and inference conventions before any Garnett Dream outcome is inspected. Structural/file-format decisions may be resolved model-blind, but outcome-driven representation or parameter selection is prohibited.
+### `NEUROSEM-GARNETT-STRUCTURE-PROBE-0001`
+
+Completed. Model-blind inventory of Garnett files and participant/run structure.
+
+Important follow-up: the first broad structure probe could over-include Little Prince files because both tasks use `task-reading`. Later probes explicitly restricted to `ses-GarnettDream`; no scientific outcome had been computed at that point.
+
+### `NEUROSEM-GARNETT-ALIGNMENT-FREEZE-0001` and `0002`
+
+Completed model-blind structural/event/text/materialization freeze work.
+
+Frozen analysis unit: ordered `ROWS -> ROWE` presentation row within chapter/run.
+
+Frozen event/source family: `derivatives/preproc/filtered_0.5_30`.
+
+Sub-07's CH19 was not allowed to substitute post hoc for missing CH18.
+
+### `NEUROSEM-GARNETT-INPUTS-0002`
+
+Failed after long materialization because 171 BrainVision companion-reference checks detected the published internal typo `ses-GranettDream` versus tracked filename `ses-GarnettDream`.
+
+The EEG files themselves materialized; the failure was validator-only. No EEG outcome was computed.
+
+### `NEUROSEM-GARNETT-INPUTS-0003`
+
+Completed after a narrow validator normalization of only the known `GranettDream -> GarnettDream` typo.
+
+Frozen materialization summary:
+
+- 10 participants;
+- 171 valid participant-runs;
+- 18 chapters;
+- 85,865 participant x presentation-row records;
+- zero failures;
+- ready for reliability.
+
+No EEG samples or model outcomes were loaded during materialization.
+
+### `NEUROSEM-GARNETT-RELIABILITY-0001`
+
+Status: completed.
+
+Type: prospectively frozen EEG-only same-participant/new-text reliability test.
+
+Primary `row_mean_all`:
+
+- mean raw LOO reliability **0.03545**;
+- mean nuisance-residualized participant LOO reliability **0.01863**;
+- median residualized LOO **0.01895**;
+- **10/10 participants positive**;
+- participant-bootstrap 95% CI **[0.01636, 0.02085]**;
+- exact one-sided sign-flip **p=0.0009766**;
+- exact two-sided sign-flip **p=0.001953**.
+
+Predeclared sensitivities:
+
+- `row_std_all`: residual mean about **0.04443**, 10/10 positive;
+- `relative_8bin_all`: residual mean about **0.00407**, 9/10 positive.
+
+Interpretation: neural geometry generalizes to a substantially different narrative in the same participant/acquisition family. `row_mean_all` remains primary despite stronger numerical SD reliability.
+
+### Row-text mapping probes
+
+`NEUROSEM-GARNETT-ROW-TEXT-MAPPING-0001` failed because the probe opened the wrong event-file family and then indexed past the event list. No outcome was computed.
+
+`0002` corrected only the source-family path and showed that `ROWS.value` is not text.
+
+`0003` broadened model-blind tracked-file discovery but did not establish a final row-text mapping.
+
+The segmented-XLSX probe then used the authors' documented non-display per-run XLSX analysis files and the documented `Chinese_text` header in physical row 1.
+
+### `NEUROSEM-GARNETT-XLSX-MAPPING-0002`
+
+Status: completed.
+
+Type: model-blind exact text-mapping freeze.
+
+Result:
+
+- all tracked XLSX files materialized;
+- exactly 18 unique non-display Garnett workbooks matched chapters/runs 1-18;
+- all had the expected `Chinese_text` header in physical row 1;
+- after excluding that header, all 18 workbook row counts exactly matched the frozen `ROWS -> ROWE` item counts;
+- total mapped linguistic items across chapters: **9,047**;
+- no missing or ambiguous run mapping.
+
+Frozen rule:
+
+`CHxx_ROWyyyy -> physical XLSX row yyyy + 1`
+
+This mapping was established before any Garnett model-transfer outcome.
+
+### Next Garnett action
+
+Run one confirmatory multilingual-E5 transfer test:
+
+- frozen `row_mean_all` target;
+- lambda 0.10 neural-guided minus lambda 0 text-only;
+- no Garnett tuning;
+- chapter-wise RSA;
+- participant-level Fisher-z aggregation;
+- full text-derived nuisance family restored from exact text: order, duration, character count, punctuation count, character-set Jaccard distance.
+
+Lock this result before any sensitivity analysis.
+
+## Phase H. Abbas AHBA transcriptomic extension
+
+Status: planned; **no NeuroSem molecular outcome has been run**.
+
+Abbas proposed using the Allen Human Brain Atlas as a molecular-mechanistic spatial prior for the 128-channel ChineseEEG geometry.
+
+Preferred mapping:
+
+`AHBA cortical transcriptomics -> cortical spatial map -> EEG forward/source-sensitivity projection -> 128-channel molecular weighting -> frozen NeuroSem analysis`
+
+The literal nearest-cortex-under-electrode interpretation is rejected because scalp electrodes measure mixtures of cortical generators.
+
+Model-blind preparation must freeze:
+
+- `abagen` preprocessing, including default-like `ibf_threshold=0.5`;
+- probe/gene aggregation and normalization;
+- donor handling;
+- bilateral/hemisphere strategy;
+- exact ChineseEEG montage and reference;
+- head model, source space, lead-field/sensitivity convention;
+- GABAergic, serotonergic, human cell-type, and small curated pathway panels;
+- spatial-null and random-gene-set frameworks.
+
+Required robustness:
+
+- leave-one-donor-out;
+- spatial-autocorrelation-preserving null maps;
+- gene-set-size-matched random controls;
+- multiplicity correction;
+- robustness to frozen bilateral handling.
+
+This extension cannot revise or rescue the existing ChineseEEG, TMNRED, ZuCo, Nature, or Garnett primary analyses.
 
 ## Current evidence summary
 
 | Question | Current answer |
 |---|---|
-| Is there reproducible reading-related EEG geometry? | **Yes.** ChineseEEG development evidence, TMNRED weak independent Chinese replication, and strong independent English ZuCo replication. |
+| Is there reproducible reading-related EEG geometry? | **Yes.** ChineseEEG development evidence, TMNRED weak independent Chinese replication, strong independent English ZuCo replication, and positive same-participant/new-text Garnett reliability. |
 | Does neural-guided training improve held-out alignment to the development EEG target? | **Yes.** BERT reproduced across two seeds; E5 qualitative architecture replication. |
 | Does that improvement robustly improve generic semantic benchmarks? | **No.** Generic benchmark advantage is unstable/not neural-specific. |
 | Does the neural-guided advantage transfer to independent reading EEG? | **Yes in ZuCo, not universally.** ZuCo frozen transfer is positive; TMNRED frozen transfer is null. |
+| Has Garnett different-text neural geometry replicated? | **Yes.** EEG reliability is positive; exact text mapping is frozen; final model-transfer test pending. |
 | Does the Nature directional result directly test the reading hypothesis? | **No.** It is an out-of-task boundary condition. |
-| Is cross-language reading geometry established? | **Yes, for the frozen ZuCo test.** |
-| Has different-text replication within the original ChineseEEG participants been completed? | **Not yet.** Garnett Dream remains the principal prospective validation gap. |
+| Is there a molecular transcriptomic mechanism? | **Not yet tested.** AHBA is the planned separately frozen mechanistic extension proposed by Abbas. |
+
+See `5_CURRENT_ROADMAP.md` for the operational sequence from here.
