@@ -52,6 +52,21 @@ Primary nuisance family:
 
 If eye-tracking nuisance terms were part of the exact Little Prince analysis being replicated and are structurally available at the frozen Garnett Dream unit, retain them using the same definitions. If they are unavailable or not unit-compatible, document that difference before outcome analysis rather than replacing them post hoc.
 
+### Model-blind reliability-stage clarification (frozen before Garnett EEG outcomes)
+
+The completed Garnett structural/materialization audits established the presentation unit as the ordered `ROWS -> ROWE` pair within each chapter, but did **not** establish an exact mapping from every presentation row to its public novel text. This was learned before any Garnett EEG reliability or neural-model result was computed.
+
+A direct check of the current Little Prince reliability implementation shows that its nuisance family is: run-position difference, duration difference, character-count difference, chapter-identity difference, character-set Jaccard distance, and punctuation-count difference. For the Garnett EEG-only reliability stage:
+
+- analyze chapters separately, so chapter identity is constant within each analyzed unit and contributes no informative RDM;
+- retain the two nuisance structures available exactly at the frozen Garnett unit without reconstructing missing text: within-chapter row/order difference and presentation-duration difference;
+- do **not** invent or approximate text length, punctuation, or lexical-overlap terms from the novel after seeing EEG outcomes;
+- report both raw and this reduced-nuisance residualized reliability;
+- retain the residualized `row_mean_all` endpoint as the primary reliability gate;
+- require an exact presentation-row text mapping to be frozen before any neural-model validation, at which point all applicable text-derived nuisance terms must be restored prospectively.
+
+This clarification is a fidelity correction driven only by model-blind data structure. It does not change the primary EEG representation, participant cohort, item identity, chapter segmentation, or inferential unit.
+
 ## Primary validation endpoint
 
 ### EEG-only reproducibility
