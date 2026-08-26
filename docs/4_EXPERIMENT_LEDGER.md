@@ -1,8 +1,8 @@
 # 4. Experiment Ledger
 
-**Last updated:** 2026-08-25
+**Last updated:** 2026-08-26
 
-This is the chronological audit trail for major NeuroSem analyses. It records what was run, why it was run, whether it was confirmatory or exploratory, and what changed afterward. It is not a replacement for the detailed protocol files or raw RunRelay results.
+This is the chronological audit trail for major NeuroSem analyses. It records what was run, why it was run, whether it was confirmatory or exploratory, and what changed afterward. Exact code/configuration should be recovered from the NeuroSem commit associated with each RunRelay job.
 
 ## Project chronology at a glance
 
@@ -16,397 +16,238 @@ flowchart LR
     F --> G[E5 architecture replication]
     G --> H[E5 Pareto exploration]
     H --> I[Nature directional validation]
-    I --> J[ChineseEEG representation refinement]
-    J --> K[TMNRED EEG reliability]
-    K --> L[TMNRED E5 transfer]
-    L --> M[TMNRED alternative representations]
-    M --> N[ZuCo 2.0 audit / materialization]
-    N --> O[Garnett Dream different-text replication]
+    I --> J[TMNRED EEG reliability]
+    J --> K[TMNRED E5 transfer]
+    K --> L[ZuCo audit / structural freeze]
+    L --> M[ZuCo EEG reliability]
+    M --> N[ZuCo frozen E5 transfer]
+    N --> O[Garnett Dream prospective validation]
 ```
 
-This diagram shows the scientific progression, not every individual debugging job. The detailed ledger below preserves the important failures, protocol corrections, and exact RunRelay job identifiers.
+## Ledger conventions
 
-## How to use this ledger
-
-- **Confirmatory / frozen** means the key analysis choices were fixed before inspecting the target outcome.
-- **Exploratory** means the analysis was motivated by earlier results and should not be promoted to primary evidence without independent replication.
-- Failed jobs are retained when they changed the workflow or exposed a data/engineering constraint.
-- Exact code/configuration should be recovered from the NeuroSem commit associated with the RunRelay job.
-- Safe derived artifacts are transported through Google Drive. Raw/restricted neural data are not GitHub artifacts.
+- **Confirmatory / frozen**: key analysis choices were fixed before target outcomes were inspected.
+- **Exploratory**: motivated by earlier results and not promoted to primary evidence without independent replication.
+- Failed jobs are retained when they expose an engineering/data constraint or demonstrate that no scientific choice changed after failure.
+- Safe derived artifacts are transported through Google Drive; raw/restricted neural data are not declared artifacts.
 
 ## Phase A. ChineseEEG discovery and BERT tuning
 
-### Discovery representation work
+### EEG representation selection
 
-The early flattened sensor-time EEG representation had weak cross-subject reliability. A simpler temporal mean within each channel was selected on neural reliability before semantic testing.
+The early flattened sensor-time representation had weak cross-subject reliability. A simpler temporal mean within each channel was selected on neural reliability before semantic testing.
 
-The selected representation produced approximately 0.220 raw LOO reliability and approximately 0.121 after nuisance control, with residual reliability above the circular-shift null.
+Selected representation: approximately 0.220 raw LOO reliability and approximately 0.121 after nuisance control, with residual reliability above the circular-shift null.
 
 ### BERT semantic RSA, Little Prince runs 01-06
 
-Purpose: test whether BERT geometry shows residual correspondence with reproducible EEG geometry after nuisance control.
+Purpose: test residual correspondence between BERT geometry and reproducible EEG geometry after nuisance control.
 
-Result: positive effect in 6/6 runs; mean run effect 0.0085; exact run-level sign-flip p=0.015625.
+Result: positive in 6/6 runs; mean run effect 0.0085; exact run-level sign-flip p=0.015625.
 
-### BERT neural-guided tuning, seed 1
+### BERT neural-guided tuning and sealed run-07
 
 Four arms: base, text-only, neural-guided, shuffled-neural.
 
 Run-07 mean partial-Spearman:
 
-- base 0.0319;
-- text-only 0.0354;
-- neural-guided 0.0371;
-- shuffled-neural 0.0353.
+- seed 1: 0.0319 / 0.0354 / **0.0371** / 0.0353;
+- seed 2: 0.0319 / 0.0341 / **0.0375** / 0.0338.
 
-Result: neural-guided arm strongest on sealed run-07 neural holdout.
+Interpretation: neural-guided arm strongest on the sealed neural holdout in two seeds.
 
-### BERT external semantic benchmark, seed 1
+### Generic semantic benchmark
 
-Eight-task mean Spearman:
+Seed 1 eight-task mean: base 0.283464, text-only 0.308486, neural-guided 0.308575, shuffled 0.307943.
 
-- base 0.283464;
-- text-only 0.308486;
-- neural-guided 0.308575;
-- shuffled-neural 0.307943.
+Seed 2: base 0.283464, text-only 0.305020, neural-guided 0.301607, shuffled 0.305266.
 
-Result: essentially no meaningful neural-specific semantic gain.
+Interpretation: no stable neural-specific generic semantic gain.
 
-### BERT tuning, seed 2 replication
-
-Run-07 mean partial-Spearman:
-
-- base 0.0319;
-- text-only 0.0341;
-- neural-guided 0.0375;
-- shuffled-neural 0.0338.
-
-External semantic benchmark:
-
-- base 0.283464;
-- text-only 0.305020;
-- neural-guided 0.301607;
-- shuffled-neural 0.305266.
-
-Result: neural holdout advantage reproduced; external semantic advantage did not.
-
-## Phase B. Independent architecture replication with multilingual E5
+## Phase B. Multilingual-E5 architecture replication
 
 ### `NEUROSEM-E5-REP-0001`
 
-Status: failed/malformed control job.
-
-Reason: `requested_machine_id` was null. This job must not be reused as evidence or as a template.
-
-Workflow lesson: every NeuroSem RunRelay job must explicitly request `pshjl4vf24`, and the saved job file must be read back and verified before claiming it is queued.
+Malformed control job: `requested_machine_id` was null. Never reuse as template/evidence.
 
 ### `NEUROSEM-E5-REP-0002`
 
-Status: failed.
-
-Role: infrastructure/debugging only.
+Failed; infrastructure/debugging only.
 
 ### `NEUROSEM-E5-REP-0003`
 
-Status: completed.
+Completed. Purpose: independent-architecture replication of neural-guided tuning with multilingual E5.
 
-Purpose: independent-architecture replication of neural-guided tuning with multilingual E5.
+Interpretation: qualitative ChineseEEG neural-target alignment effect reproduced in a second architecture.
 
-Scientific result: the qualitative ChineseEEG neural-target alignment effect reproduced in a second architecture. This argues against a BERT-specific implementation artifact.
+### E5 Pareto work
 
-### `NEUROSEM-E5-PARETO-0001`
+`NEUROSEM-E5-PARETO-0001` failed during exploratory infrastructure work.
 
-Status: failed.
+`NEUROSEM-E5-PARETO-EVAL-0001` completed and evaluated already-trained dose-response points without retraining.
 
-Role: exploratory dose-response infrastructure/debugging.
-
-### `NEUROSEM-E5-PARETO-EVAL-0001`
-
-Status: completed.
-
-Artifacts: `combined_summary.json`, `pareto_points.csv`.
-
-Purpose: evaluate already-trained E5 dose-response/Pareto points without retraining.
-
-Interpretation: neural-target alignment and generic semantic performance do not simply improve together. Treat the Pareto work as exploratory.
+Interpretation: neural alignment and generic semantic performance do not simply improve together. Treat Pareto work as exploratory.
 
 ## Phase C. Nature directional-word dataset
 
-### `NEUROSEM-NATURE-DL-0001`
+Completed download, model-blind audit, event probing, and frozen directional-word validation.
 
-Status: completed.
+Primary covert/inner-speech lambda .10 - 0 mean difference was approximately -0.001786; no positive transfer evidence.
 
-Purpose: download/checksum the public Scientific Data directional-word EEG dataset.
-
-### `NEUROSEM-NATURE-AUDIT-0001`
-
-Status: completed.
-
-Purpose: model-blind structural audit.
-
-Artifacts: subject inventory and summary.
-
-### `NEUROSEM-NATURE-PROBE-0001`
-
-Status: completed.
-
-Purpose: inspect event labels/structure before model comparison.
-
-### Subsequent Nature validation analyses
-
-Purpose: test directional-concept neural/model alignment, with covert/inner speech as the primary condition.
-
-Interpretation: no convincing transfer evidence. This dataset is now classified as out-of-task because covert articulation is not equivalent to natural reading.
+Interpretation: out-of-task boundary condition, not a task-matched natural-reading replication.
 
 ## Phase D. ChineseEEG representation refinement
 
-### `NEUROSEM-EEGREP-AUDIT-0001`
+`NEUROSEM-EEGREP-AUDIT-0001` completed a model-blind inventory.
 
-Status: completed.
-
-Purpose: audit locally available time-resolved/spectral/phase inputs before representation refinement.
-
-### `NEUROSEM-EEGREP-OVERNIGHT-0001`
-
-Status: completed unusually quickly.
-
-Interpretation: the run did not exercise all intended signal-processing families. It should not be treated as a completed representation benchmark.
-
-### `NEUROSEM-EEGREP-SPECTRALPHASE-0001`
-
-Status: completed.
-
-Purpose: execute fuller spectral/phase candidate pipeline.
-
-### `NEUROSEM-EEGREP-SPECTRALPHASE-0002`
-
-Status: failed.
-
-### `NEUROSEM-EEGREP-SPECTRALPHASE-0003`
-
-Status: failed rapidly because required subject assets were `NOT TRACKED` in the dataset index.
-
-Important workflow lesson: `NOT TRACKED` is a dataset-availability condition, not something `git annex get` can repair.
-
-### `NEUROSEM-EEGREP-SPECTRALPHASE-0004`
-
-Status: failed.
-
-Scientific/workflow correction: freeze the common **tracked and materializable** subject intersection across every required derivative combination before comparing representations.
-
-### `NEUROSEM-EEGREP-SPECTRALPHASE-0005`
-
-Status: failed after longer execution.
-
-Interpretation: representation refinement exposed dataset-availability and execution complexity. Mean remained the established primary representation; richer families remain sensitivity/exploratory unless prospectively validated elsewhere.
+Subsequent overnight/spectral-phase jobs exposed missing/untracked assets and incomplete common-subject materialization. The established temporal mean remained the primary representation; richer families remain secondary/exploratory unless prospectively validated elsewhere.
 
 ## Phase E. TMNRED independent Chinese-reading replication
 
-### `NEUROSEM-TMNRED-DOWNLOAD-0001`
+A sequence of download, documentation, event-alignment, format, stimulus, and materialization probes established a prospective frozen cohort/item rule before signal-level outcome analysis.
 
-Status: completed.
+### Frozen input cohort
 
-Purpose: create pinned OpenNeuro/DataLad checkout without recursively materializing the entire dataset.
-
-### `NEUROSEM-TMNRED-AUDIT-0001`
-
-Status: completed.
-
-Purpose: prospective model-blind structural/materialization audit.
-
-### `NEUROSEM-TMNRED-DOCS-0001`
-
-Status: completed.
-
-Purpose: inspect documentation, sidecars, event schemas, and derivative paths.
-
-### `NEUROSEM-TMNRED-PREPROC-PROBE-0001`
-
-Status: completed.
-
-Purpose: inspect one representative preprocessed EEGLAB file set before freezing signal-level analysis.
-
-### `NEUROSEM-TMNRED-EVENT-ALIGN-0001`
-
-Status: completed.
-
-Purpose: establish event/trial identity mapping.
-
-### `NEUROSEM-TMNRED-STIMULUS-META-0001`
-
-Status: completed.
-
-Purpose: inspect source-material metadata and freeze semantic analysis units.
-
-### `NEUROSEM-TMNRED-INPUTS-0001`
-
-Status: failed.
-
-### `NEUROSEM-TMNRED-MATERIALIZATION-PROBE-0001`
-
-Status: completed.
-
-Purpose: diagnose file-format/materialization failure modes.
-
-### `NEUROSEM-TMNRED-INPUTS-0002`
-
-Status: failed.
-
-### `NEUROSEM-TMNRED-INPUTS-0003`
-
-Status: completed.
-
-Key cohort result: 29 participants structurally ready across eight sessions; `sub-25` excluded; `sub-23` retained with deterministic resampling.
-
-### `NEUROSEM-TMNRED-INPUTS-0004`
-
-Status: failed.
-
-Reason: overly strict complete-case/common-item logic and initial trial-identity extraction issue.
-
-### `NEUROSEM-TMNRED-INPUTS-0005`
-
-Status: failed scientifically rather than technically.
-
-Exact all-29-subject item intersections were too sparse in early sessions: 8, 13, 14, 18, 30, 29, 34, 20 common items across sessions 1-8.
-
-Protocol decision: switch prospectively to an >=80% participant-coverage item rule rather than lowering the complete-case minimum opportunistically.
-
-### `NEUROSEM-TMNRED-INPUTS-0006`
-
-Status: completed.
-
-Frozen cohort/item result:
+`NEUROSEM-TMNRED-INPUTS-0006` completed with:
 
 - 29 participants;
-- eight sessions;
-- all 50 sentence items retained in every session under >=80% coverage.
-
-This is the input freeze for subsequent TMNRED analyses.
+- 8 sessions;
+- all 50 sentence items retained per session under the >=80% participant-coverage rule.
 
 ### `NEUROSEM-TMNRED-PRIMARY-RELIABILITY-0001`
 
-Status: completed.
-
 Type: frozen/model-blind EEG-only replication.
 
-Key results:
-
-- `row_mean_all`: residual LOO 0.00724, 95% CI [0.00356, 0.01079], 75.9% positive participants;
-- `row_std_all`: residual LOO 0.01820, 89.7% positive participants;
-- `relative_8bin_all`: residual LOO 0.01148.
-
-Interpretation: mean geometry independently replicates weakly; SD is more reliable in TMNRED but is secondary.
+- `row_mean_all`: residual LOO 0.00724, 95% CI [0.00356, 0.01079], 75.9% positive;
+- `row_std_all`: 0.01820;
+- `relative_8bin_all`: 0.01148.
 
 ### `NEUROSEM-TMNRED-E5-TRANSFER-0001`
 
-Status: completed.
-
 Type: frozen confirmatory external model-transfer test.
 
-Primary contrast: E5 neural-guided lambda 0.10 vs text-only lambda 0, no TMNRED tuning.
+Primary contrast: ChineseEEG-trained E5 lambda 0.10 neural-guided vs lambda 0 text-only, no TMNRED tuning.
 
-Result:
-
-- mean residual-RSA difference +0.000020;
-- 95% CI [-0.000128, +0.000176];
-- one-sided sign-flip p=0.402;
-- 55.2% positive participants.
+Result: mean delta +0.000020, 95% CI [-0.000128, +0.000176], one-sided p=.402, 55.2% positive.
 
 Interpretation: null transfer.
 
 ### `NEUROSEM-TMNRED-E5-ALTREP-0001`
 
-Status: completed.
-
 Type: explicitly exploratory post-confirmatory analysis.
 
-Results:
+- SD target: delta -0.000294, 95% CI [-0.000479, -0.000107], p=.997;
+- 8-bin target: delta +0.000041, 95% CI [-0.000111, +0.000207], p=.322.
 
-- SD target: delta -0.000294, 95% CI [-0.000479, -0.000107], p=0.997;
-- 8-bin target: delta +0.000041, 95% CI [-0.000111, +0.000207], p=0.322.
-
-Interpretation: alternative TMNRED representations do not rescue lambda-0.10 transfer.
+Interpretation: alternative TMNRED targets do not rescue transfer.
 
 ## Phase F. ZuCo 2.0 independent English-reading replication
 
-### `NEUROSEM-ZUCO-OSF-INVENTORY-0001`
+### Inventory and format probing
+
+`NEUROSEM-ZUCO-OSF-INVENTORY-0001` completed. Decision: prioritize ZuCo 2.0 Task 1 Normal Reading.
+
+Early format jobs established MATLAB v7.3/HDF5 handling and continuous EEG event structure.
+
+Representative YDG NR1: 105 channels, 500 Hz, 50 sentence units, 110 events, with sentence windows delimited by `10 -> 11` or `12 -> 13` pairs.
+
+### Full-cohort materialization
+
+`NEUROSEM-ZUCO2-NR-INPUTS-0001` completed but was unusable because the initial filename matcher only accepted the `gip_` prefix.
+
+The corrected matcher accepted alphabetic prefixes, and `NEUROSEM-ZUCO2-NR-INPUTS-0002` completed successfully.
+
+Frozen cohort:
+
+- 18 subjects discovered;
+- 126 expected/present run files;
+- 123 runs structurally ready;
+- 17 subjects ready across all seven runs;
+- YTL excluded because NR3, NR4, and NR6 failed structural event QC.
+
+YTL exclusion was frozen before outcome analysis.
+
+### Stimulus mapping probes
+
+A sequence of narrow, model-blind probes resolved the public Task 1 material schema and the exact 349-sentence mapping.
+
+Important history:
+
+- early probe design attempted unnecessary ET materialization and timed out;
+- later probes established that `task_materials/nr_*.csv` files are semicolon-delimited and headerless;
+- each material file contains three more rows than the EEG sentence count;
+- no row was dropped based on outcome information;
+- a unique zero-cost monotonic word-count alignment showed that rows 1-3 are skipped in every NR run and all remaining rows map one-to-one to EEG sentence order.
+
+This mapping was frozen before EEG reliability.
+
+### `NEUROSEM-ZUCO2-NR-RELIABILITY-0001`
 
 Status: completed.
 
-Purpose: model-blind inventory of ZuCo 1.0 and 2.0 before large downloads.
+Type: prospectively frozen, model-blind EEG-only reliability analysis.
 
-Decision: prioritize **ZuCo 2.0 Task 1 Normal Reading** because the public inventory provides 18 participants with seven NR EEG runs each and a stronger cohort than ZuCo 1.0 for the intended test.
+Primary `row_mean_all`:
 
-### `NEUROSEM-ZUCO2-NR-FORMAT-0001`
+- mean raw LOO 0.06739;
+- mean nuisance-residualized LOO **0.06742**;
+- median residualized LOO 0.06559;
+- 95% CI **[0.05831, 0.07687]**;
+- **17/17 participants positive**;
+- exact one-sided sign-flip **p=7.63e-06**.
 
-Status: failed.
+Frozen sensitivities:
 
-Reason: initial MATLAB-format handling assumption.
+- `row_std_all` residual LOO about 0.04087;
+- `relative_8bin_all` residual LOO about 0.04682.
 
-### `NEUROSEM-ZUCO2-NR-FORMAT-0002`
+Interpretation: the prospectively inherited temporal mean replicates strongly in independent English normal reading and is the strongest of the three predeclared ZuCo representations.
 
-Status: failed rapidly.
+### `NEUROSEM-ZUCO2-NR-E5-TRANSFER-0001`
 
-Reason: HDF5/MATLAB v7.3 support required `h5py`, which was not yet installed in the project environment.
+Status: failed immediately before any scientific outcome.
 
-### `NEUROSEM-ZUCO2-SETUP-H5PY-0001`
+Reason: `ModuleNotFoundError: No module named 'scripts'` from direct script execution. No artifacts. The failure was purely a Python import-path issue.
 
-Status: completed.
+Scientific protocol was not modified.
 
-Purpose: refresh project environment with `h5py` support.
-
-### `NEUROSEM-ZUCO2-NR-FORMAT-0003`
-
-Status: completed.
-
-Key result: seven NR runs contain 349 sentence units in total; representative EEG is MATLAB v7.3/HDF5.
-
-### `NEUROSEM-ZUCO2-NR-FORMAT-0004`
+### `NEUROSEM-ZUCO2-NR-E5-TRANSFER-0002`
 
 Status: completed.
 
-Key result: representative YDG NR1 EEG is continuous, not epoched: 105 channels, 500 Hz, 198,585 time points, 110 events.
+Type: single frozen confirmatory cross-dataset/cross-language model-transfer test.
 
-### `NEUROSEM-ZUCO2-NR-FORMAT-0005`
+Contrast: ChineseEEG-trained multilingual-E5 lambda 0.10 neural-guided minus matched lambda 0 text-only, evaluated on the frozen ZuCo temporal-mean EEG geometry with no ZuCo tuning.
 
-Status: completed on the same code state as the later resend. Operationally duplicated because completion was not initially visible in the interactive status path.
+Result:
 
-### `NEUROSEM-ZUCO2-NR-FORMAT-0006`
+- mean participant delta **+0.0016637**;
+- median delta **+0.0014871**;
+- **17/17 participants positive**;
+- bootstrap 95% CI **[+0.0012294, +0.0021452]**;
+- exact one-sided sign-flip **p=7.63e-06**;
+- exact two-sided sign-flip **p=1.53e-05**.
 
-Status: completed; harmless duplicate/resend.
+Interpretation: positive task-matched transfer of neural alignment from ChineseEEG to independent English reading EEG.
 
-Key event-mapping result for YDG NR1:
-
-- 110 events total;
-- 100 core sentence events = 50 ordered sentence pairs;
-- 42 pairs use `10 -> 11`;
-- 8 pairs use `12 -> 13`;
-- trigger `15` is auxiliary after question-associated sentences;
-- `90` and `20` behave as run-level start/end markers.
-
-Conclusion: sentence identity can be prospectively defined by run + sentence order, with windows delimited by the two allowed start/end trigger pairs.
-
-### Current ZuCo next stage
-
-Full 18-participant x 7-run materialization/QC is the next model-blind step. No ZuCo EEG reliability or model-transfer result exists yet.
+Guardrail: stop ZuCo lambda/representation/window/sensor searches after this confirmatory result.
 
 ## Phase G. ChineseEEG Garnett Dream
 
-Status: not yet incorporated into the core analysis pipeline.
+Status: pending.
 
-Reason for prioritization now: it provides a different-text replication using the same general ChineseEEG acquisition family and should be exploited before broad publication claims.
+Role: **same-participant / new-text validation**, not independent-cohort replication.
 
-Recommended design: freeze the Little Prince representation/nuisance/RSA pipeline prospectively, then evaluate Garnett Dream without using its outcome to choose the representation.
+Next action: use a dedicated prospective protocol that freezes the Little Prince temporal-mean representation, nuisance controls, and inference conventions before any Garnett Dream outcome is inspected. Structural/file-format decisions may be resolved model-blind, but outcome-driven representation or parameter selection is prohibited.
 
 ## Current evidence summary
 
 | Question | Current answer |
 |---|---|
-| Is there reproducible reading-related EEG geometry? | **Yes, modestly supported.** ChineseEEG strong within-dataset evidence; TMNRED independent positive reliability. |
+| Is there reproducible reading-related EEG geometry? | **Yes.** ChineseEEG development evidence, TMNRED weak independent Chinese replication, and strong independent English ZuCo replication. |
 | Does neural-guided training improve held-out alignment to the development EEG target? | **Yes.** BERT reproduced across two seeds; E5 qualitative architecture replication. |
-| Does that improvement robustly improve generic semantic benchmarks? | **No evidence so far.** BERT external benchmark unstable; E5 Pareto work does not show simple joint improvement. |
-| Does the ChineseEEG-trained neural advantage transfer to independent TMNRED EEG? | **No.** Frozen primary test null; alternative EEG summaries do not rescue it. |
-| Does the Nature directional result directly test the reading hypothesis? | **No.** It is covert/inner speech and should be treated as out-of-task. |
-| Is cross-language reading geometry established? | **Not yet.** ZuCo is the key next test. |
-| Has different-text replication within ChineseEEG been completed? | **Not yet.** Garnett Dream is a priority. |
+| Does that improvement robustly improve generic semantic benchmarks? | **No.** Generic benchmark advantage is unstable/not neural-specific. |
+| Does the neural-guided advantage transfer to independent reading EEG? | **Yes in ZuCo, not universally.** ZuCo frozen transfer is positive; TMNRED frozen transfer is null. |
+| Does the Nature directional result directly test the reading hypothesis? | **No.** It is an out-of-task boundary condition. |
+| Is cross-language reading geometry established? | **Yes, for the frozen ZuCo test.** |
+| Has different-text replication within the original ChineseEEG participants been completed? | **Not yet.** Garnett Dream remains the principal prospective validation gap. |
