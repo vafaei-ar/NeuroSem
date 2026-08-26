@@ -3,13 +3,15 @@
 
 The ChineseEEG authors document that the non-"display" per-run segmented XLSX
 files contain the textual units/lines used for EEG analysis, while companion
-"display" XLSX files are transformed for PsychoPy presentation. This probe
-materializes only tracked XLSX files under derivatives/novels, inventories
-their structure without exporting text, and tests whether exactly one
-Garnett-Dream non-display run workbook matches the already-frozen ROWS->ROWE
-item count for each chapter/run 1..18.
+"display" XLSX files are transformed for PsychoPy presentation. Their public
+segmentation code writes a schema header in physical row 1 (``Chinese_text``)
+and data beginning in physical row 2. This probe validates that schema without
+exporting stimulus text, and tests whether exactly one Garnett-Dream non-display
+run workbook has exactly the frozen ROWS->ROWE item count after excluding that
+single documented header row for every chapter/run 1..18.
 
-No EEG sample, model embedding, adapter, RSA, or reliability quantity is loaded.
+No EEG sample, model embedding, adapter, RSA, reliability quantity, or stimulus
+text is exported or used to choose the mapping.
 """
 from __future__ import annotations
 
@@ -25,6 +27,9 @@ from openpyxl import load_workbook
 
 RUN_RE = re.compile(r"run[_-]?(\d{1,2})", re.I)
 GARNETT_KEYS = ("garnett", "dream", "langwang", "lang_wang", "lang-wang")
+EXPECTED_HEADER = "Chinese_text"
+UPSTREAM_README_BLOB_SHA = "a72763308292e61b4fefad9c978fe9ba48c9877b"
+UPSTREAM_SEGMENTATION_CODE_BLOB_SHA = "f72682d34b88e706b917320981ba4a9e50a9f645"
 
 
 def git_lines(root: Path, *args: str) -> list[str]:
@@ -60,32 +65,61 @@ def sha256(path: Path) -> str:
 def workbook_structure(path: Path) -> dict:
     wb = load_workbook(path, read_only=True, data_only=True)
     sheets = []
+    all_nonempty_row_hashes = []
+    data_row_hashes = []
     total_nonempty_rows = 0
     total_nonempty_cells = 0
-    row_hashes = []
-    for ws in wb.worksheets:
+    header_valid = False
+    header_nonempty_cells = None
+
+    for sheet_index, ws in enumerate(wb.worksheets):
         n_rows = 0
         n_cells = 0
+        first_nonempty_seen = False
+        sheet_header_valid = False
+        sheet_header_cells = None
         for row in ws.iter_rows(values_only=True):
             vals = [str(v).strip() for v in row if v is not None and str(v).strip()]
             if not vals:
                 continue
             n_rows += 1
             n_cells += len(vals)
-            # Hash only, never export text.
             joined = "\u241f".join(vals)
-            row_hashes.append(hashlib.sha256(joined.encode("utf-8")).hexdigest())
-        sheets.append({"title": ws.title, "nonempty_rows": n_rows, "nonempty_cells": n_cells})
+            row_hash = hashlib.sha256(joined.encode("utf-8")).hexdigest()
+            all_nonempty_row_hashes.append(row_hash)
+            if not first_nonempty_seen:
+                first_nonempty_seen = True
+                sheet_header_cells = len(vals)
+                sheet_header_valid = len(vals) == 1 and vals[0] == EXPECTED_HEADER
+                if sheet_index == 0:
+                    header_valid = sheet_header_valid
+                    header_nonempty_cells = sheet_header_cells
+                continue
+            data_row_hashes.append(row_hash)
+        sheets.append({
+            "title": ws.title,
+            "nonempty_rows": n_rows,
+            "nonempty_cells": n_cells,
+            "first_nonempty_row_is_expected_header": sheet_header_valid,
+            "first_nonempty_row_nonempty_cells": sheet_header_cells,
+        })
         total_nonempty_rows += n_rows
         total_nonempty_cells += n_cells
+
     wb.close()
-    sequence_hash = hashlib.sha256("\n".join(row_hashes).encode("ascii")).hexdigest() if row_hashes else None
+    all_sequence_hash = hashlib.sha256("\n".join(all_nonempty_row_hashes).encode("ascii")).hexdigest() if all_nonempty_row_hashes else None
+    data_sequence_hash = hashlib.sha256("\n".join(data_row_hashes).encode("ascii")).hexdigest() if data_row_hashes else None
+    data_nonempty_rows = total_nonempty_rows - 1 if len(sheets) == 1 and header_valid else None
     return {
         "n_sheets": len(sheets),
         "sheets": sheets,
-        "nonempty_rows": total_nonempty_rows,
+        "nonempty_rows_including_header": total_nonempty_rows,
         "nonempty_cells": total_nonempty_cells,
-        "row_sequence_sha256": sequence_hash,
+        "header_valid": bool(len(sheets) == 1 and header_valid),
+        "header_nonempty_cells": header_nonempty_cells,
+        "data_nonempty_rows": data_nonempty_rows,
+        "row_sequence_sha256_including_header": all_sequence_hash,
+        "data_row_sequence_sha256": data_sequence_hash,
     }
 
 
@@ -144,10 +178,21 @@ def main() -> int:
             and not r.get("workbook_error")
         ]
         candidates_by_run[str(run)] = [
-            {"path": r["path"], "nonempty_rows": r.get("nonempty_rows"), "sha256": r.get("sha256"), "row_sequence_sha256": r.get("row_sequence_sha256")}
+            {
+                "path": r["path"],
+                "header_valid": r.get("header_valid"),
+                "nonempty_rows_including_header": r.get("nonempty_rows_including_header"),
+                "data_nonempty_rows": r.get("data_nonempty_rows"),
+                "sha256": r.get("sha256"),
+                "data_row_sequence_sha256": r.get("data_row_sequence_sha256"),
+            }
             for r in candidates
         ]
-        exact = [r for r in candidates if int(r.get("nonempty_rows") or -1) == expected[run]]
+        exact = [
+            r for r in candidates
+            if r.get("header_valid")
+            and int(r.get("data_nonempty_rows") or -1) == expected[run]
+        ]
         if len(exact) == 1:
             r = exact[0]
             matches.append({
@@ -155,9 +200,13 @@ def main() -> int:
                 "chapter": run,
                 "expected_items": expected[run],
                 "path": r["path"],
-                "nonempty_rows": r["nonempty_rows"],
+                "header_valid": True,
+                "physical_header_row": 1,
+                "first_data_physical_row": 2,
+                "nonempty_rows_including_header": r["nonempty_rows_including_header"],
+                "data_nonempty_rows": r["data_nonempty_rows"],
                 "sha256": r["sha256"],
-                "row_sequence_sha256": r["row_sequence_sha256"],
+                "data_row_sequence_sha256": r["data_row_sequence_sha256"],
             })
         elif len(exact) == 0:
             missing.append({"run": run, "expected_items": expected[run], "candidate_count": len(candidates)})
@@ -167,24 +216,28 @@ def main() -> int:
     with (out / "workbook_inventory.csv").open("w", encoding="utf-8", newline="") as f:
         fields = [
             "path", "materialized_before", "materialized_after", "is_display", "looks_garnett", "run_from_path",
-            "size_bytes", "sha256", "n_sheets", "nonempty_rows", "nonempty_cells", "row_sequence_sha256", "workbook_error",
+            "size_bytes", "sha256", "n_sheets", "header_valid", "header_nonempty_cells",
+            "nonempty_rows_including_header", "data_nonempty_rows", "nonempty_cells",
+            "row_sequence_sha256_including_header", "data_row_sequence_sha256", "workbook_error",
         ]
         w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
         w.writeheader(); w.writerows(records)
 
     exact_complete = len(matches) == 18 and not ambiguous and not missing and not failures
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "ChineseEEG Garnett Dream",
-        "purpose": "model-blind segmented-XLSX presentation-row mapping probe",
+        "purpose": "model-blind segmented-XLSX presentation-row mapping probe with documented header handling",
         "loads_eeg_samples": False,
         "computes_reliability_or_rsa": False,
         "computes_model_quantities": False,
         "exports_text": False,
         "source_semantics": {
             "upstream_repository": "ncclabsustech/Chinese_reading_task_eeg_processing",
-            "documented_rule": "non-display segmented per-run XLSX contains displayed analysis lines; display XLSX is a transformed PsychoPy presentation file",
-            "upstream_readme_blob_sha": "a72763308292e61b4fefad9c978fe9ba48c9877b",
+            "documented_rule": "non-display segmented per-run XLSX contains analysis lines; display XLSX is transformed for PsychoPy presentation",
+            "documented_xlsx_schema": "save_to_xlsx writes the literal schema header Chinese_text in physical row 1 and stimulus rows beginning at physical row 2",
+            "upstream_readme_blob_sha": UPSTREAM_README_BLOB_SHA,
+            "upstream_segmentation_code_blob_sha": UPSTREAM_SEGMENTATION_CODE_BLOB_SHA,
         },
         "expected_items_by_chapter": {str(k): v for k, v in sorted(expected.items())},
         "n_tracked_xlsx": len(tracked),
@@ -198,14 +251,14 @@ def main() -> int:
         "freeze_gate": {
             "exact_row_text_mapping_identified": exact_complete,
             "ready_to_freeze_model_validation_text_mapping": exact_complete,
-            "mapping_rule": "For run/chapter 1..18, map CHxx_ROWyyyy to row yyyy of the unique non-display Garnett segmented run XLSX whose nonempty-row count equals the frozen ROWS->ROWE item count." if exact_complete else None,
-            "reason": "Unique non-display segmented XLSX row counts exactly match all 18 frozen Garnett ROWS->ROWE item counts." if exact_complete else "An exact one-to-one segmented-XLSX mapping is not yet structurally established for all 18 runs.",
+            "mapping_rule": "For chapter/run xx in 1..18, map CHxx_ROWyyyy to physical XLSX row yyyy+1 (row 1 is the validated Chinese_text schema header) in the unique non-display Garnett segmented run workbook; the remaining data-row count must exactly equal the frozen ROWS->ROWE item count." if exact_complete else None,
+            "reason": "All 18 unique non-display Garnett run workbooks have the documented single header row and exactly match the frozen ROWS->ROWE item counts after excluding that header." if exact_complete else "An exact header-aware one-to-one segmented-XLSX mapping is not yet structurally established for all 18 runs.",
         },
         "guardrails": [
             "No EEG signal sample is opened.",
             "No model embedding, adapter, lambda, RSA, or reliability outcome is loaded or computed.",
-            "No stimulus text is exported; only paths, counts, file hashes, and row-sequence hashes are stored.",
-            "No mapping is selected using Garnett neural outcomes.",
+            "No stimulus text is exported; only schema status, paths, counts, file hashes, and row-sequence hashes are stored.",
+            "The one-row offset is fixed from the authors' public save_to_xlsx implementation, not inferred from Garnett neural outcomes.",
         ],
     }
     (out / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
