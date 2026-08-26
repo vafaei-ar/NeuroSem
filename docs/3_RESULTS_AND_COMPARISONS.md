@@ -1,33 +1,42 @@
 # 3. Results and Comparisons
 
-**Last updated:** 2026-08-25
+**Last updated:** 2026-08-26
 
-This file is the current numerical results summary for NeuroSem. It separates EEG reliability, neural-model correspondence, model tuning, external semantic benchmarks, and independent EEG transfer. It should be updated whenever a result changes the scientific interpretation.
+This file is the current numerical results summary for NeuroSem. It separates EEG reliability, neural-model correspondence, model tuning, external semantic benchmarks, and independent EEG transfer.
+
+## Cross-dataset evidence table
+
+| Dataset / test | Task / language | Independence from Little Prince development set | Frozen EEG reliability | Frozen model-transfer result | Interpretation |
+|---|---|---|---|---|---|
+| ChineseEEG Little Prince | Silent natural reading / Chinese | Development dataset | temporal-mean residual LOO ~**0.121** | BERT run-07 neural-guided > text-only in two seeds; E5 qualitative architecture replication | Establishes development neural geometry and within-dataset neural-guided learning |
+| TMNRED | Sentence reading / Chinese | Independent participants + dataset | primary temporal mean **0.00724**, 95% CI **[0.00356, 0.01079]** | E5 lambda .10 - 0 = **+0.000020**, 95% CI **[-0.000128, +0.000176]**, p=.402 | Geometry replicates weakly; neural-guided transfer null |
+| ZuCo 2.0 Task 1 NR | Normal reading / English | Independent participants + dataset + language | primary temporal mean **0.06742**, 95% CI **[0.05831, 0.07687]**, 17/17 positive | E5 lambda .10 - 0 = **+0.001664**, 95% CI **[+0.001229, +0.002145]**, 17/17 positive, one-sided p=**7.63e-06** | Strong cross-language reading replication and positive frozen transfer |
+| Nature directional | Covert directional concepts / Russian + Spanish | Independent participants + dataset + task | not treated as task-matched reading reliability | lambda .10 - 0 mean **-0.001786**, null | Out-of-task boundary condition; does not directly test natural reading |
+| ChineseEEG Garnett Dream | Silent natural reading / Chinese | Same participants, new text | pending | pending | Prospective same-participant/new-text validation |
+
+The key pattern is not universal transfer. Reading-related geometry generalizes across independent Chinese and English reading datasets, but the neural-guided model advantage transfers convincingly only in the task-matched ZuCo English-reading test so far.
 
 ## Evidence map
 
 ```mermaid
 flowchart TD
     A[ChineseEEG neural geometry] -->|Positive| B[Reproducible across Little Prince runs]
-    B --> C[BERT neural-guided tuning]
-    C -->|Positive| D[Sealed run-07 neural alignment]
+    B --> C[BERT / E5 neural-guided tuning]
+    C -->|Positive| D[Sealed ChineseEEG neural alignment]
 
     D --> E[Generic semantic transfer]
     E -->|Null / unstable| E1[STS / C-MTEB]
 
     D --> F[Independent EEG transfer]
-    F -->|EEG geometry positive| F1[TMNRED reliability]
-    F -->|Model transfer null| F2[TMNRED E5]
-    F -->|Pending| F3[ZuCo English reading]
+    F -->|EEG geometry positive, model transfer null| F1[TMNRED]
+    F -->|EEG geometry strong, model transfer positive| F2[ZuCo English reading]
 
-    A --> G[Different-text replication]
+    A --> G[Same-participant new-text validation]
     G -->|Pending| G1[Garnett Dream]
 
     F --> H[Out-of-task test]
-    H -->|Not convincing; task differs| H1[Nature directional inner speech]
+    H -->|Null; task differs| H1[Nature directional inner speech]
 ```
-
-The diagram summarizes direction and status only. Exact effect sizes, confidence intervals, and p-values remain in the sections below.
 
 ## 3.1 ChineseEEG neural geometry and BERT correspondence
 
@@ -56,121 +65,60 @@ Cross-run summary:
 - mean run effect = **0.0085**;
 - exact one-sided run-level sign-flip **p = 0.015625**;
 - common-subject aggregate positive in **8/9** subjects;
-- exact subject-level sign-flip **p = 0.0391**;
-- every leave-one-run-out aggregate remained positive.
+- exact subject-level sign-flip **p = 0.0391**.
 
-Interpretation: the effect is small, but the direction is unusually consistent across narrative runs.
-
-## 3.2 BERT neural-guided tuning: run-07 holdout
-
-Four arms were compared:
-
-- base pretrained BERT;
-- text-only LoRA tuning;
-- neural-guided LoRA tuning;
-- shuffled-neural control.
-
-### Seed 1
+## 3.2 BERT neural-guided tuning: sealed run-07
 
 Run-07 mean partial-Spearman:
 
-| Arm | Mean |
-|---|---:|
-| Base | 0.0319 |
-| Text-only | 0.0354 |
-| Neural-guided | **0.0371** |
-| Shuffled-neural | 0.0353 |
+| Arm | Seed 1 | Seed 2 |
+|---|---:|---:|
+| Base | 0.0319 | 0.0319 |
+| Text-only | 0.0354 | 0.0341 |
+| Neural-guided | **0.0371** | **0.0375** |
+| Shuffled-neural | 0.0353 | 0.0338 |
 
-The neural-guided arm was the strongest of the four on this sealed neural holdout.
+Interpretation: brain-guided training can improve alignment to held-out ChineseEEG neural geometry relative to matched text-only and shuffled-neural controls.
 
-### Seed 2
+## 3.3 Generic external semantic benchmark
 
-Run-07 mean partial-Spearman:
+Seed 1 eight-task mean Spearman:
 
-| Arm | Mean |
-|---|---:|
-| Base | 0.0319 |
-| Text-only | 0.0341 |
-| Neural-guided | **0.0375** |
-| Shuffled-neural | 0.0338 |
+- base 0.283464;
+- text-only 0.308486;
+- neural-guided 0.308575;
+- shuffled-neural 0.307943.
 
-The same qualitative ordering reproduced in seed 2.
+Seed 2:
 
-Interpretation: brain-guided training can improve alignment to held-out ChineseEEG neural geometry relative to matched text-only and shuffled-neural controls. This supports a within-dataset learning effect, not yet transfer.
+- base 0.283464;
+- text-only 0.305020;
+- neural-guided 0.301607;
+- shuffled-neural 0.305266.
 
-## 3.3 BERT external semantic benchmark
-
-Frozen eight-task external semantic benchmark:
-
-| Arm | Mean Spearman across 8 tasks |
-|---|---:|
-| Base | 0.283464 |
-| Text-only | 0.308486 |
-| Neural-guided | **0.308575** |
-| Shuffled-neural | 0.307943 |
-
-Primary deltas:
-
-- neural - text-only = **+0.000089**;
-- neural - shuffled-neural = **+0.000632**;
-- neural - base = **+0.025111**;
-- neural wins vs text-only on **5/8** tasks;
-- neural wins vs shuffled-neural on **6/8** tasks.
-
-Seed 2 did not reproduce a neural advantage:
-
-| Arm | Mean Spearman across 8 tasks |
-|---|---:|
-| Base | 0.283464 |
-| Text-only | **0.305020** |
-| Neural-guided | 0.301607 |
-| Shuffled-neural | **0.305266** |
-
-Seed-2 deltas:
-
-- neural - text-only = **-0.003413**;
-- neural - shuffled-neural = **-0.003659**;
-- neural - base = **+0.018143**;
-- neural wins vs text-only on **1/8** tasks;
-- neural wins vs shuffled-neural on **1/8** tasks.
-
-Interpretation: the external semantic advantage is not stable across seeds. Neural-guided tuning improves over the pretrained baseline largely because tuning itself helps, but the brain-specific component does not show a robust generic semantic benefit.
+Interpretation: neural-guided tuning does not show a stable neural-specific advantage on generic semantic benchmarks.
 
 ## 3.4 Multilingual-E5 replication
 
-An independent multilingual-E5 architecture was used to test whether the ChineseEEG neural-guided effect was specific to BERT.
+Multilingual E5 reproduced the qualitative within-ChineseEEG neural-target alignment phenomenon, showing that the effect is not only a BERT-specific implementation artifact. Pareto/dose-response work showed that neural alignment and generic semantic performance can trade off rather than improve together.
 
-The E5 program reproduced the key qualitative result that neural-guided optimization can move an independent architecture toward the ChineseEEG neural target. The subsequent Pareto/dose-response work showed that neural alignment and generic semantic performance can trade off rather than improve together.
+The primary external E5 contrast subsequently frozen for TMNRED, Nature, and ZuCo was neural-guided lambda 0.10 versus matched text-only lambda 0.
 
-The important scientific conclusion is therefore architectural replication of the **neural-target alignment phenomenon**, not evidence of broad semantic improvement.
+## 3.5 TMNRED EEG-only replication
 
-For exact E5 numerical summaries, use the derived outputs produced by the `run_e5_replication`, `collect_e5_results`, `run_e5_pareto_exploratory`, and `evaluate_e5_pareto_existing` tasks. This status file intentionally does not invent values that are not currently duplicated in repository documentation.
-
-## 3.5 TMNRED EEG-only independent replication
-
-Frozen cohort:
-
-- 29 participants;
-- eight sessions;
-- 50 high-coverage sentence items retained in every session under the prospective >=80% participant-coverage rule.
-
-Primary and sensitivity EEG representations:
+Frozen cohort: 29 participants, eight sessions, 50 high-coverage sentence items in every session.
 
 | Representation | Mean residual LOO reliability | Positive participants | Interpretation |
 |---|---:|---:|---|
 | `row_mean_all` | **0.00724** | 75.9% | Prospectively designated primary representation replicates weakly but positively |
 | `row_std_all` | **0.01820** | 89.7% | Stronger secondary reliability in TMNRED |
-| `relative_8bin_all` | **0.01148** | not primary | Secondary temporal representation also reliable |
+| `relative_8bin_all` | **0.01148** | secondary | Reliable secondary temporal representation |
 
 For `row_mean_all`, bootstrap 95% CI = **[0.00356, 0.01079]**.
 
-Interpretation: the ChineseEEG-selected mean representation generalizes modestly to an independent Chinese reading dataset. The exact representation ranking is not invariant across datasets because SD was more reliable in TMNRED.
-
 ## 3.6 TMNRED frozen E5 transfer
 
-Primary contrast: ChineseEEG-trained neural-guided E5 at lambda 0.10 versus matched text-only lambda 0, evaluated on prospectively designated TMNRED `row_mean_all` geometry with no TMNRED tuning.
-
-Results:
+Primary contrast: ChineseEEG-trained E5 lambda 0.10 neural-guided versus lambda 0 text-only, no TMNRED tuning.
 
 - mean residual-RSA difference = **+0.000020**;
 - median difference = **+0.000053**;
@@ -178,79 +126,87 @@ Results:
 - bootstrap 95% CI = **[-0.000128, +0.000176]**;
 - one-sided sign-flip **p = 0.402**.
 
-Raw-RSA comparison was also null, with approximately **p = 0.416**.
+Exploratory alternative-target follow-ups did not rescue transfer:
 
-Interpretation: the neural-guided E5 advantage learned in ChineseEEG did not transfer detectably to independent TMNRED mean-EEG geometry.
+- SD target: delta **-0.000294**, 95% CI **[-0.000479, -0.000107]**, p=.997;
+- relative-8-bin target: delta **+0.000041**, 95% CI **[-0.000111, +0.000207]**, p=.322.
 
-## 3.7 TMNRED alternative EEG representations
+Interpretation: TMNRED neural geometry is reproducible, but the ChineseEEG-trained neural-guided E5 advantage does not transfer detectably there.
 
-Exploratory post-confirmatory tests asked whether the transfer null was caused only by the choice of mean EEG target.
+## 3.7 Nature directional-word dataset
 
-### `row_std_all`
+The Nature directional dataset is an out-of-task test because its primary NeuroSem condition is covert/inner speech rather than reading.
 
-- mean residual-RSA difference, lambda 0.10 - lambda 0 = **-0.000294**;
-- bootstrap 95% CI = **[-0.000479, -0.000107]**;
-- one-sided sign-flip **p = 0.997**;
-- positive participants = **31.0%**.
+Frozen lambda .10 - 0 mean difference was approximately **-0.001786**, with no evidence of a positive transfer effect. This should be treated as a boundary condition, not as a task-matched refutation of reading-related neural geometry.
 
-This goes slightly in the wrong direction.
+## 3.8 ZuCo 2.0 structural freeze
 
-### `relative_8bin_all`
+Public ZuCo 2.0 Task 1 NR contained 18 participants x 7 runs. Model-blind QC froze 17 participants with all seven runs structurally ready; YTL was excluded before outcome analysis because NR3, NR4, and NR6 failed structural event checks.
 
-- mean residual-RSA difference = **+0.000041**;
-- bootstrap 95% CI = **[-0.000111, +0.000207]**;
-- one-sided sign-flip **p = 0.322**;
-- positive participants = **51.7%**.
+Sentence counts by run were 50, 50, 51, 50, 50, 49, 49 = 349 total.
 
-Interpretation: stronger TMNRED EEG reliability did not rescue transfer. The failure is unlikely to be explained only by the temporal-mean target.
+The task-material mapping was frozen without EEG-signal or model outcomes: a unique zero-cost monotonic word-count alignment mapped EEG sentence order to public task-material rows while skipping rows 1-3 in every run.
 
-## 3.8 Nature directional-word dataset
+## 3.9 ZuCo EEG-only reliability
 
-The directional-word dataset is an out-of-task test because its primary NeuroSem condition is covert/inner speech rather than reading.
+Primary representation: `row_mean_all`, inherited prospectively from ChineseEEG and tested model-blind before model transfer.
 
-The analysis did not provide convincing evidence that the ChineseEEG-trained neural-guided model transfers to this dataset. This result must be interpreted cautiously because the task differs substantially from reading and contains only six directional concepts.
+Results:
 
-Current role: secondary mechanistic/generalization evidence, not a task-matched external replication.
+- mean raw LOO reliability = **0.06739**;
+- mean nuisance-residualized LOO reliability = **0.06742**;
+- median residualized LOO = **0.06559**;
+- bootstrap 95% CI = **[0.05831, 0.07687]**;
+- **17/17 participants positive**;
+- exact one-sided sign-flip **p = 7.63e-06**;
+- exact two-sided sign-flip **p = 1.53e-05**.
 
-## 3.9 ZuCo 2.0 status
+Sensitivity representations were also positive:
 
-ZuCo results are **not yet available**. Structural and event-mapping work is complete enough to define sentence extraction prospectively.
+- `row_std_all` residual LOO about **0.04087**;
+- `relative_8bin_all` residual LOO about **0.04682**.
 
-Current representative-file facts:
+Interpretation: the prospectively inherited temporal-mean representation replicates strongly in independent English natural reading and is stronger than the two predeclared sensitivities on this dataset.
 
-- continuous EEG;
-- 105 channels;
-- 500 Hz;
-- 50 sentences in NR1;
-- sentence windows delimitable by ordered event pairs `10 -> 11` or `12 -> 13`;
-- full-cohort model-blind QC is the next stage.
+## 3.10 ZuCo frozen E5 transfer
 
-No EEG reliability or model-transfer result should be claimed until full-cohort materialization/QC completes.
+The sole confirmatory transfer contrast was ChineseEEG-trained multilingual-E5 neural-guided lambda 0.10 minus matched text-only lambda 0 on the frozen ZuCo temporal-mean target. There was no ZuCo tuning, representation selection, subject selection, item selection, model selection, or lambda selection from transfer outcomes.
 
-## 3.10 ChineseEEG Garnett Dream status
+Results:
 
-No Garnett Dream result has yet been incorporated into the core NeuroSem evidence chain.
+- mean participant delta = **+0.0016637**;
+- median delta = **+0.0014871**;
+- **17/17 participants positive**;
+- bootstrap 95% CI = **[+0.0012294, +0.0021452]**;
+- exact one-sided sign-flip **p = 7.63e-06**;
+- exact two-sided sign-flip **p = 1.53e-05**.
 
-This is now a high-priority gap because Garnett Dream offers a strong different-text replication under the same general dataset/acquisition family. Analysis should be frozen from the Little Prince pipeline before looking at Garnett Dream outcomes.
+Interpretation: this is positive evidence that a modest amount of neural guidance learned from ChineseEEG transfers its neural-alignment advantage to an independent English natural-reading EEG dataset.
 
-## 3.11 What the results jointly say
+The first RunRelay attempt failed immediately with `ModuleNotFoundError: No module named 'scripts'`. The rerun changed only Python import-path handling; the scientific protocol, frozen contrast, cohort, representation, and inference were unchanged.
 
-The current evidence supports the following hierarchy:
+## 3.11 ChineseEEG Garnett Dream status
+
+No Garnett Dream outcome has yet been incorporated into the core evidence chain.
+
+Its correct role is **same-participant / new-text validation**. Before any outcome is inspected, the analysis should freeze the Little Prince temporal-mean representation, nuisance-control family, participant/item QC rules, and RSA/inference conventions as far as the Garnett Dream file structure permits.
+
+## 3.12 Joint interpretation
 
 ### Claim A: reproducible reading-related EEG geometry exists
 
-**Supported.** Strongest evidence comes from ChineseEEG and independent TMNRED EEG reliability.
+**Supported.** ChineseEEG provides strong development evidence, TMNRED provides weak but positive independent Chinese-reading replication, and ZuCo provides substantially stronger independent English-reading replication.
 
-### Claim B: brain-guided training can improve alignment to the development EEG target
+### Claim B: brain-guided training can improve held-out alignment to the development EEG target
 
-**Supported within ChineseEEG.** BERT run-07 holdout improvements reproduced across two seeds, and E5 reproduced the qualitative phenomenon.
+**Supported.** BERT run-07 improvements reproduced across two seeds, and E5 reproduced the qualitative phenomenon.
 
 ### Claim C: brain-guided training improves generic semantic representations
 
-**Not supported.** External STS/C-MTEB benefits are unstable and largely indistinguishable from ordinary text-only tuning.
+**Not supported.** Generic semantic benchmark gains are unstable and not neural-specific.
 
-### Claim D: brain-guided training transfers to independent EEG datasets
+### Claim D: brain-guided training can transfer its neural-alignment advantage to an independent reading EEG dataset
 
-**Not supported so far.** Frozen TMNRED transfer is null, and alternative TMNRED EEG representations do not rescue it. The Nature directional dataset is also not convincing, but it is a different task.
+**Supported in ZuCo, not universal.** The frozen ZuCo result is positive and highly consistent across all 17 participants, whereas the frozen TMNRED transfer is null and the out-of-task Nature directional test is null/negative.
 
-This separation should govern manuscript wording and all future analysis decisions.
+The manuscript should therefore claim **task-matched cross-dataset neural-alignment transfer in English reading**, not universal semantic improvement or universal EEG transfer.
