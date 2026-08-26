@@ -1,8 +1,8 @@
 # NeuroSem: current project brief for Abbas
 
-**Updated:** 2026-08-25
+**Updated:** 2026-08-26
 
-This brief is a collaborator-facing summary of what NeuroSem has done so far, what the results mean, and what remains unresolved. For the complete repository trail, read the numbered documents:
+This is the collaborator-facing summary of what NeuroSem has done, what the results mean, and what remains unresolved. For the complete repository trail, read:
 
 1. [`1_PROJECT_OVERVIEW.md`](1_PROJECT_OVERVIEW.md)
 2. [`2_DATASETS_AND_TASKS.md`](2_DATASETS_AND_TASKS.md)
@@ -13,214 +13,154 @@ This brief is a collaborator-facing summary of what NeuroSem has done so far, wh
 
 We are testing whether the relationships among linguistic items measured in human EEG form a reproducible geometry, whether that geometry contains information beyond ordinary nuisance structure, and whether that neural geometry can provide useful supervision for language models.
 
-The project now separates three claims:
+The project separates three claims:
 
 1. Does reproducible neural language geometry exist?
 2. Can neural-guided training move a language model toward the development EEG geometry?
 3. Does that change transfer to independent semantic tasks or independent EEG datasets?
 
-The results currently support claims 1 and 2 more strongly than claim 3.
+The new ZuCo result materially strengthens claim 3 for a task-matched independent reading dataset, while generic semantic transfer and TMNRED transfer remain null.
 
-## What we did in ChineseEEG
+## ChineseEEG: Little Prince
 
-### Task
+Participants silently read Chinese text while EEG and eye tracking were recorded.
 
-Participants silently read Chinese text while EEG and eye tracking were recorded. The analyses so far have centered on *The Little Prince*.
+The selected EEG representation averages across time separately within each electrode. It does not average across channels. Pairwise distances among these channel vectors form the neural geometry.
 
-ChineseEEG also contains *Garnett Dream*. We now consider this an important different-text replication that should be analyzed with the Little Prince pipeline frozen prospectively.
-
-### EEG representation
-
-The initial flattened sensor-time representation was not sufficiently reliable across subjects. We therefore selected a simpler representation based on neural reliability before semantic testing.
-
-For each linguistic item, we average EEG across time separately within every electrode. If there are 128 channels, one item becomes a 128-dimensional vector. We then compute pairwise distances between item vectors to obtain the EEG representational geometry.
-
-For this selected mean representation:
+For this representation:
 
 - raw leave-one-subject-out reliability was approximately 0.220;
-- residual reliability after nuisance control was approximately 0.121;
-- the residual reliability was above the circular-shift null.
+- residual reliability after nuisance control was approximately 0.121.
 
-### BERT correspondence
-
-Across Little Prince runs 01-06, the final-layer BERT residual neural-semantic effect was positive in all six runs.
+Across Little Prince runs 01-06, the BERT residual neural-semantic effect was positive in all six runs:
 
 - mean run effect: 0.0085;
 - exact run-level sign-flip p = 0.015625;
-- common-subject aggregate positive in 8/9 participants;
-- exact subject-level sign-flip p = 0.0391.
+- common-subject aggregate positive in 8/9 participants.
 
-The effect is small, but its direction is consistent across narrative runs.
+## BERT neural-guided tuning
 
-## What happened when we trained BERT with neural supervision
+Four matched arms were compared: base, text-only, neural-guided, and shuffled-neural.
 
-We compared four matched arms:
+Run-07 mean partial-Spearman:
 
-- pretrained base;
-- text-only tuning;
-- neural-guided tuning;
-- shuffled-neural control.
+| Arm | Seed 1 | Seed 2 |
+|---|---:|---:|
+| Base | 0.0319 | 0.0319 |
+| Text-only | 0.0354 | 0.0341 |
+| Neural-guided | **0.0371** | **0.0375** |
+| Shuffled-neural | 0.0353 | 0.0338 |
 
-Run-07 remained sealed until final evaluation.
+The neural-guided arm improved held-out ChineseEEG neural alignment in two seeds.
 
-### Seed 1 run-07 mean partial-Spearman
+## Generic semantics
 
-- base: 0.0319
-- text-only: 0.0354
-- neural-guided: **0.0371**
-- shuffled-neural: 0.0353
+The neural-specific gain did not robustly transfer to generic semantic similarity benchmarks.
 
-### Seed 2
+Seed 1 neural - text-only: +0.000089.
 
-- base: 0.0319
-- text-only: 0.0341
-- neural-guided: **0.0375**
-- shuffled-neural: 0.0338
+Seed 2 neural - text-only: -0.003413.
 
-So the neural-guided arm improved held-out alignment to ChineseEEG neural geometry in two seeds.
+Thus improving neural alignment is not the same as broadly improving semantic benchmark performance.
 
-## Did that improve generic semantics?
+## Multilingual E5
 
-Not robustly.
+An independent multilingual-E5 architecture reproduced the qualitative finding that neural-guided optimization can move a model toward the ChineseEEG neural target.
 
-On the frozen eight-task external semantic benchmark, seed 1 produced almost identical text-only and neural-guided performance:
+The E5 program then froze lambda 0.10 neural-guided versus matched lambda 0 text-only as the main external neural-transfer contrast.
 
-- base 0.283464
-- text-only 0.308486
-- neural-guided 0.308575
-- shuffled-neural 0.307943
+## TMNRED: independent Chinese reading
 
-Seed 2 went against a brain-specific benefit:
+Frozen cohort: 29 participants x 8 sessions, with all 50 sentence items retained per session under the prospective >=80% coverage rule.
 
-- base 0.283464
-- text-only 0.305020
-- neural-guided 0.301607
-- shuffled-neural 0.305266
+Primary EEG reliability:
 
-This is an important result. Improving neural alignment is not the same as improving generic semantic performance.
+- temporal mean residual LOO = **0.00724**;
+- 95% CI = **[0.00356, 0.01079]**.
 
-## Independent architecture: multilingual E5
+Frozen E5 transfer:
 
-We repeated the central tuning question using multilingual E5 so that the result did not depend only on Chinese BERT.
+- lambda .10 - 0 mean delta = **+0.000020**;
+- 95% CI = **[-0.000128, +0.000176]**;
+- one-sided p = **0.402**.
 
-E5 reproduced the qualitative finding that neural-guided optimization can move an independent architecture toward the ChineseEEG neural target. We then explored neural-loss dose-response/Pareto behavior.
-
-The key conclusion is architectural replication of the neural-target alignment phenomenon, not evidence that neural supervision broadly improves semantic benchmarks.
-
-## TMNRED: independent Chinese-reading validation
-
-TMNRED is important because it is another reading task rather than imagined speech.
-
-We first performed a long sequence of model-blind audits, materialization probes, event checks, and cohort/item freezes before looking at EEG reliability.
-
-The final frozen cohort contains:
-
-- 29 participants;
-- eight sessions;
-- all 50 high-coverage sentence items in each session under the prospective >=80% participant-coverage rule.
-
-### EEG-only reliability
-
-The prospectively selected ChineseEEG-style mean representation replicated weakly but positively:
-
-- residual LOO reliability = **0.00724**;
-- bootstrap 95% CI = **[0.00356, 0.01079]**;
-- 75.9% of participants positive.
-
-Two secondary representations were more reliable in TMNRED:
-
-- amplitude SD = **0.01820**;
-- 8-bin temporal representation = **0.01148**.
-
-This tells us that the neural geometry itself generalizes modestly, but the exact best EEG representation is not invariant across datasets.
-
-## Did the ChineseEEG-trained E5 model transfer to TMNRED?
-
-No detectable advantage.
-
-The frozen primary contrast was neural-guided lambda 0.10 versus matched text-only lambda 0, with no TMNRED tuning.
-
-- mean residual-RSA difference = +0.000020;
-- bootstrap 95% CI = [-0.000128, +0.000176];
-- one-sided sign-flip p = 0.402;
-- 55.2% participants positive.
-
-We then explicitly labeled the follow-up as exploratory and tested the more reliable TMNRED SD and 8-bin representations.
-
-They also did not rescue transfer:
-
-- SD target: delta -0.000294, p = 0.997;
-- 8-bin target: delta +0.000041, p = 0.322.
-
-So the TMNRED model-transfer null is not plausibly explained only by our use of temporal mean EEG.
+Interpretation: the neural geometry itself replicates weakly, but the neural-guided model advantage does not transfer detectably to TMNRED.
 
 ## Nature directional-word dataset
 
-This dataset should now be interpreted differently from TMNRED and ZuCo.
+The primary NeuroSem condition is covert/inner speech, not natural reading.
 
-Participants perform overt or covert articulation of six directional concepts. Our primary analysis uses covert/inner speech. This is not the same behavioral task as reading connected language.
+The frozen lambda .10 - 0 result was negative/null (mean approximately -0.001786). This is best treated as an out-of-task boundary condition rather than a direct test of the reading hypothesis.
 
-Therefore:
+## ZuCo 2.0: independent English reading
 
-- it is useful as an out-of-task mechanistic/generalization test;
-- it should not be treated as a task-matched external validation of the reading result;
-- a null result there does not directly falsify reading-related EEG geometry.
+This is now the strongest external result.
 
-This point is important for interpreting the total evidence fairly.
+### Structural freeze
 
-## ZuCo 2.0: current work
+The public dataset contained 18 participants x 7 normal-reading runs. Model-blind QC froze 17 participants with all seven runs structurally valid; YTL was excluded before outcome analysis because three runs failed structural event checks.
 
-ZuCo 2.0 Task 1 Normal Reading is our current priority external dataset because participants read English sentences while EEG and eye tracking are recorded.
+Sentence identity and public text mapping were frozen before reliability/model analysis. No model outcome was used to choose the mapping.
 
-We deliberately audited structure and timing before looking at any EEG reliability result.
+### EEG-only reliability
 
-The representative NR1 file is continuous EEG with:
+Primary all-channel temporal mean:
 
-- 105 channels;
-- 500 Hz sampling;
-- 50 sentences;
-- 110 events.
+- nuisance-residualized LOO reliability = **0.06742**;
+- bootstrap 95% CI = **[0.05831, 0.07687]**;
+- **17/17 participants positive**;
+- exact one-sided sign-flip p = **7.63e-06**.
 
-Sentence boundaries map cleanly to 50 ordered pairs:
+The predeclared SD and 8-bin sensitivity representations were also positive but weaker.
 
-- 42 use `10 -> 11`;
-- 8 use `12 -> 13`;
-- `15` is an auxiliary trigger after question-associated sentences;
-- `90` and `20` behave as run-level markers.
+### Frozen ChineseEEG-to-ZuCo E5 transfer
 
-This gives us a prospective sentence-extraction rule before full-cohort analysis.
+The sole confirmatory contrast was ChineseEEG-trained multilingual-E5 lambda 0.10 neural-guided minus matched lambda 0 text-only on the frozen ZuCo temporal-mean EEG geometry, with no ZuCo tuning.
 
-The next stage is full 18-participant x 7-run model-blind materialization/QC, followed by a frozen EEG-only reliability test.
+Result:
 
-## Garnett Dream: newly elevated priority
+- mean participant delta = **+0.001664**;
+- median delta = **+0.001487**;
+- **17/17 participants positive**;
+- bootstrap 95% CI = **[+0.001229, +0.002145]**;
+- exact one-sided sign-flip p = **7.63e-06**.
 
-ChineseEEG contains a second and much larger novel, *Garnett Dream*. We did not use this sufficiently in the first analysis sequence.
+The first execution attempt failed immediately because of a Python import-path error. The rerun changed only import handling; the scientific protocol was unchanged.
 
-This is now important because it allows a clean question:
+Interpretation: neural-guided training learned from ChineseEEG produced a small but highly consistent improvement in neural alignment in an independent English natural-reading EEG dataset.
 
-> Does the Little Prince neural geometry replicate in a different text under the same general acquisition family?
+## Garnett Dream
 
-We should freeze the Little Prince representation, nuisance controls, and RSA pipeline before examining Garnett Dream outcomes.
+ChineseEEG also contains a second and much larger narrative, *Garnett Dream*, recorded in the same participant/acquisition family.
+
+Its role is now precisely defined as **same-participant / new-text validation**, not independent-cohort replication.
+
+A prospective protocol has been frozen in [`garnett_dream_validation_protocol_v1.md`](garnett_dream_validation_protocol_v1.md). The primary representation remains the Little Prince all-channel temporal mean. Outcome-driven changes in representation, windows, sensors, lambda, architecture, participant exclusions, or item selection are prohibited.
 
 ## Current scientific conclusion
 
-The strongest defensible statement today is:
+The strongest defensible statement is now:
 
-> Reading-related EEG contains a small but reproducible relational geometry. Neural-guided training can improve alignment to the development EEG target, but evidence that this improvement transfers to generic semantic tasks or independent EEG datasets is currently weak or null.
+> Reading-related EEG contains a small but reproducible relational geometry across independent datasets and languages. Neural-guided training can improve alignment to the development EEG target and, in a frozen confirmatory test, produces a small but highly consistent improvement in alignment to independent English natural-reading EEG. The benefit is not universal: generic semantic benchmarks, TMNRED model transfer, and the out-of-task Nature directional test remain null or weak.
 
-That is more precise than saying that brain supervision improves language-model semantics.
+This is stronger and more precise than saying that brain supervision broadly improves language-model semantics.
 
-## Current publication logic
+## Publication logic
 
-We are keeping **Nature Machine Intelligence** as the aspirational first target and **Nature Neuroscience** as the second target, but the final target must follow the evidence.
+**Nature Machine Intelligence** remains a plausible aspirational first target because we now have a positive independent cross-language neural-transfer result, but the manuscript must present the null generic semantic and TMNRED findings prominently rather than hide them.
 
-For an NMI-level machine-learning claim, we would need substantially stronger evidence that neural supervision produces useful transferable model behavior.
+**Nature Neuroscience** remains a strong alternative if the main contribution ultimately centers on reproducible cross-dataset neural reading geometry with neural-guided modeling as a secondary mechanism.
 
-For a neuroscience-centered story, the key may instead become reproducible neural language geometry across:
+## What we should discuss with Abbas next
 
-- Little Prince;
-- Garnett Dream;
-- independent Chinese reading in TMNRED;
-- independent English reading in ZuCo.
+The repository currently preserves this brief **for Abbas**, but it does not preserve a verbatim list of Abbas's own comments or proposals. We therefore should not attribute specific ideas to him unless they are recorded elsewhere or confirmed directly.
 
-That evidence chain is now the priority.
+The most useful discussion points for Abbas now are:
+
+1. whether the positive ZuCo transfer is strong enough, together with the null TMNRED/generic-semantic results, to support the NMI framing;
+2. whether Garnett Dream should be the final major validation before manuscript lock;
+3. whether an additional experiment would add a genuinely orthogonal claim, rather than merely increasing the number of datasets;
+4. what mechanistic interpretation can explain positive transfer to ZuCo but null transfer to TMNRED;
+5. whether the manuscript should lead with **cross-language reading neural geometry** or with **neural-guided representation learning**.
+
+Until Abbas's actual comments are recorded, these should be treated as questions to bring to him, not as ideas already attributed to him.
