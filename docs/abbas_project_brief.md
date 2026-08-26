@@ -137,6 +137,42 @@ Its role is now precisely defined as **same-participant / new-text validation**,
 
 A prospective protocol has been frozen in [`garnett_dream_validation_protocol_v1.md`](garnett_dream_validation_protocol_v1.md). The primary representation remains the Little Prince all-channel temporal mean. Outcome-driven changes in representation, windows, sensors, lambda, architecture, participant exclusions, or item selection are prohibited.
 
+## Abbas's proposed AHBA transcriptomic extension
+
+Abbas explicitly proposed adding the **Allen Human Brain Atlas (AHBA)** as a molecular-mechanistic extension to NeuroSem. The idea is to derive spatial gene-expression weights corresponding to the 128-channel ChineseEEG montage, group genes into biologically interpretable systems, and test whether weighting the EEG spatial representation by those molecular maps changes EEG-language-model RSA.
+
+The requested molecular families include:
+
+- GABA receptor families, including alpha, beta, gamma, delta and related inhibitory signaling genes;
+- serotonin receptor families and broader serotonergic signaling;
+- curated biological pathways;
+- cell-type marker sets such as excitatory neurons, inhibitory neurons, astrocytes, oligodendrocytes, OPCs, microglia, endothelial cells, and other literature-supported classes.
+
+The scientifically preferred implementation preserves Abbas's intuition but avoids treating scalp electrodes as literal cortical parcels. The planned mapping is:
+
+**AHBA cortical transcriptomics -> cortical spatial map -> EEG forward/source-sensitivity projection -> 128-channel molecular weighting -> frozen NeuroSem RSA test.**
+
+This replaces a direct nearest-electrode assignment, because EEG channels measure mixtures of cortical generators through volume conduction.
+
+The transcriptomic preparation should be model-blind and outcome-blind. Current planned guardrails are:
+
+- use `abagen`-style AHBA preprocessing with the default-like intensity-based filtering threshold (`ibf_threshold=0.5`);
+- freeze donor handling, bilateral mapping, probe/gene preprocessing, and spatial normalization before any NeuroSem outcome is inspected;
+- standardize gene maps spatially before averaging genes within a pathway or cell-type set rather than summing raw expression;
+- prespecify a limited pathway panel instead of screening thousands of pathways;
+- use donor robustness / leave-one-donor-out checks;
+- use spatial-autocorrelation-preserving null maps;
+- use size-matched random gene-set controls;
+- correct for multiplicity across the prespecified molecular families.
+
+The mechanistic question should be phrased as:
+
+> Are cortical locations that contribute more strongly to the established semantic neural geometry preferentially weighted by specific molecular systems?
+
+This AHBA analysis must remain a **separately frozen mechanistic extension**. It must not alter or retroactively optimize the existing ChineseEEG, TMNRED, ZuCo, or Garnett primary analyses.
+
+A dedicated planning document is maintained in [`abbas_ahba_transcriptomic_extension.md`](abbas_ahba_transcriptomic_extension.md).
+
 ## Current scientific conclusion
 
 The strongest defensible statement is now:
@@ -151,16 +187,15 @@ This is stronger and more precise than saying that brain supervision broadly imp
 
 **Nature Neuroscience** remains a strong alternative if the main contribution ultimately centers on reproducible cross-dataset neural reading geometry with neural-guided modeling as a secondary mechanism.
 
+The AHBA extension could add a molecular-mechanistic layer if it survives the frozen spatial-null and donor-robustness tests, but it should not be required to rescue the primary manuscript claim.
+
 ## What we should discuss with Abbas next
 
-The repository currently preserves this brief **for Abbas**, but it does not preserve a verbatim list of Abbas's own comments or proposals. We therefore should not attribute specific ideas to him unless they are recorded elsewhere or confirmed directly.
+Abbas's AHBA proposal is now explicitly recorded rather than treated as missing. The immediate discussion points are:
 
-The most useful discussion points for Abbas now are:
-
-1. whether the positive ZuCo transfer is strong enough, together with the null TMNRED/generic-semantic results, to support the NMI framing;
-2. whether Garnett Dream should be the final major validation before manuscript lock;
-3. whether an additional experiment would add a genuinely orthogonal claim, rather than merely increasing the number of datasets;
-4. what mechanistic interpretation can explain positive transfer to ZuCo but null transfer to TMNRED;
-5. whether the manuscript should lead with **cross-language reading neural geometry** or with **neural-guided representation learning**.
-
-Until Abbas's actual comments are recorded, these should be treated as questions to bring to him, not as ideas already attributed to him.
+1. confirm the molecular hierarchy to freeze before outcome analysis: GABAergic, serotonergic, cell-type, and a small curated pathway panel;
+2. confirm that the electrode mapping should use cortical source/lead-field sensitivity rather than a literal nearest-electrode cortical assignment;
+3. decide the preferred human cell-type marker references and pathway database before any weighted RSA is run;
+4. agree on donor/bilateral handling and spatial-null strategy for AHBA;
+5. decide whether Garnett Dream should be completed before the AHBA outcome test or whether model-blind AHBA preparation can proceed in parallel;
+6. decide whether the final manuscript should lead with cross-language reading neural geometry, neural-guided representation learning, or—if AHBA succeeds—a combined computational/molecular mechanism story.
