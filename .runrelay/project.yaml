@@ -172,7 +172,7 @@ tasks:
       - outputs/tmnred_audit/latest/file_inventory.csv
 
   probe_tmnred_docs:
-    description: Read only already-materialized TMNRED documentation, sidecars, event schemas, and stimulus/derivative path metadata before freezing signal-level analysis.
+    description: Read only already-materialized TMNRED documentation, sidecars, event schemas, and derivative path metadata before freezing signal-level analysis.
     command:
       - .venv/bin/python
       - scripts/audit/probe_tmnred_docs.py
@@ -347,6 +347,8 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/e5_neural_tuning_v1/**/summary.json
+      - outputs/e5_neurosem_run07_embeddings_v1/**/summary.json
+      - outputs/e5_neurosem_run07_rsa_v1/**/summary.json
       - outputs/e5_neurosem_run07_embeddings_v1/**/summary.json
       - outputs/e5_neurosem_run07_rsa_v1/**/summary.json
       - outputs/e5_neurosem_cmteb_sts_v1/**/summary.json
@@ -560,3 +562,21 @@ tasks:
       - outputs/zuco2_nr_e5_transfer_v1/latest/summary.json
       - outputs/zuco2_nr_e5_transfer_v1/latest/subject_results.csv
       - outputs/zuco2_nr_e5_transfer_v1/latest/session_results.csv
+
+  probe_garnett_dream_structure:
+    description: Model-blind inventory of ChineseEEG Garnett Dream task files, event metadata, participant/run coverage, and current materialization state before any neural reliability or model analysis.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_garnett_dream_structure.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --output-dir
+      - outputs/garnett_dream_structure_probe/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/garnett_dream_structure_probe/latest/summary.json
+      - outputs/garnett_dream_structure_probe/latest/file_inventory.csv
+      - outputs/garnett_dream_structure_probe/latest/events_summary.json
