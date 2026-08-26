@@ -349,8 +349,6 @@ tasks:
       - outputs/e5_neural_tuning_v1/**/summary.json
       - outputs/e5_neurosem_run07_embeddings_v1/**/summary.json
       - outputs/e5_neurosem_run07_rsa_v1/**/summary.json
-      - outputs/e5_neurosem_run07_embeddings_v1/**/summary.json
-      - outputs/e5_neurosem_run07_rsa_v1/**/summary.json
       - outputs/e5_neurosem_cmteb_sts_v1/**/summary.json
 
   collect_e5_results:
