@@ -662,3 +662,22 @@ tasks:
     artifacts:
       - outputs/garnett_dream_row_text_mapping_probe_v1/latest/summary.json
       - outputs/garnett_dream_row_text_mapping_probe_v1/latest/candidate_file_inventory.csv
+
+  probe_garnett_dream_segmented_xlsx_mapping_v1:
+    description: Materialize and structurally inspect the tracked Garnett Dream segmented XLSX stimulus files to test an exact one-to-one mapping between non-display per-run rows and frozen ROWS-to-ROWE items, without exporting text or loading EEG/model outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_garnett_dream_segmented_xlsx_mapping_v1.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --input-freeze
+      - outputs/garnett_dream_input_materialization/latest/summary.json
+      - --output-dir
+      - outputs/garnett_dream_segmented_xlsx_mapping_probe_v1/latest
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/garnett_dream_segmented_xlsx_mapping_probe_v1/latest/summary.json
+      - outputs/garnett_dream_segmented_xlsx_mapping_probe_v1/latest/workbook_inventory.csv
