@@ -405,7 +405,7 @@ tasks:
       - outputs/published_language_gene_panel_v1/latest/references.md
 
   freeze_published_language_gene_panels_v2:
-    description: Outcome-blind freeze of two exact language-related gene panels explicitly listed in Wong et al. PNAS 2024 main article text: six genes individually associated with pars triangularis-middle temporal structural connectivity within the published 56-gene language set, and fourteen genes individually associated with dyslexia within that same set. Validate exact memberships against the frozen primary AHBA gene universe without reading any NeuroSem target or prior AHBA outcome.
+    description: Outcome-blind freeze of two exact language-related gene panels explicitly listed in Wong et al. PNAS 2024 main article text, namely six genes individually associated with pars triangularis-middle temporal structural connectivity within the published 56-gene language set, and fourteen genes individually associated with dyslexia within that same set. Validate exact memberships against the frozen primary AHBA gene universe without reading any NeuroSem target or prior AHBA outcome.
     command:
       - .venv/bin/python
       - scripts/analysis/freeze_published_language_gene_panels_v2.py
