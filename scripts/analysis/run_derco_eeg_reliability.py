@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import re
 from pathlib import Path
 
@@ -15,6 +14,8 @@ from scipy.spatial.distance import pdist
 ARTICLES = range(5)
 EVENT_RE = re.compile(r"^(?P<word>.+)_(?P<article>\d+)_(?P<stim_index>-?\d+)$")
 SEED = 20260827
+MIN_LOO_CONTRIBUTORS = 11  # strict majority of the 21 leave-one-out participants
+MIN_ELIGIBLE_PAIRS = 1000
 
 
 def parse_items(ep, article: int):
@@ -82,67 +83,140 @@ def main() -> int:
     if len(subjects) != 22:
         raise RuntimeError(f"expected frozen 22 subjects, found {len(subjects)}")
 
-    rdms = {a: {} for a in ARTICLES}
-    nuisance = {}
-    common_counts = {}
-    article_words = {}
+    article_results = {s: {} for s in subjects}
+    rows_out = []
+    union_item_counts = {}
 
     for article in ARTICLES:
         item_maps = {}
-        ep_cache = {}
+        word_by_index = {}
+        union_indices = set()
+
+        # Structural pass only. Establish the article-wide participant-independent item key space.
         for subject in subjects:
             fif = root / subject / f"article_{article}" / "preprocessed_epoch.fif"
             ep = mne.read_epochs(fif, preload=False, verbose="ERROR")
             items = parse_items(ep, article)
-            item_maps[subject] = {idx: (word, row_i) for idx, word, row_i in items}
-            ep_cache[subject] = ep
-        common = sorted(set.intersection(*(set(item_maps[s]) for s in subjects)))
-        common_counts[article] = len(common)
-        if len(common) < 100:
-            raise RuntimeError(f"article {article} has only {len(common)} all-participant common items")
-        words = []
-        for idx in common:
-            ws = {item_maps[s][idx][0] for s in subjects}
-            if len(ws) != 1:
-                raise RuntimeError(f"word conflict article={article} index={idx}: {ws}")
-            words.append(next(iter(ws)))
-        article_words[article] = words
-        pos = np.asarray(common, float)
-        lengths = np.asarray([len(w) for w in words], float)
-        nuisance[article] = np.column_stack([
-            np.ones(len(pdist(pos[:, None], metric="cityblock"))),
-            pdist(pos[:, None], metric="cityblock"),
-            pdist(lengths[:, None], metric="cityblock"),
-        ])
-        for subject in subjects:
-            ep = ep_cache[subject]
-            rows = [item_maps[subject][idx][1] for idx in common]
-            data = ep.get_data(picks="eeg")[rows]
-            feats = np.mean(data, axis=2)
-            feats = zscore_features(feats)
-            rdms[article][subject] = pdist(feats, metric="correlation")
+            local = {}
+            for idx, word, row_i in items:
+                if idx in local:
+                    raise RuntimeError(f"duplicate stimulus index article={article} subject={subject} index={idx}")
+                local[idx] = (word, row_i)
+                prev = word_by_index.get(idx)
+                if prev is not None and prev != word:
+                    raise RuntimeError(
+                        f"cross-participant word conflict article={article} index={idx}: {prev!r} vs {word!r}"
+                    )
+                word_by_index[idx] = word
+                union_indices.add(idx)
+            item_maps[subject] = local
 
-    rows_out = []
+        union = sorted(union_indices)
+        union_item_counts[article] = len(union)
+        pos_of = {idx: i for i, idx in enumerate(union)}
+        n_union = len(union)
+        tri_i, tri_j = np.triu_indices(n_union, k=1)
+        n_pairs = len(tri_i)
+        pair_id = np.full((n_union, n_union), -1, dtype=np.int32)
+        pair_id[tri_i, tri_j] = np.arange(n_pairs, dtype=np.int32)
+
+        # Dense pair vectors avoid a huge Python dictionary while preserving missingness explicitly.
+        all_subject_rdms = np.full((len(subjects), n_pairs), np.nan, dtype=np.float32)
+        n_items_by_subject = {}
+
+        for si, subject in enumerate(subjects):
+            fif = root / subject / f"article_{article}" / "preprocessed_epoch.fif"
+            ep = mne.read_epochs(fif, preload=False, verbose="ERROR")
+            local = item_maps[subject]
+            local_indices = sorted(local)
+            n_items_by_subject[subject] = len(local_indices)
+            rows = [local[idx][1] for idx in local_indices]
+            data = ep.get_data(picks="eeg")[rows]
+            feats = np.mean(data, axis=2)  # row_mean_all: temporal mean within each retained EEG channel
+            feats = zscore_features(feats)
+            d = pdist(feats, metric="correlation")
+
+            local_pos = np.asarray([pos_of[idx] for idx in local_indices], dtype=np.int32)
+            li, lj = np.triu_indices(len(local_indices), k=1)
+            gids = pair_id[local_pos[li], local_pos[lj]]
+            if np.any(gids < 0):
+                raise RuntimeError("internal pair-index mapping failure")
+            all_subject_rdms[si, gids] = d.astype(np.float32)
+
+        finite = np.isfinite(all_subject_rdms)
+        total_count = finite.sum(axis=0).astype(np.int16)
+        total_sum = np.nansum(all_subject_rdms, axis=0, dtype=np.float64)
+
+        pair_pos_diff = np.abs(np.asarray(union, float)[tri_i] - np.asarray(union, float)[tri_j])
+        lengths = np.asarray([len(word_by_index[idx]) for idx in union], float)
+        pair_len_diff = np.abs(lengths[tri_i] - lengths[tri_j])
+
+        for si, subject in enumerate(subjects):
+            subj = all_subject_rdms[si].astype(np.float64)
+            subj_finite = finite[si]
+            loo_count = total_count.astype(np.int32) - subj_finite.astype(np.int32)
+            eligible = subj_finite & (loo_count >= MIN_LOO_CONTRIBUTORS)
+            n_eligible = int(np.sum(eligible))
+            if n_eligible < MIN_ELIGIBLE_PAIRS:
+                raise RuntimeError(
+                    f"article {article} subject {subject} has only {n_eligible} eligible pairs "
+                    f"with >= {MIN_LOO_CONTRIBUTORS} LOO contributors"
+                )
+
+            loo = (total_sum[eligible] - subj[eligible]) / loo_count[eligible]
+            y = subj[eligible]
+            X = np.column_stack([
+                np.ones(n_eligible, float),
+                pair_pos_diff[eligible],
+                pair_len_diff[eligible],
+            ])
+            raw_r = corr(y, loo)
+            primary_r = corr(residualize(y, X), residualize(loo, X))
+            if not np.isfinite(primary_r) or not np.isfinite(raw_r):
+                raise RuntimeError(f"non-finite reliability article={article} subject={subject}")
+
+            article_results[subject][article] = (primary_r, raw_r)
+            c = loo_count[eligible]
+            rows_out.append({
+                "subject": subject,
+                "article": article,
+                "n_subject_items": n_items_by_subject[subject],
+                "n_eligible_pairs": n_eligible,
+                "min_loo_pair_contributors": int(np.min(c)),
+                "median_loo_pair_contributors": float(np.median(c)),
+                "primary_residual_reliability": primary_r,
+                "raw_reliability": raw_r,
+            })
+
     agg_primary = []
     agg_raw = []
     for subject in subjects:
         z_primary = []
         z_raw = []
+        total_pairs = 0
         for article in ARTICLES:
-            subj_rdm = rdms[article][subject]
-            others = [rdms[article][s] for s in subjects if s != subject]
-            loo = np.mean(np.vstack(others), axis=0)
-            X = nuisance[article]
-            raw_r = corr(subj_rdm, loo)
-            pr = corr(residualize(subj_rdm, X), residualize(loo, X))
+            pr, rr = article_results[subject][article]
             z_primary.append(np.arctanh(np.clip(pr, -0.999999, 0.999999)))
-            z_raw.append(np.arctanh(np.clip(raw_r, -0.999999, 0.999999)))
-            rows_out.append({"subject": subject, "article": article, "n_common_items": common_counts[article], "primary_residual_reliability": pr, "raw_reliability": raw_r})
+            z_raw.append(np.arctanh(np.clip(rr, -0.999999, 0.999999)))
+            total_pairs += next(
+                int(r["n_eligible_pairs"])
+                for r in rows_out
+                if r["subject"] == subject and r["article"] == article
+            )
         apv = float(np.tanh(np.mean(z_primary)))
         arv = float(np.tanh(np.mean(z_raw)))
         agg_primary.append(apv)
         agg_raw.append(arv)
-        rows_out.append({"subject": subject, "article": "aggregate", "n_common_items": sum(common_counts.values()), "primary_residual_reliability": apv, "raw_reliability": arv})
+        rows_out.append({
+            "subject": subject,
+            "article": "aggregate",
+            "n_subject_items": "",
+            "n_eligible_pairs": total_pairs,
+            "min_loo_pair_contributors": "",
+            "median_loo_pair_contributors": "",
+            "primary_residual_reliability": apv,
+            "raw_reliability": arv,
+        })
 
     vals = np.asarray(agg_primary, float)
     raw_vals = np.asarray(agg_raw, float)
@@ -156,16 +230,24 @@ def main() -> int:
 
     with (out / "participant_article_reliability.csv").open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(rows_out[0].keys()))
-        w.writeheader(); w.writerows(rows_out)
+        w.writeheader()
+        w.writerows(rows_out)
 
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "DERCo",
-        "analysis": "prospectively frozen EEG-only leave-one-participant-out neural geometry reliability",
+        "analysis": "prospectively frozen EEG-only pairwise-available leave-one-participant-out neural geometry reliability",
         "n_subjects": len(subjects),
         "articles": list(ARTICLES),
-        "common_item_counts": {str(k): int(v) for k, v in common_counts.items()},
+        "union_item_counts": {str(k): int(v) for k, v in union_item_counts.items()},
         "representation": "row_mean_all; featurewise z-score ddof=0; correlation-distance RDM",
+        "missingness_rule": (
+            "For each participant/article, evaluate every item pair retained by that participant whose LOO reference "
+            f"is available in at least {MIN_LOO_CONTRIBUTORS} of the other 21 participants; average the pairwise "
+            "correlation distances across those available LOO participants. No all-participant item intersection is required."
+        ),
+        "minimum_loo_pair_contributors": MIN_LOO_CONTRIBUTORS,
+        "minimum_eligible_pairs_per_participant_article": MIN_ELIGIBLE_PAIRS,
         "primary_nuisances": ["absolute stimulus-index difference", "absolute event-label word-length difference"],
         "participant_aggregation": "unweighted Fisher-z mean across five articles, then tanh",
         "primary_mean": float(np.mean(vals)),
@@ -179,6 +261,8 @@ def main() -> int:
         "reliability_gate_pass": gate,
         "guardrails": [
             "All 22 frozen participants and all five articles are retained.",
+            "Pairwise availability handles independent artifact rejection without outcome-driven participant or item exclusion.",
+            f"The >= {MIN_LOO_CONTRIBUTORS}/21 LOO-contributor majority rule and >= {MIN_ELIGIBLE_PAIRS} pair minimum were frozen before this estimator was run.",
             "No embedding model or NeuroSem model checkpoint is loaded.",
             "No semantic RSA or transfer outcome is computed.",
             "No participant, article, representation, nuisance, or item subset is selected using the reliability result."
