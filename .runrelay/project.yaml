@@ -87,3 +87,21 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/ahba_dependency_setup_v1/latest/summary.json
+
+  probe_ahba_forward_model_feasibility_v1:
+    description: Run a model-blind feasibility audit for registering the measured 128-channel ChineseEEG CapTrak geometry to a template-MRI EEG forward model. No EEG signal samples, AHBA downloads, model quantities, NeuroSem outcomes, or gene-expression outcomes are accessed.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_ahba_forward_model_feasibility_v1.py
+      - --preflight-summary
+      - outputs/ahba_chineseeeg_preflight_v1/latest/summary.json
+      - --spatial-inventory
+      - outputs/ahba_chineseeeg_preflight_v1/latest/spatial_metadata_inventory.csv
+      - --output-dir
+      - outputs/ahba_forward_model_feasibility_v1/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_forward_model_feasibility_v1/latest/summary.json
