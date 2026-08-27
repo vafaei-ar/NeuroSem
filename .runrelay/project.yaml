@@ -238,3 +238,24 @@ tasks:
     artifacts:
       - outputs/ahba_molecular_sensitivity_matrix_v1/latest/summary.json
       - outputs/ahba_molecular_sensitivity_matrix_v1/latest/projection_qc.csv
+
+  freeze_ahba_biological_gene_sets_v1:
+    description: Freeze the prespecified AHBA biological gene-set panel before any NeuroSem molecular outcome test. Validate curated GABAergic, serotonergic, and compact published human-brain cell-type marker panels against the frozen AHBA gene universes, and freeze exact memberships for two prespecified Reactome pathways with database version and response hashes. No EEG samples, molecular-sensitivity values, NeuroSem/model outcomes, or gene-set associations are accessed.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/freeze_ahba_biological_gene_sets_v1.py
+      - --expression-root
+      - outputs/ahba_expression_dk_v1/latest
+      - --matrix-summary
+      - outputs/ahba_molecular_sensitivity_matrix_v1/latest/summary.json
+      - --output-dir
+      - outputs/ahba_biological_gene_sets_v1/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_biological_gene_sets_v1/latest/summary.json
+      - outputs/ahba_biological_gene_sets_v1/latest/gene_sets.json
+      - outputs/ahba_biological_gene_sets_v1/latest/gene_set_membership.csv
+      - outputs/ahba_biological_gene_sets_v1/latest/references.md
