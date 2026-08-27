@@ -145,7 +145,7 @@ tasks:
       - outputs/ahba_registration_transform_freeze_v1/latest/chineseeeg-head-fsaverage-trans.fif
 
   prepare_ahba_expression_dk_v1:
-    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killiany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. The launcher restores only legacy pandas call signatures required by abagen 0.1.3. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
+    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. The launcher restores only legacy pandas call signatures required by abagen 0.1.3. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
     command:
       - .venv/bin/python
       - scripts/analysis/run_ahba_expression_dk_v1_compat.py
@@ -187,7 +187,7 @@ tasks:
       - outputs/ahba_forward_sensitivity_v1/latest/forward_sensitivity.npz
 
   freeze_ahba_dk_ico5_mapping_v1:
-    description: Freeze the model-blind mapping from the 68 cortical Desikan-Killiany aparc parcels to the exact fsaverage ico-5 source vertices used by the frozen EEG forward-sensitivity matrix. Quantify unknown/corpus-callosum territory explicitly and fail closed on ambiguous parcel-name reconciliation. Do not load EEG signal samples, AHBA gene-expression values, NeuroSem/model outcomes, or biological gene-set results.
+    description: Freeze the model-blind mapping from the 68 cortical Desikan-Killany aparc parcels to the exact fsaverage ico-5 source vertices used by the frozen EEG forward-sensitivity matrix. Quantify unknown/corpus-callosum territory explicitly and fail closed on ambiguous parcel-name reconciliation. Do not load EEG signal samples, AHBA gene-expression values, NeuroSem/model outcomes, or biological gene-set results.
     command:
       - .venv/bin/python
       - scripts/audit/freeze_ahba_dk_ico5_mapping_v1.py
@@ -384,3 +384,22 @@ tasks:
       - outputs/ahba_exploratory_transcriptome_v1/latest/gradient_results.csv
       - outputs/ahba_exploratory_transcriptome_v1/latest/donor_lodo_weight_stability.csv
       - outputs/ahba_exploratory_transcriptome_v1/latest/spin_null_summary.csv
+
+  freeze_published_language_gene_panel_v1:
+    description: Outcome-blind freeze of an independent published human language-cortex gene panel from Wong et al. PNAS 2024 Dataset S5. Retrieve and hash the supplementary table, extract exactly the published 56 genes defined by region-specific laminar expression plus layer II/III and/or V/VI excitatory corticocortical-neuron upregulation, and validate overlap with the frozen primary AHBA gene universe. Do not load NeuroSem targets, exploratory PLS results, prior molecular-association results, or model quantities.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/freeze_published_language_gene_panel_v1.py
+      - --expression-root
+      - outputs/ahba_expression_dk_v1/latest
+      - --output-dir
+      - outputs/published_language_gene_panel_v1/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/published_language_gene_panel_v1/latest/summary.json
+      - outputs/published_language_gene_panel_v1/latest/gene_panel.json
+      - outputs/published_language_gene_panel_v1/latest/gene_panel_membership.csv
+      - outputs/published_language_gene_panel_v1/latest/references.md
