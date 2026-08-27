@@ -5,8 +5,19 @@ import argparse, json, subprocess
 from pathlib import Path
 
 
-def annex_get(root: Path, rel: str) -> None:
-    subprocess.run(["git", "annex", "get", rel], cwd=root, check=True)
+def annex_get(root: Path, rel: str) -> str:
+    attempts = [
+        ["git", "annex", "get", "--from", "s3-PUBLIC", rel],
+        ["git", "annex", "get", rel],
+    ]
+    errors = []
+    for cmd in attempts:
+        p = subprocess.run(cmd, cwd=root, text=True, capture_output=True)
+        if p.returncode == 0:
+            return " ".join(cmd)
+        errors.append({"cmd": cmd, "returncode": p.returncode, "stdout": p.stdout[-3000:], "stderr": p.stderr[-3000:]})
+    remotes = subprocess.run(["git", "annex", "info"], cwd=root, text=True, capture_output=True)
+    raise RuntimeError(json.dumps({"path": rel, "attempts": errors, "annex_info_stdout": remotes.stdout[-5000:], "annex_info_stderr": remotes.stderr[-5000:]}, indent=2))
 
 
 def main() -> int:
@@ -23,8 +34,9 @@ def main() -> int:
         f"derivatives/annotations/time_align/char-level/story_{story}_char_time.mat",
         f"derivatives/preprocessed_data/sub-01/CIFTI/sub-01_task-RDR_run-{story}_bold.dtseries.nii",
     ]
+    materialization_commands = {}
     for rel in materialize:
-        annex_get(root, rel)
+        materialization_commands[rel] = annex_get(root, rel)
 
     import numpy as np
     import nibabel as nib
@@ -55,17 +67,19 @@ def main() -> int:
     def mat_summary(d):
         outd = {}
         for k, v in d.items():
-            if k.startswith("__"): continue
+            if k.startswith("__"):
+                continue
             arr = np.asarray(v, dtype=object)
             outd[k] = {"type": type(v).__name__, "shape": list(arr.shape), "sample": repr(v)[:1000]}
         return outd
 
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "SMN4Lang / OpenNeuro ds004078",
         "probe_subject": "sub-01",
         "probe_run_story": story,
         "materialized_paths": materialize,
+        "materialization_commands": materialization_commands,
         "story_text_n_chars": len(text),
         "story_text_preview": text[:1000],
         "word_timing": mat_summary(word_mat),
@@ -83,6 +97,7 @@ def main() -> int:
     (out / "summary.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({"status":"ok","shape":shape,"series_step":payload["cifti_series_step"]}, indent=2))
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
