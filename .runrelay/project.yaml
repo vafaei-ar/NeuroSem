@@ -105,3 +105,21 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/ahba_forward_model_feasibility_v1/latest/summary.json
+
+  freeze_ahba_registration_source_model_v1:
+    description: Model-blind freeze audit for the measured ChineseEEG-to-fsaverage registration inputs and the AHBA EEG source-model conventions. It may materialize public fsaverage anatomy but never opens EEG signal samples, downloads AHBA, or computes NeuroSem/model/gene-expression outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/audit/freeze_ahba_registration_source_model_v1.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --feasibility-summary
+      - outputs/ahba_forward_model_feasibility_v1/latest/summary.json
+      - --output-dir
+      - outputs/ahba_registration_source_model_freeze_v1/latest
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_registration_source_model_freeze_v1/latest/summary.json
