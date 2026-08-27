@@ -91,12 +91,30 @@ def punctuation_count(text: str) -> int:
     return sum(ch in punct for ch in text)
 
 
+def feature_container_for_run(run_number: int, feature_root: Path) -> Path:
+    """Resolve the frozen feature layout, including legacy unscoped run-01."""
+    scoped = feature_root / f"run-{run_number:02d}"
+    if scoped.exists():
+        return scoped
+    if run_number == 1 and feature_root.exists():
+        return feature_root
+    raise FileNotFoundError(f"missing feature root for run-{run_number:02d}: {scoped}")
+
+
+def embedding_container_for_run(run_number: int, embedding_root: Path) -> Path:
+    """Resolve the frozen embedding layout, including legacy unscoped run-01."""
+    scoped = embedding_root / f"run-{run_number:02d}"
+    if scoped.exists():
+        return scoped
+    if run_number == 1 and embedding_root.exists():
+        return embedding_root
+    raise FileNotFoundError(f"missing embedding root for run-{run_number:02d}: {scoped}")
+
+
 def load_run(run_number: int, feature_root: Path, embedding_root: Path):
     run_label = f"run-{run_number:02d}"
-    fr = feature_root / run_label
-    if not fr.exists():
-        raise FileNotFoundError(f"missing feature root {fr}")
-    subjects = sorted([d.name for d in fr.iterdir() if d.is_dir()])
+    fr = feature_container_for_run(run_number, feature_root)
+    subjects = sorted([d.name for d in fr.iterdir() if d.is_dir() and d.name.startswith("sub-")])
     subject_dirs = {}
     for subject in subjects:
         try:
@@ -104,9 +122,10 @@ def load_run(run_number: int, feature_root: Path, embedding_root: Path):
         except FileNotFoundError:
             pass
     if len(subject_dirs) < 3:
-        raise RuntimeError(f"{run_label}: fewer than 3 subjects with row_mean features")
+        raise RuntimeError(f"{run_label}: fewer than 3 subjects with row_mean features under {fr}")
 
-    emb_dir = latest_dir(embedding_root / run_label, "bert_base_chinese_final_mean.npy")
+    er = embedding_container_for_run(run_number, embedding_root)
+    emb_dir = latest_dir(er, "bert_base_chinese_final_mean.npy")
     emb = np.load(emb_dir / "bert_base_chinese_final_mean.npy").astype(np.float64)
     return run_label, subject_dirs, emb_dir, emb
 
