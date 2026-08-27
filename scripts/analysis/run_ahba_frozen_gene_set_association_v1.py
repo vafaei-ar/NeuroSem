@@ -53,7 +53,8 @@ def load_json(path: Path):
 
 
 def read_target(path: Path):
-    rows = list(csv.DictReader(path.open("r", encoding="utf-8-sig", newline="")))
+    with path.open("r", encoding="utf-8-sig", newline="") as f:
+        rows = list(csv.DictReader(f))
     if not rows:
         raise RuntimeError("participant channel target is empty")
     subjects = sorted({r["subject"] for r in rows})
@@ -199,8 +200,8 @@ def main():
     msum = load_json(args.matrix_summary)
     gsum = load_json(args.gene_set_summary)
     tsum = load_json(args.channel_target_summary)
-    if not msum.get("ready_for_biological_testing", False):
-        raise RuntimeError("molecular matrix gate is not ready for biological testing")
+    if not msum.get("ready_for_prespecified_biological_testing", False):
+        raise RuntimeError("molecular matrix gate is not ready for prespecified biological testing")
     if not gsum.get("ready_for_frozen_biological_testing", False):
         raise RuntimeError("gene-set gate is not ready")
     if not tsum.get("ready_for_frozen_molecular_association", False):
@@ -241,12 +242,10 @@ def main():
             for s in subjects:
                 participant_rows.append({"analysis": "primary_full_68", "set": set_name, "subject": s, "spearman": corr[s], "fisher_z": fisher_z(corr[s])})
 
-            # Random-gene-set null on the exact primary full-domain gene universe.
             rp, rmean, rsd = random_set_p(pm["full"], stats["mean_fisher_z"], len(genes), target_rankz, args.random_sets, rng)
             row["size_matched_random_p_two_sided"] = rp
             random_rows.append({"set": set_name, "n_genes": len(genes), "n_random": args.random_sets, "seed": args.seed, "observed_mean_fisher_z": stats["mean_fisher_z"], "empirical_p_two_sided": rp, "null_mean": rmean, "null_sd": rsd})
 
-            # Common-support baseline and donor LODO robustness.
             vc = molecular_vector(pm["common"], genes, pindex)
             _, _, cstats = evaluate_vector(vc, target_rankz)
             lodo_rows.append({"analysis": "primary_common_support_population", "set": set_name, "excluded_donor": "", **cstats})
@@ -255,7 +254,6 @@ def main():
                 _, _, lstats = evaluate_vector(vl, target_rankz)
                 lodo_rows.append({"analysis": "primary_common_support_lodo", "set": set_name, "excluded_donor": donor, **lstats})
 
-            # Bilateral no-mirror sensitivity and its LODOs.
             ngenes = set_genes(gene_sets, set_name, "no_mirror")
             vn = molecular_vector(nm["full"], ngenes, nindex)
             _, _, nstats = evaluate_vector(vn, target_rankz)
