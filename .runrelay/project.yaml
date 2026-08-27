@@ -26,19 +26,20 @@ monitoring:
   tmux_default: false
 
 tasks:
-  probe_derco_materialization_alignment:
-    description: Prospectively download one public DERCo preprocessed FIF and the five public prediction CSVs to inspect only structural metadata and linguistic item-mapping feasibility before any EEG reliability or NeuroSem model analysis.
+  materialize_derco_reliability_inputs:
+    description: Prospectively materialize all public DERCo preprocessed EEG epochs for all 22 participants and five articles, validate exact retained-epoch word identity against the public article prediction tables, and freeze the structural cohort before any EEG reliability or model analysis.
     command:
       - .venv/bin/python
-      - scripts/audit/probe_derco_materialization_alignment.py
+      - scripts/audit/materialize_derco_reliability_inputs.py
       - --data-root
-      - data/raw/derco_probe
+      - data/raw/derco
       - --output-dir
-      - outputs/derco_materialization_alignment_probe/latest
+      - outputs/derco_reliability_input_materialization/latest
     approval: manual
-    timeout_minutes: 60
+    timeout_minutes: 720
     requires_gpu: false
     working_directory: .
     artifacts:
-      - outputs/derco_materialization_alignment_probe/latest/summary.json
-      - outputs/derco_materialization_alignment_probe/latest/prediction_schema.csv
+      - outputs/derco_reliability_input_materialization/latest/summary.json
+      - outputs/derco_reliability_input_materialization/latest/session_inventory.csv
+      - outputs/derco_reliability_input_materialization/latest/canonical_word_map.csv
