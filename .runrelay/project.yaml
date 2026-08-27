@@ -681,3 +681,25 @@ tasks:
     artifacts:
       - outputs/garnett_dream_segmented_xlsx_mapping_probe_v1/latest/summary.json
       - outputs/garnett_dream_segmented_xlsx_mapping_probe_v1/latest/workbook_inventory.csv
+
+  build_manuscript_figures_v1:
+    description: Build manuscript Figure 2 reading-reliability and Figure 4 frozen AHBA molecular-null panels plus normalized summary tables strictly from already-locked derived outputs; no scientific analysis, selection, or new inference.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_manuscript_figures_v1.py
+      - --outputs-root
+      - outputs
+      - --output-dir
+      - outputs/manuscript_figures_v1/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/manuscript_figures_v1/latest/fig2_reading_reliability.png
+      - outputs/manuscript_figures_v1/latest/fig2_reading_reliability.pdf
+      - outputs/manuscript_figures_v1/latest/fig4_ahba_frozen_molecular_nulls.png
+      - outputs/manuscript_figures_v1/latest/fig4_ahba_frozen_molecular_nulls.pdf
+      - outputs/manuscript_figures_v1/latest/table2_reliability_summary.csv
+      - outputs/manuscript_figures_v1/latest/table3_ahba_gene_sets.csv
+      - outputs/manuscript_figures_v1/latest/source_manifest.json
