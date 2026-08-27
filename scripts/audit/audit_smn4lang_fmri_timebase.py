@@ -50,6 +50,20 @@ def mat_vec(d: dict, key: str) -> np.ndarray:
     return np.asarray(d[key]).reshape(-1)
 
 
+def materialize_small_file(root: Path, rel: str) -> Path:
+    local = root / rel
+    local.parent.mkdir(parents=True, exist_ok=True)
+    # The metadata checkout contains broken git-annex symlinks for files whose
+    # payloads were not materialized. Path.exists() is false for those symlinks,
+    # but write_bytes() would follow the dangling target and fail. Replace the
+    # symlink with the public OpenNeuro S3 payload explicitly.
+    if local.is_symlink():
+        local.unlink()
+    if not local.exists() or local.stat().st_size == 0:
+        local.write_bytes(get_bytes(rel))
+    return local
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-root", type=Path, default=Path("data/raw/smn4lang"))
@@ -63,10 +77,7 @@ def main() -> int:
     timing_cache: dict[int, dict] = {}
     for story in STORIES:
         rel = f"derivatives/annotations/time_align/word-level/story_{story}_word_time.mat"
-        local = root / rel
-        local.parent.mkdir(parents=True, exist_ok=True)
-        if not local.exists() or local.stat().st_size == 0:
-            local.write_bytes(get_bytes(rel))
+        local = materialize_small_file(root, rel)
         d = loadmat(local, simplify_cells=True)
         starts = mat_vec(d, "start").astype(float)
         ends = mat_vec(d, "end").astype(float)
@@ -154,7 +165,7 @@ def main() -> int:
     ])
 
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "SMN4Lang / OpenNeuro ds004078",
         "model_blind": True,
         "computes_neural_outcomes": False,
@@ -164,6 +175,7 @@ def main() -> int:
         "expected_runs": len(SUBJECTS) * len(STORIES),
         "observed_runs": len(run_rows),
         "n_failures": len(failures),
+        "timing_materialization": "public_openneuro_s3_replace_annex_symlink",
         "tr_seconds_locked_from_probe": TR,
         "n_brainordinates_locked_from_probe": N_BRAINORDINATES,
         "header_bytes_calibrated_from_probe": HEADER_BYTES,
