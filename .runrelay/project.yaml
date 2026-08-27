@@ -77,3 +77,20 @@ tasks:
     artifacts:
       - outputs/derco_monotonic_word_alignment_diagnostic/latest/summary.json
       - outputs/derco_monotonic_word_alignment_diagnostic/latest/alignment_diagnostic.csv
+
+  audit_derco_fif_metadata_mapping:
+    description: Definitive model-blind audit of DERCo preprocessed FIF-attached stimulus metadata, requiring exact consistency between metadata index/word fields and retained event labels across all 22 participants and five articles before any neural reliability or model analysis.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_derco_fif_metadata_mapping.py
+      - --data-root
+      - data/raw/derco
+      - --output-dir
+      - outputs/derco_fif_metadata_mapping_audit/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/derco_fif_metadata_mapping_audit/latest/summary.json
+      - outputs/derco_fif_metadata_mapping_audit/latest/file_audit.csv
