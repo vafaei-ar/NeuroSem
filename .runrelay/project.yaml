@@ -185,3 +185,29 @@ tasks:
       - outputs/ahba_forward_sensitivity_v1/latest/summary.json
       - outputs/ahba_forward_sensitivity_v1/latest/channel_sensitivity_qc.csv
       - outputs/ahba_forward_sensitivity_v1/latest/forward_sensitivity.npz
+
+  freeze_ahba_dk_ico5_mapping_v1:
+    description: Freeze the model-blind mapping from the 68 cortical Desikan-Killiany aparc parcels to the exact fsaverage ico-5 source vertices used by the frozen EEG forward-sensitivity matrix. Quantify unknown/corpus-callosum territory explicitly and fail closed on ambiguous parcel-name reconciliation. Do not load EEG signal samples, AHBA gene-expression values, NeuroSem/model outcomes, or biological gene-set results.
+    command:
+      - .venv/bin/python
+      - scripts/audit/freeze_ahba_dk_ico5_mapping_v1.py
+      - --source-freeze
+      - outputs/ahba_registration_source_model_freeze_v1/latest/summary.json
+      - --forward-freeze
+      - outputs/ahba_forward_sensitivity_v1/latest/summary.json
+      - --forward-matrix
+      - outputs/ahba_forward_sensitivity_v1/latest/forward_sensitivity.npz
+      - --expression-summary
+      - outputs/ahba_expression_dk_v1/latest/summary.json
+      - --atlas-info
+      - outputs/ahba_expression_dk_v1/latest/primary_leftright/atlas_info.csv
+      - --output-dir
+      - outputs/ahba_dk_ico5_mapping_v1/latest
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_dk_ico5_mapping_v1/latest/summary.json
+      - outputs/ahba_dk_ico5_mapping_v1/latest/vertex_parcel_map.csv
+      - outputs/ahba_dk_ico5_mapping_v1/latest/parcel_coverage.csv
