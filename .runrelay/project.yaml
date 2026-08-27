@@ -58,3 +58,21 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/smn4lang_fmri_mapping_probe/latest/summary.json
+
+  audit_smn4lang_fmri_timebase:
+    description: Model-blind structural timebase audit across all 12 participants and 60 SMN4Lang stories, verifying word timing monotonicity, fMRI event timing, CIFTI run completeness, within-story timepoint identity across participants, and a shared scan-time mapping before any neural reliability or model analysis.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_smn4lang_fmri_timebase.py
+      - --data-root
+      - data/raw/smn4lang
+      - --output-dir
+      - outputs/smn4lang_fmri_timebase_audit/latest
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_fmri_timebase_audit/latest/summary.json
+      - outputs/smn4lang_fmri_timebase_audit/latest/run_timebase.csv
+      - outputs/smn4lang_fmri_timebase_audit/latest/story_timing.csv
