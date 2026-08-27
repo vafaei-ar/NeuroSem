@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Mapping
 from pathlib import Path
 
 import numpy as np
@@ -22,12 +23,7 @@ import pandas as pd
 
 
 def _install_pandas_append_compat() -> bool:
-    """Restore the removed DataFrame.append API for abagen 0.1.3 only.
-
-    pandas 2 removed ``DataFrame.append``. abagen 0.1.3 still calls that API
-    internally. This shim reproduces the historical append behavior with
-    ``pd.concat`` and does not alter any AHBA preprocessing parameter or value.
-    """
+    """Restore the removed DataFrame.append API for abagen 0.1.3 only."""
     if hasattr(pd.DataFrame, "append"):
         return False
 
@@ -62,36 +58,66 @@ def _install_pandas_append_compat() -> bool:
 
 
 def _install_numpy_row_stack_compat() -> bool:
-    """Restore the removed ``np.row_stack`` alias for abagen 0.1.3 only.
-
-    NumPy removed ``row_stack`` after deprecating it as an exact alias of
-    ``np.vstack``. abagen 0.1.3 still references the old name internally.
-    Rebinding the alias therefore preserves the historical numerical operation.
-    """
+    """Restore the removed ``np.row_stack`` alias for abagen 0.1.3 only."""
     if hasattr(np, "row_stack"):
         return False
     np.row_stack = np.vstack
     return True
 
 
-def _save_donor_bundle(outdir: Path, name: str, donors: list[pd.DataFrame], counts: pd.DataFrame, info: pd.DataFrame) -> dict:
+def _normalize_donor_results(donors) -> list[tuple[str, pd.DataFrame]]:
+    """Return donor-level expression as ordered ``(donor_id, DataFrame)`` pairs.
+
+    abagen 0.1.3 returns donor-level expression as a donor-keyed mapping when
+    ``return_donors=True``. Some versions/workflows may instead return a sequence.
+    Accept both representations without changing matrices or collapsing donor IDs.
+    """
+    if isinstance(donors, Mapping):
+        items = [(str(k), v) for k, v in donors.items()]
+    elif isinstance(donors, (list, tuple)):
+        items = [(f"donor_{idx + 1:02d}", v) for idx, v in enumerate(donors)]
+    else:
+        raise TypeError(f"Unexpected donor container type: {type(donors).__name__}")
+
+    if not items:
+        raise RuntimeError("No donor matrices returned")
+    bad = [(k, type(v).__name__) for k, v in items if not isinstance(v, pd.DataFrame)]
+    if bad:
+        raise TypeError(f"Expected donor DataFrames; observed invalid entries: {bad}")
+    return items
+
+
+def _safe_donor_filename(donor_id: str, idx: int) -> str:
+    safe = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in donor_id)
+    safe = safe.strip("_") or f"donor_{idx + 1:02d}"
+    return f"donor_{idx + 1:02d}_{safe}.npz"
+
+
+def _save_donor_bundle(outdir: Path, name: str, donors, counts: pd.DataFrame, info: pd.DataFrame) -> dict:
     sub = outdir / name
     sub.mkdir(parents=True, exist_ok=True)
-    if not donors:
-        raise RuntimeError(f"No donor matrices returned for {name}")
+    donor_items = _normalize_donor_results(donors)
 
-    gene_symbols = [str(c) for c in donors[0].columns]
-    region_ids = [int(x) for x in donors[0].index]
-    for idx, df in enumerate(donors):
+    first_id, first_df = donor_items[0]
+    gene_symbols = [str(c) for c in first_df.columns]
+    region_ids = [int(x) for x in first_df.index]
+    donor_ids = []
+    donor_files = {}
+    for idx, (donor_id, df) in enumerate(donor_items):
         if [str(c) for c in df.columns] != gene_symbols:
-            raise RuntimeError(f"Gene columns differ across donors for {name}")
+            raise RuntimeError(f"Gene columns differ across donors for {name}; donor={donor_id}")
         if [int(x) for x in df.index] != region_ids:
-            raise RuntimeError(f"Region indices differ across donors for {name}")
+            raise RuntimeError(f"Region indices differ across donors for {name}; donor={donor_id}")
         arr = df.to_numpy(dtype=np.float32)
-        np.savez_compressed(sub / f"donor_{idx + 1:02d}.npz", expression=arr)
+        filename = _safe_donor_filename(donor_id, idx)
+        np.savez_compressed(sub / filename, expression=arr)
+        donor_ids.append(donor_id)
+        donor_files[donor_id] = filename
 
     (sub / "gene_symbols.json").write_text(json.dumps(gene_symbols, ensure_ascii=False) + "\n", encoding="utf-8")
     (sub / "region_ids.json").write_text(json.dumps(region_ids) + "\n", encoding="utf-8")
+    (sub / "donor_ids.json").write_text(json.dumps(donor_ids, ensure_ascii=False) + "\n", encoding="utf-8")
+    (sub / "donor_files.json").write_text(json.dumps(donor_files, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     counts.to_csv(sub / "sample_counts.csv")
     info.to_csv(sub / "atlas_info.csv", index=False)
 
@@ -109,7 +135,9 @@ def _save_donor_bundle(outdir: Path, name: str, donors: list[pd.DataFrame], coun
         }
 
     return {
-        "n_donors": len(donors),
+        "n_donors": len(donor_items),
+        "donor_ids": donor_ids,
+        "donor_container_type": type(donors).__name__,
         "n_regions": len(region_ids),
         "n_genes": len(gene_symbols),
         "n_regions_with_any_sample": int((region_total > 0).sum()),
@@ -178,10 +206,6 @@ def main() -> int:
     if not required.issubset(info.columns):
         raise RuntimeError(f"Desikan-Killiany atlas info missing required columns: {sorted(required - set(info.columns))}")
 
-    # The atlas-info table shipped with abagen is intentionally broader than the
-    # cortical surface analysis target. Use its documented structure metadata to
-    # constrain sample matching to cortex instead of assuming every info-table
-    # row is cortical. The surface GIFTIs themselves remain unchanged.
     cortex_info = info[info["structure"].astype(str).str.lower().eq("cortex")].copy()
     if cortex_info.empty:
         raise RuntimeError("Desikan-Killiany atlas info contains no cortical parcels")
@@ -262,9 +286,8 @@ def main() -> int:
         "guardrails": [
             "Do not use NeuroSem, EEG reliability/RSA, model embeddings, or gene-set association outcomes to alter AHBA preprocessing.",
             "Primary bilateral handling is left-to-right mirroring fixed before molecular association testing; no-mirror remains a prespecified sensitivity analysis.",
-            "Keep donor-level matrices for leave-one-donor-out robustness; do not collapse away donor identity before mechanistic testing.",
-            "The pandas compatibility shim only restores the removed DataFrame.append API used internally by abagen 0.1.3; it must not alter scientific preprocessing settings.",
-            "The NumPy compatibility shim only restores row_stack as its documented vstack alias for abagen 0.1.3; it must not alter scientific preprocessing settings.",
+            "Keep donor-level matrices and their explicit donor identifiers for leave-one-donor-out robustness; do not collapse away donor identity before mechanistic testing.",
+            "Compatibility shims restore only APIs removed from current pandas/NumPy that abagen 0.1.3 still calls; they must not alter scientific preprocessing settings.",
             "Do not test GABA, serotonin, cell-type, or pathway hypotheses in this preprocessing stage.",
         ],
     }
@@ -273,6 +296,7 @@ def main() -> int:
         "status": "ready" if not blockers else "blocked",
         "ready_for_molecular_sensitivity_matrix": not blockers,
         "primary_n_donors": primary["n_donors"],
+        "primary_donor_ids": primary["donor_ids"],
         "primary_n_regions": primary["n_regions"],
         "primary_n_genes": primary["n_genes"],
         "numpy_row_stack_compat_installed": numpy_row_stack_compat_installed,
