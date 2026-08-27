@@ -16,6 +16,7 @@ OSF_NODE = "rkqbu"
 OSF_API = f"https://api.osf.io/v2/nodes/{OSF_NODE}/files/"
 ARTICLES = list(range(5))
 EVENT_RE = re.compile(r"^(?P<word>.+)_(?P<article>\d+)_(?P<word_id>\d+)$")
+PUBLISHED_WORD_ID_RE = re.compile(r"^topic-(?P<article>\d+)-(?P<word_id>\d+)$")
 
 
 def get_json(url: str, max_attempts: int = 8) -> dict:
@@ -85,21 +86,33 @@ def file_download_url(item: dict) -> str:
     return str(url)
 
 
-def canonical_word_map(path: Path) -> dict[int, str]:
-    out: dict[int, str] = {}
+def canonical_word_map(path: Path, expected_article: int) -> dict[int, tuple[str, str]]:
+    out: dict[int, tuple[str, str]] = {}
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         if reader.fieldnames is None or "word_id" not in reader.fieldnames or "correct_word" not in reader.fieldnames:
             raise RuntimeError(f"missing word_id/correct_word in {path}")
         for row in reader:
-            wid = int(row["word_id"])
+            published_word_id = str(row["word_id"]).strip()
+            m = PUBLISHED_WORD_ID_RE.match(published_word_id)
+            if not m:
+                raise RuntimeError(f"unexpected published word_id={published_word_id!r} in {path}")
+            article = int(m.group("article"))
+            if article != expected_article:
+                raise RuntimeError(
+                    f"published word_id article mismatch in {path}: expected {expected_article}, got {published_word_id!r}"
+                )
+            wid = int(m.group("word_id"))
             word = str(row["correct_word"]).strip()
             if not word:
-                raise RuntimeError(f"empty correct_word for word_id={wid} in {path}")
+                raise RuntimeError(f"empty correct_word for word_id={published_word_id} in {path}")
             prior = out.get(wid)
-            if prior is not None and prior != word:
-                raise RuntimeError(f"inconsistent correct_word for article file {path}, word_id={wid}: {prior!r} vs {word!r}")
-            out[wid] = word
+            current = (published_word_id, word)
+            if prior is not None and prior != current:
+                raise RuntimeError(
+                    f"inconsistent published mapping for article {expected_article}, event word_id={wid}: {prior!r} vs {current!r}"
+                )
+            out[wid] = current
     if not out:
         raise RuntimeError(f"no canonical words in {path}")
     return out
@@ -149,14 +162,14 @@ def main() -> int:
     if not preproc_url or not pred_url:
         raise RuntimeError("DERCo preprocessed/prediction folder malformed")
 
-    word_maps: dict[int, dict[int, str]] = {}
+    word_maps: dict[int, dict[int, tuple[str, str]]] = {}
     prediction_files = {}
     for article in ARTICLES:
         name = f"human_prediction_article_{article}.csv"
         item = find_named(pred_url, name)
         path = data_root / "prediction" / name
         download(file_download_url(item), path)
-        word_maps[article] = canonical_word_map(path)
+        word_maps[article] = canonical_word_map(path, article)
         prediction_files[article] = str(path.relative_to(Path.cwd())) if path.is_relative_to(Path.cwd()) else str(path)
 
     subjects = []
@@ -196,10 +209,11 @@ def main() -> int:
                     word, art_from_label, wid = parse_event_label(label)
                     if art_from_label != article:
                         raise RuntimeError(f"article mismatch in event label {label}")
-                    canonical = word_maps[article].get(wid)
-                    if canonical is None:
-                        raise RuntimeError(f"word_id {wid} missing from article {article} prediction table")
-                    if canonical.casefold() != word.casefold():
+                    canonical_entry = word_maps[article].get(wid)
+                    if canonical_entry is None:
+                        raise RuntimeError(f"event word_id {wid} missing from article {article} prediction table")
+                    published_word_id, canonical_word = canonical_entry
+                    if canonical_word.casefold() != word.casefold():
                         mismatch += 1
                     seen_ids.append(wid)
                 if mismatch:
@@ -233,10 +247,15 @@ def main() -> int:
 
     word_rows = []
     for article, mapping in sorted(word_maps.items()):
-        for wid, word in sorted(mapping.items()):
-            word_rows.append({"article": article, "word_id": wid, "correct_word": word})
+        for wid, (published_word_id, word) in sorted(mapping.items()):
+            word_rows.append({
+                "article": article,
+                "event_word_id": wid,
+                "published_word_id": published_word_id,
+                "correct_word": word,
+            })
     with (out / "canonical_word_map.csv").open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["article", "word_id", "correct_word"])
+        w = csv.DictWriter(f, fieldnames=["article", "event_word_id", "published_word_id", "correct_word"])
         w.writeheader(); w.writerows(word_rows)
 
     ready = len(ready_subjects) == 22 and len(inventory_rows) == 110 and not blockers
@@ -256,7 +275,7 @@ def main() -> int:
         "n_channels_expected": 32,
         "sfreq_hz_expected": 1000.0,
         "epoch_window_s": [-0.2, 1.0],
-        "item_identity_rule": "parse retained epoch event label as <word>_<article>_<word_id>; require article and word_id/correct_word agreement with frozen public article prediction table",
+        "item_identity_rule": "parse retained FIF label as <word>_<article>_<numeric event word_id>; map numeric id to the terminal integer of published word_id topic-<article>-<zero-padded id>; require exact article and correct_word agreement",
         "canonical_word_counts": {str(a): len(m) for a, m in word_maps.items()},
         "blockers": blockers,
         "ready_for_frozen_derco_reliability": ready,
@@ -264,6 +283,7 @@ def main() -> int:
             "This stage materializes public preprocessed DERCo EEG only and validates exact retained-epoch linguistic identity.",
             "No EEG reliability, RSA, semantic-model quantity, model embedding, or transfer outcome is computed.",
             "The cohort is structural: all 22 public preprocessed participants must pass all five article checks; no participant is selected based on NeuroSem outcomes.",
+            "Published structured word_id strings are preserved verbatim in canonical_word_map.csv; only their terminal integer is used to join to the FIF event label.",
             "The primary downstream representation remains the already-selected all-channel temporal mean; this stage does not compare EEG representations."
         ],
     }
