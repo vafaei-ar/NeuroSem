@@ -123,3 +123,23 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/ahba_registration_source_model_freeze_v1/latest/summary.json
+
+  freeze_ahba_registration_transform_v1:
+    description: Construct and model-blindly validate the explicit rigid measured-head-to-fsaverage transform using the frozen 128-channel CapTrak geometry and NAS/LPA/RPA fiducials. Freeze it only if prespecified sensor-to-scalp distance checks pass. No EEG samples, AHBA data, model quantities, or NeuroSem outcomes are accessed.
+    command:
+      - .venv/bin/python
+      - scripts/audit/freeze_ahba_registration_transform_v1.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --source-freeze
+      - outputs/ahba_registration_source_model_freeze_v1/latest/summary.json
+      - --output-dir
+      - outputs/ahba_registration_transform_freeze_v1/latest
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_registration_transform_freeze_v1/latest/summary.json
+      - outputs/ahba_registration_transform_freeze_v1/latest/alignment_diagnostic.png
+      - outputs/ahba_registration_transform_freeze_v1/latest/chineseeeg-head-fsaverage-trans.fif
