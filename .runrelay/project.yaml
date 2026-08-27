@@ -111,3 +111,21 @@ tasks:
     artifacts:
       - outputs/derco_fif_metadata_index_semantics/latest/summary.json
       - outputs/derco_fif_metadata_index_semantics/latest/file_diagnostic.csv
+
+  audit_derco_event_label_item_identity:
+    description: Final model-blind structural audit using DERCo event labels themselves as participant-independent item keys, requiring parseable word/article/stimulus-index labels, within-file monotonic unique indices, and zero cross-participant word conflicts for any shared article/index key.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_derco_event_label_item_identity.py
+      - --data-root
+      - data/raw/derco
+      - --output-dir
+      - outputs/derco_event_label_item_identity/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/derco_event_label_item_identity/latest/summary.json
+      - outputs/derco_event_label_item_identity/latest/file_audit.csv
+      - outputs/derco_event_label_item_identity/latest/item_key_audit.csv
