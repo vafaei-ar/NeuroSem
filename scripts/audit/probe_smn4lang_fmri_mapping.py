@@ -5,6 +5,28 @@ import argparse, json, subprocess
 from pathlib import Path
 
 
+def run_capture(cmd: list[str], root: Path) -> dict:
+    p = subprocess.run(cmd, cwd=root, text=True, capture_output=True)
+    return {
+        "cmd": cmd,
+        "returncode": p.returncode,
+        "stdout": p.stdout[-5000:],
+        "stderr": p.stderr[-5000:],
+    }
+
+
+def ensure_annex_initialized(root: Path) -> dict:
+    before = run_capture(["git", "annex", "info"], root)
+    init = None
+    if before["returncode"] != 0 and "First run: git-annex init" in before["stderr"]:
+        init = run_capture(["git", "annex", "init", "neurosem-smn4lang-probe"], root)
+        if init["returncode"] != 0:
+            raise RuntimeError(json.dumps({"stage": "git_annex_init", "before": before, "init": init}, indent=2))
+    enable_public = run_capture(["git", "annex", "enableremote", "s3-PUBLIC"], root)
+    after = run_capture(["git", "annex", "info"], root)
+    return {"before": before, "init": init, "enable_s3_public": enable_public, "after": after}
+
+
 def annex_get(root: Path, rel: str) -> str:
     attempts = [
         ["git", "annex", "get", "--from", "s3-PUBLIC", rel],
@@ -16,8 +38,9 @@ def annex_get(root: Path, rel: str) -> str:
         if p.returncode == 0:
             return " ".join(cmd)
         errors.append({"cmd": cmd, "returncode": p.returncode, "stdout": p.stdout[-3000:], "stderr": p.stderr[-3000:]})
-    remotes = subprocess.run(["git", "annex", "info"], cwd=root, text=True, capture_output=True)
-    raise RuntimeError(json.dumps({"path": rel, "attempts": errors, "annex_info_stdout": remotes.stdout[-5000:], "annex_info_stderr": remotes.stderr[-5000:]}, indent=2))
+    whereis = run_capture(["git", "annex", "whereis", rel], root)
+    remotes = run_capture(["git", "annex", "info"], root)
+    raise RuntimeError(json.dumps({"path": rel, "attempts": errors, "whereis": whereis, "annex_info": remotes}, indent=2))
 
 
 def main() -> int:
@@ -34,9 +57,26 @@ def main() -> int:
         f"derivatives/annotations/time_align/char-level/story_{story}_char_time.mat",
         f"derivatives/preprocessed_data/sub-01/CIFTI/sub-01_task-RDR_run-{story}_bold.dtseries.nii",
     ]
-    materialization_commands = {}
-    for rel in materialize:
-        materialization_commands[rel] = annex_get(root, rel)
+
+    try:
+        annex_setup = ensure_annex_initialized(root)
+        materialization_commands = {}
+        for rel in materialize:
+            materialization_commands[rel] = annex_get(root, rel)
+    except Exception as exc:
+        failure = {
+            "schema_version": 3,
+            "dataset": "SMN4Lang / OpenNeuro ds004078",
+            "probe_subject": "sub-01",
+            "probe_run_story": story,
+            "status": "materialization_failed",
+            "error": str(exc),
+            "model_blind": True,
+            "no_neural_model_outcomes": True,
+        }
+        (out / "summary.json").write_text(json.dumps(failure, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(json.dumps({"status": "materialization_failed"}, indent=2))
+        return 2
 
     import numpy as np
     import nibabel as nib
@@ -74,10 +114,12 @@ def main() -> int:
         return outd
 
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "dataset": "SMN4Lang / OpenNeuro ds004078",
         "probe_subject": "sub-01",
         "probe_run_story": story,
+        "status": "ok",
+        "annex_setup": annex_setup,
         "materialized_paths": materialize,
         "materialization_commands": materialization_commands,
         "story_text_n_chars": len(text),
