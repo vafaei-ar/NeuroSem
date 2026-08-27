@@ -24,25 +24,41 @@ from pathlib import Path
 import pandas as pd
 
 SOURCE_URLS = [
+    "https://www.pnas.org/doi/suppl/10.1073/pnas.2401687121/suppl_file/pnas.2401687121.sd05.xlsx",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC11348331/bin/pnas.2401687121.sd05.xlsx?download=1",
+    "https://pmc.ncbi.nlm.nih.gov/articles/instance/11348331/bin/pnas.2401687121.sd05.xlsx?download=1",
     "https://pmc.ncbi.nlm.nih.gov/articles/PMC11348331/bin/pnas.2401687121.sd05.xlsx",
-    "https://pmc.ncbi.nlm.nih.gov/articles/instance/11348331/bin/pnas.2401687121.sd05.xlsx",
 ]
 ANCHORS = {"PTPRK", "SOSTDC1", "NELL1", "NELL2", "SLIT1", "SLIT2", "RYR3", "SNCA", "LMO3", "LMO4", "CDH10"}
+XLSX_MAGIC = b"PK\x03\x04"
 
 
 def download_first(urls: list[str]) -> tuple[str, bytes]:
     errors = []
     for url in urls:
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "NeuroSem/1.0 scientific reproducibility"})
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent": "Mozilla/5.0 NeuroSem/1.0 scientific reproducibility",
+                    "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*;q=0.8",
+                },
+            )
             with urllib.request.urlopen(req, timeout=60) as r:
                 data = r.read()
+                content_type = str(r.headers.get("Content-Type", ""))
+                final_url = str(r.geturl())
             if len(data) < 1000:
                 raise RuntimeError(f"response too small: {len(data)} bytes")
-            return url, data
+            if not data.startswith(XLSX_MAGIC):
+                prefix = data[:80].decode("utf-8", errors="replace").replace("\n", " ")
+                raise RuntimeError(
+                    f"response is not XLSX ZIP bytes; content_type={content_type!r}; final_url={final_url!r}; prefix={prefix!r}"
+                )
+            return final_url, data
         except Exception as e:
             errors.append(f"{url}: {type(e).__name__}: {e}")
-    raise RuntimeError("Could not retrieve Dataset S5: " + " | ".join(errors))
+    raise RuntimeError("Could not retrieve Dataset S5 as XLSX: " + " | ".join(errors))
 
 
 def norm_gene(x) -> str:
@@ -51,21 +67,18 @@ def norm_gene(x) -> str:
 
 
 def extract_panel(xlsx: bytes) -> tuple[list[str], dict]:
-    book = pd.read_excel(io.BytesIO(xlsx), sheet_name=None)
+    book = pd.read_excel(io.BytesIO(xlsx), sheet_name=None, engine="openpyxl")
     candidates = []
     for sheet_name, df in book.items():
-        cols = [str(c) for c in df.columns]
         for gene_col in df.columns:
             genes = df[gene_col].map(norm_gene)
             anchor_hits = len(set(genes[genes.ne("")]) & ANCHORS)
             if anchor_hits < 3:
                 continue
             pcols = [c for c in df.columns if any(k in str(c).lower() for k in ["fdr", "adj", "adjust", "q value", "q-value"])]
-            # Case 1: Dataset sheet itself is the 56-gene table.
             unique = sorted(set(genes[genes.ne("")]))
             if len(unique) == 56 and ANCHORS.issubset(set(unique)):
                 candidates.append((unique, {"sheet": sheet_name, "gene_column": str(gene_col), "filter": "sheet contains exactly 56 unique gene symbols"}))
-            # Case 2: sheet contains the broader candidate universe plus an adjusted interaction p column.
             for pc in pcols:
                 pv = pd.to_numeric(df[pc], errors="coerce")
                 sel = sorted(set(genes[(genes.ne("")) & pv.lt(0.01)]))
@@ -88,7 +101,6 @@ def load_ahba_genes(root: Path) -> set[str]:
             obj = json.loads(p.read_text(encoding="utf-8"))
             vals = obj.get("genes", obj.get("gene_symbols", obj)) if isinstance(obj, dict) else obj
             return {str(x).upper() for x in vals}
-    # Fallback to expression columns if gene-symbol JSON is not present.
     for p in sorted((root / "primary_leftright").glob("*.csv")):
         try:
             df = pd.read_csv(p, nrows=1)
