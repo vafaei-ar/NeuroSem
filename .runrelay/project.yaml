@@ -145,7 +145,7 @@ tasks:
       - outputs/ahba_registration_transform_freeze_v1/latest/chineseeeg-head-fsaverage-trans.fif
 
   prepare_ahba_expression_dk_v1:
-    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. The launcher restores only legacy pandas call signatures required by abagen 0.1.3. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
+    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killiany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. The launcher restores only legacy pandas call signatures required by abagen 0.1.3. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
     command:
       - .venv/bin/python
       - scripts/analysis/run_ahba_expression_dk_v1_compat.py
@@ -187,7 +187,7 @@ tasks:
       - outputs/ahba_forward_sensitivity_v1/latest/forward_sensitivity.npz
 
   freeze_ahba_dk_ico5_mapping_v1:
-    description: Freeze the model-blind mapping from the 68 cortical Desikan-Killany aparc parcels to the exact fsaverage ico-5 source vertices used by the frozen EEG forward-sensitivity matrix. Quantify unknown/corpus-callosum territory explicitly and fail closed on ambiguous parcel-name reconciliation. Do not load EEG signal samples, AHBA gene-expression values, NeuroSem/model outcomes, or biological gene-set results.
+    description: Freeze the model-blind mapping from the 68 cortical Desikan-Killiany aparc parcels to the exact fsaverage ico-5 source vertices used by the frozen EEG forward-sensitivity matrix. Quantify unknown/corpus-callosum territory explicitly and fail closed on ambiguous parcel-name reconciliation. Do not load EEG signal samples, AHBA gene-expression values, NeuroSem/model outcomes, or biological gene-set results.
     command:
       - .venv/bin/python
       - scripts/audit/freeze_ahba_dk_ico5_mapping_v1.py
@@ -321,3 +321,32 @@ tasks:
       - outputs/ahba_frozen_gene_set_association_v1/latest/participant_results.csv
       - outputs/ahba_frozen_gene_set_association_v1/latest/donor_and_bilateral_sensitivity.csv
       - outputs/ahba_frozen_gene_set_association_v1/latest/size_matched_random_set_nulls.csv
+
+  freeze_chineseeeg_semantic_parcel_target_v1:
+    description: Freeze an AHBA-blind 68-parcel cortical semantic-contribution phenotype by deterministic sensitivity-weighted back-projection of the already-frozen 128-channel ChineseEEG semantic contribution maps through the frozen EEG forward-sensitivity matrix and DK68 vertex mapping. No AHBA expression, gene sets, transcriptomic outcomes, inverse fitting, or regularization/tuning are used.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/freeze_chineseeeg_semantic_parcel_target_v1.py
+      - --channel-target-summary
+      - outputs/chineseeeg_semantic_channel_target_v1/latest/summary.json
+      - --participant-target
+      - outputs/chineseeeg_semantic_channel_target_v1/latest/participant_channel_target.csv
+      - --forward-summary
+      - outputs/ahba_forward_sensitivity_v1/latest/summary.json
+      - --forward-matrix
+      - outputs/ahba_forward_sensitivity_v1/latest/forward_sensitivity.npz
+      - --mapping-summary
+      - outputs/ahba_dk_ico5_mapping_v1/latest/summary.json
+      - --vertex-map
+      - outputs/ahba_dk_ico5_mapping_v1/latest/vertex_parcel_map.csv
+      - --output-dir
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/summary.json
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/population_parcel_target.csv
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/participant_parcel_target.csv
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/channel_parcel_sensitivity.csv
