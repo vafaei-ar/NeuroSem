@@ -26,17 +26,19 @@ monitoring:
   tmux_default: false
 
 tasks:
-  probe_derco_osf_inventory:
-    description: Prospectively inventory only public DERCo OSF file metadata to verify preprocessed FIF and text/table availability before any EEG materialization, reliability analysis, model loading, or NeuroSem transfer outcome.
+  probe_derco_materialization_alignment:
+    description: Prospectively download one public DERCo preprocessed FIF and the five public prediction CSVs to inspect only structural metadata and linguistic item-mapping feasibility before any EEG reliability or NeuroSem model analysis.
     command:
       - .venv/bin/python
-      - scripts/audit/probe_derco_osf_inventory.py
+      - scripts/audit/probe_derco_materialization_alignment.py
+      - --data-root
+      - data/raw/derco_probe
       - --output-dir
-      - outputs/derco_osf_inventory/latest
+      - outputs/derco_materialization_alignment_probe/latest
     approval: manual
-    timeout_minutes: 30
+    timeout_minutes: 60
     requires_gpu: false
     working_directory: .
     artifacts:
-      - outputs/derco_osf_inventory/latest/summary.json
-      - outputs/derco_osf_inventory/latest/file_inventory.csv
+      - outputs/derco_materialization_alignment_probe/latest/summary.json
+      - outputs/derco_materialization_alignment_probe/latest/prediction_schema.csv
