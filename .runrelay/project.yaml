@@ -94,3 +94,20 @@ tasks:
     artifacts:
       - outputs/derco_fif_metadata_mapping_audit/latest/summary.json
       - outputs/derco_fif_metadata_mapping_audit/latest/file_audit.csv
+
+  diagnose_derco_fif_metadata_index_semantics:
+    description: Model-blind diagnostic of which preserved FIF metadata index representation matches DERCo event-label stimulus suffixes, comparing pandas metadata index, retained-row ordinals, and numeric nonblank WordID while independently checking word and article agreement.
+    command:
+      - .venv/bin/python
+      - scripts/audit/diagnose_derco_fif_metadata_index_semantics.py
+      - --data-root
+      - data/raw/derco
+      - --output-dir
+      - outputs/derco_fif_metadata_index_semantics/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/derco_fif_metadata_index_semantics/latest/summary.json
+      - outputs/derco_fif_metadata_index_semantics/latest/file_diagnostic.csv
