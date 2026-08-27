@@ -213,7 +213,7 @@ tasks:
       - outputs/ahba_dk_ico5_mapping_v1/latest/parcel_coverage.csv
 
   build_ahba_molecular_sensitivity_matrix_v1:
-    description: Build donor-level 128 x G AHBA molecular-sensitivity matrices using only the frozen AHBA expression preprocessing, frozen 128 x V EEG forward sensitivity, and frozen DK-to-ico5 mapping. Renormalize each channel within the DK-mapped domain, expand donor parcel expression to mapped ico-5 vertices, spatially z-score each gene map, and project without testing any biological gene sets or NeuroSem outcomes.
+    description: Build model-blind population and leave-one-donor-out 128 x G AHBA molecular-sensitivity matrices from frozen inputs. Preserve donor-parcel missingness without imputation, reconstruct the frozen abagen donors/mean parcel aggregation from available donor values, renormalize sensitivity within the DK-mapped domain, spatially z-score each complete aggregated gene map, and project. Generate LODO matrices only when all 68 parcels remain observed after donor exclusion. No biological gene-set or NeuroSem outcomes are accessed.
     command:
       - .venv/bin/python
       - scripts/analysis/build_ahba_molecular_sensitivity_matrix_v1.py
