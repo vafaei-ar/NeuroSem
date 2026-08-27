@@ -1,91 +1,110 @@
-# Run Next: ChineseEEG Download and Structural Audit
+# Run Next: NeuroSem Consolidation
 
-This is the immediate NeuroSem execution step. Do not start model training yet.
+**Last updated:** 2026-08-27
 
-## 1. Clone and enter the repository
+The project is no longer at the dataset-download or first-audit stage. The core ChineseEEG, TMNRED, ZuCo, Garnett, Nature, and AHBA analysis families have been run.
 
-```bash
-git clone https://github.com/vafaei-ar/NeuroSem.git
-cd NeuroSem
-git pull
-```
+The next work is **reconciliation and manuscript production**, not another exploratory outcome search.
 
-## 2. Download ChineseEEG
+## 1. Lock current scientific conclusions
 
-The repository includes `scripts/download/download_chineseeeg.sh`.
+Preserve the following without reopening analysis choices:
 
-```bash
-bash scripts/download/download_chineseeeg.sh
-```
+- ChineseEEG Little Prince: reproducible neural geometry and positive held-out within-dataset neural-guided alignment.
+- TMNRED: independent reading geometry replication, frozen model transfer null.
+- ZuCo: independent English-reading geometry replication and positive frozen E5 transfer.
+- Garnett Dream: same-participant/new-text EEG reliability positive, frozen E5 transfer null/inconclusive.
+- Nature directional: out-of-task null boundary condition.
+- AHBA: frozen GABA/serotonin/pathway null, exploratory transcriptome spatial null, published language-panel primary null, exploratory no-mirror hemispheric sensitivity.
 
-Default destination:
+Do not run new lambda, representation, gene-set, pathway, hemisphere, or subset searches to improve these outcomes.
 
-```text
-data/raw/chineseeeg
-```
+## 2. Reconcile final analysis code into canonical `main`
 
-If OpenNeuro/DataLad initially retrieves only annex metadata, enter the dataset and retrieve the content needed for the first audit. For the complete local copy:
+Several late AHBA analyses were executed on narrow RunRelay branches. Those branches may contain reduced manifests, compatibility wrappers, temporary notes, or technical fixes.
 
-```bash
-cd data/raw/chineseeeg
-datalad get -r .
-cd ../../..
-```
+Do **not** merge those branches wholesale.
 
-If the full dataset is too large for the available disk, stop before selectively retrieving files and report the output of:
+Instead:
 
-```bash
-du -sh data/raw/chineseeeg
-find data/raw/chineseeeg -maxdepth 3 -type f | head -100
-```
+1. identify the final scientific script for each completed analysis;
+2. selectively port only the final analysis code to canonical `main`;
+3. remove temporary compatibility and placeholder files that are no longer needed;
+4. preserve exact RunRelay job and commit provenance in `docs/4_EXPERIMENT_LEDGER.md`;
+5. verify that canonical `.runrelay/project.yaml` contains only intentional tasks.
 
-We will then define a minimal retrieval subset instead of guessing.
+## 3. Build manuscript figures
 
-## 3. Run the structural/metadata audit
+Priority figure set:
 
-No additional Python package is required for this first audit.
+1. Cross-dataset EEG geometry reliability: ChineseEEG, TMNRED, ZuCo, Garnett.
+2. Neural-guided model-transfer contrasts: TMNRED, ZuCo, Garnett, Nature.
+3. AHBA spatial mapping schematic and prespecified molecular nulls.
+4. Exploratory transcriptome PLS with spatial-null comparison.
+5. Published language-panel primary results.
+6. Mirrored versus no-mirror dyslexia-panel hemisphere decomposition.
 
-```bash
-python scripts/audit/audit_chineseeeg.py \
-  data/raw/chineseeeg \
-  --output-dir outputs/chineseeeg_audit \
-  --make-zip
-```
+Every AHBA figure must label analyses as confirmatory, exploratory, or post-hoc diagnostic.
 
-Do **not** add `--hash-large-files` on the first run. It is unnecessary and may take substantial time.
+## 4. Build manuscript tables
 
-The script does not load EEG samples. It inventories the BIDS tree and produces small metadata summaries.
+Required tables:
 
-## 4. Return the audit archive
+- dataset/task/independence table;
+- EEG reliability summary;
+- frozen model-transfer summary;
+- AHBA molecular-result summary;
+- RunRelay job/commit provenance table for supplement/reproducibility.
 
-The command prints a path similar to:
+## 5. Draft Results
 
-```text
-outputs/chineseeeg_audit/YYYYMMDD_HHMMSS.zip
-```
+Use scientific evidence order, not debugging chronology:
 
-Upload that ZIP to the project conversation. It should contain only:
+1. ChineseEEG discovery geometry.
+2. Within-development neural-guided tuning.
+3. Independent reading EEG replication.
+4. Cross-dataset transfer, including both positive and null tests.
+5. Garnett same-participant/new-text boundary.
+6. Nature out-of-task boundary.
+7. AHBA mechanistic nulls.
+8. AHBA mirroring sensitivity as a separate methodological observation.
 
-- `manifest.json`
-- `file_inventory.csv`
-- `events_summary.json`
-- `channels_summary.json`
-- `eeg_json_summary.json`
-- `participants_copy.tsv` if present
-- `report.md`
+## 6. Draft Methods
 
-No raw EEG samples are included.
+Build Methods directly from frozen protocols and final committed scripts.
 
-## 5. What happens after the audit
+For every major analysis, record:
 
-The audit determines the real subject/run/event structure and exact stimulus columns in the local data. Based on those outputs, the next commit will define:
+- frozen input cohort/items;
+- representation and nuisance family;
+- inference unit and null procedure;
+- model/version/seed where relevant;
+- exact RunRelay job ID and NeuroSem commit;
+- confirmatory/exploratory/diagnostic classification.
 
-1. the exact analysis unit (character, word, phrase, or sentence event);
-2. discovery subjects/runs and exclusions;
-3. temporal epoch definitions;
-4. stimulus-to-text mapping;
-5. nuisance RDM construction;
-6. a preprocessing reproduction script tied to the actual files;
-7. the first frozen Phase-1 analysis configuration.
+## 7. Decide whether any analysis is genuinely missing
 
-The dataset documentation is not a substitute for this local audit. We need to verify the files actually downloaded before writing analysis code around assumed BIDS paths or event fields.
+Only after the figures and Results/Methods draft exist should the team decide whether a missing analysis prevents a defensible paper.
+
+A new analysis should be added only if it closes a clear methodological gap, not because an existing result is null.
+
+## 8. Future molecular work
+
+If the no-mirror dyslexia-panel finding is pursued beyond the current paper, treat it as a new prospectively frozen validation study.
+
+Preferred options:
+
+- an independent transcriptomic resource with stronger bilateral coverage;
+- a preregistered left/right language-network analysis;
+- layer-resolved spatial transcriptomic data;
+- independent imaging-transcriptomic validation using the same frozen 14-gene panel.
+
+Do not continue within-AHBA subset fishing.
+
+## Current authoritative docs
+
+- `docs/1_PROJECT_OVERVIEW.md`
+- `docs/3_RESULTS_AND_COMPARISONS.md`
+- `docs/4_EXPERIMENT_LEDGER.md`
+- `docs/5_CURRENT_ROADMAP.md`
+- `docs/6_AHBA_CURRENT_STATUS_AND_NEXT_STEPS.md`

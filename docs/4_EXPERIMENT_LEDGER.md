@@ -1,8 +1,8 @@
 # 4. Experiment Ledger
 
-**Last updated:** 2026-08-26
+**Last updated:** 2026-08-27
 
-This is the chronological audit trail for major NeuroSem analyses. It records what was run, why it was run, whether it was confirmatory or exploratory, and what changed afterward. Exact code/configuration should be recovered from the NeuroSem commit associated with each RunRelay job.
+This is the chronological audit trail for major NeuroSem analyses. It records what was run, why it was run, whether it was confirmatory, exploratory, or post-hoc diagnostic, and what changed afterward. Exact code/configuration should be recovered from the NeuroSem commit associated with each RunRelay job.
 
 ## Project chronology at a glance
 
@@ -12,44 +12,45 @@ flowchart LR
     B --> C[BERT residual RSA]
     C --> D[BERT neural-guided tuning]
     D --> E[Sealed run-07 evaluation]
-    E --> F[External semantic benchmark]
+    E --> F[Generic semantic benchmark]
     F --> G[E5 architecture replication]
-    G --> H[E5 Pareto exploration]
-    H --> I[Nature directional validation]
-    I --> J[TMNRED EEG reliability]
-    J --> K[TMNRED E5 transfer]
-    K --> L[ZuCo audit / structural freeze]
-    L --> M[ZuCo EEG reliability]
-    M --> N[ZuCo frozen E5 transfer]
-    N --> O[Garnett structural freeze]
-    O --> P[Garnett EEG reliability]
-    P --> Q[Garnett exact row-text mapping]
-    Q --> R[Garnett frozen E5 transfer pending]
-    N --> S[AHBA model-blind mechanistic preparation]
+    G --> H[Nature / TMNRED / ZuCo external validation]
+    H --> I[Garnett reliability + transfer]
+    I --> J[AHBA model-blind preparation]
+    J --> K[Frozen GABA / serotonin molecular test]
+    K --> L[Exploratory transcriptome PLS / gradients]
+    L --> M[Published language-gene panels]
+    M --> N[Mirroring diagnostic]
+    N --> O[Consolidation / manuscript]
 ```
 
 ## Ledger conventions
 
-- **Confirmatory / frozen**: key analysis choices were fixed before target outcomes were inspected.
-- **Exploratory**: motivated by earlier results and not promoted to primary evidence without independent replication.
-- Failed jobs are retained when they expose an engineering/data constraint or demonstrate that no scientific choice changed after failure.
+- **Confirmatory / frozen:** key analysis choices were fixed before target outcomes were inspected.
+- **Exploratory:** motivated by earlier results and not promoted to primary evidence without independent replication.
+- **Post-hoc diagnostic:** used to explain a completed result or sensitivity, not to revise the confirmatory conclusion.
+- Failed jobs are retained when they expose an engineering/data constraint or show that a scientific protocol did not change after failure.
 - Safe derived artifacts are transported through Google Drive; raw/restricted neural data are not declared artifacts.
 
-## Phase A. ChineseEEG discovery and BERT tuning
+# Phase A. ChineseEEG discovery and BERT tuning
 
-### EEG representation selection
+## EEG representation selection
 
-The early flattened sensor-time representation had weak cross-subject reliability. A simpler temporal mean within each channel was selected on neural reliability before semantic testing.
+The early flattened sensor-time representation had weak cross-subject reliability. A simpler temporal mean within each channel was selected using neural reliability before semantic testing.
 
-Selected representation: approximately 0.220 raw LOO reliability and approximately 0.121 after nuisance control, with residual reliability above the circular-shift null.
+Selected representation: approximately 0.220 raw LOO reliability and approximately 0.121 after nuisance control.
 
-### BERT semantic RSA, Little Prince runs 01-06
+## BERT semantic RSA, Little Prince runs 01-06
 
 Purpose: test residual correspondence between BERT geometry and reproducible EEG geometry after nuisance control.
 
-Result: positive in 6/6 runs; mean run effect 0.0085; exact run-level sign-flip p=0.015625.
+Result:
 
-### BERT neural-guided tuning and sealed run-07
+- positive in 6/6 runs;
+- mean run effect 0.0085;
+- exact one-sided run-level sign-flip p=0.015625.
+
+## BERT neural-guided tuning and sealed run-07
 
 Four arms: base, text-only, neural-guided, shuffled-neural.
 
@@ -60,7 +61,7 @@ Run-07 mean partial-Spearman:
 
 Interpretation: neural-guided arm strongest on the sealed neural holdout in two seeds.
 
-### Generic semantic benchmark
+## Generic semantic benchmark
 
 Seed 1 eight-task mean: base 0.283464, text-only 0.308486, neural-guided 0.308575, shuffled 0.307943.
 
@@ -68,11 +69,11 @@ Seed 2: base 0.283464, text-only 0.305020, neural-guided 0.301607, shuffled 0.30
 
 Interpretation: no stable neural-specific generic semantic gain.
 
-## Phase B. Multilingual-E5 architecture replication
+# Phase B. Multilingual-E5 replication
 
 ### `NEUROSEM-E5-REP-0001`
 
-Malformed control job: `requested_machine_id` was null. Never reuse as template/evidence.
+Malformed control job with null `requested_machine_id`. Never reuse as evidence/template.
 
 ### `NEUROSEM-E5-REP-0002`
 
@@ -80,311 +81,321 @@ Failed; infrastructure/debugging only.
 
 ### `NEUROSEM-E5-REP-0003`
 
-Completed. Purpose: independent-architecture replication of neural-guided tuning with multilingual E5.
+Completed. Independent-architecture replication of within-ChineseEEG neural-guided alignment.
 
-Interpretation: qualitative ChineseEEG neural-target alignment effect reproduced in a second architecture.
+### E5 Pareto exploration
 
-### E5 Pareto work
+Dose-response work showed that neural alignment and generic semantic performance do not simply improve together. Treat as exploratory.
 
-`NEUROSEM-E5-PARETO-0001` failed during exploratory infrastructure work.
-
-`NEUROSEM-E5-PARETO-EVAL-0001` completed and evaluated already-trained dose-response points without retraining.
-
-Interpretation: neural alignment and generic semantic performance do not simply improve together. Treat Pareto work as exploratory.
-
-## Phase C. Nature directional-word dataset
+# Phase C. Nature directional-word dataset
 
 Completed download, model-blind audit, event probing, and frozen directional-word validation.
 
-Primary covert/inner-speech lambda .10 - 0 mean difference was approximately -0.001786; no positive transfer evidence.
+Primary covert/inner-speech lambda .10 - 0 mean difference approximately -0.001786; no positive transfer evidence.
 
-Interpretation: out-of-task boundary condition, not a task-matched natural-reading replication.
+Interpretation: out-of-task boundary condition, not a task-matched reading replication.
 
-## Phase D. ChineseEEG representation refinement
+# Phase D. TMNRED independent Chinese-reading replication
 
-`NEUROSEM-EEGREP-AUDIT-0001` completed a model-blind inventory.
-
-Subsequent overnight/spectral-phase jobs exposed missing/untracked assets and incomplete common-subject materialization. The established temporal mean remained the primary representation; richer families remain secondary/exploratory unless prospectively validated elsewhere.
-
-## Phase E. TMNRED independent Chinese-reading replication
-
-A sequence of download, documentation, event-alignment, format, stimulus, and materialization probes established a prospective frozen cohort/item rule before signal-level outcome analysis.
-
-### Frozen input cohort
+## Frozen input cohort
 
 `NEUROSEM-TMNRED-INPUTS-0006` completed with:
 
 - 29 participants;
 - 8 sessions;
-- all 50 sentence items retained per session under the >=80% participant-coverage rule.
+- 50 sentence items retained per session under the >=80% participant-coverage rule.
 
-### `NEUROSEM-TMNRED-PRIMARY-RELIABILITY-0001`
+## `NEUROSEM-TMNRED-PRIMARY-RELIABILITY-0001`
 
-Type: frozen/model-blind EEG-only replication.
+Type: frozen EEG-only replication.
 
-- `row_mean_all`: residual LOO 0.00724, 95% CI [0.00356, 0.01079], 75.9% positive;
+- `row_mean_all`: residual LOO 0.00724, 95% CI [0.00356, 0.01079];
 - `row_std_all`: 0.01820;
 - `relative_8bin_all`: 0.01148.
 
-### `NEUROSEM-TMNRED-E5-TRANSFER-0001`
+## `NEUROSEM-TMNRED-E5-TRANSFER-0001`
 
-Type: frozen confirmatory external model-transfer test.
+Type: frozen confirmatory transfer.
 
-Primary contrast: ChineseEEG-trained E5 lambda 0.10 neural-guided vs lambda 0 text-only, no TMNRED tuning.
-
-Result: mean delta +0.000020, 95% CI [-0.000128, +0.000176], one-sided p=.402, 55.2% positive.
+Result: mean delta +0.000020, 95% CI [-0.000128, +0.000176], one-sided p=.402.
 
 Interpretation: null transfer.
 
-### `NEUROSEM-TMNRED-E5-ALTREP-0001`
+## `NEUROSEM-TMNRED-E5-ALTREP-0001`
 
-Type: explicitly exploratory post-confirmatory analysis.
+Type: post-confirmatory exploratory.
 
-- SD target: delta -0.000294, 95% CI [-0.000479, -0.000107], p=.997;
-- 8-bin target: delta +0.000041, 95% CI [-0.000111, +0.000207], p=.322.
+Alternative SD and 8-bin targets did not rescue transfer.
 
-Interpretation: alternative TMNRED targets do not rescue transfer.
+# Phase E. ZuCo 2.0 independent English-reading replication
 
-## Phase F. ZuCo 2.0 independent English-reading replication
+## Structural and stimulus freezes
 
-### Inventory and format probing
+The full 18-subject x 7-run inventory was audited. Seventeen subjects were frozen as structurally ready across all runs; YTL was excluded before outcome analysis because NR3, NR4, and NR6 failed structural event QC.
 
-`NEUROSEM-ZUCO-OSF-INVENTORY-0001` completed. Decision: prioritize ZuCo 2.0 Task 1 Normal Reading.
+A unique zero-cost monotonic word-count alignment established the exact 349-sentence public task-material mapping.
 
-Early format jobs established MATLAB v7.3/HDF5 handling and continuous EEG event structure.
+## `NEUROSEM-ZUCO2-NR-RELIABILITY-0001`
 
-Representative YDG NR1: 105 channels, 500 Hz, 50 sentence units, 110 events, with sentence windows delimited by `10 -> 11` or `12 -> 13` pairs.
-
-### Full-cohort materialization
-
-`NEUROSEM-ZUCO2-NR-INPUTS-0001` completed but was unusable because the initial filename matcher only accepted the `gip_` prefix.
-
-The corrected matcher accepted alphabetic prefixes, and `NEUROSEM-ZUCO2-NR-INPUTS-0002` completed successfully.
-
-Frozen cohort:
-
-- 18 subjects discovered;
-- 126 expected/present run files;
-- 123 runs structurally ready;
-- 17 subjects ready across all seven runs;
-- YTL excluded because NR3, NR4, and NR6 failed structural event QC.
-
-YTL exclusion was frozen before outcome analysis.
-
-### Stimulus mapping probes
-
-A sequence of narrow, model-blind probes resolved the public Task 1 material schema and the exact 349-sentence mapping.
-
-Important history:
-
-- early probe design attempted unnecessary ET materialization and timed out;
-- later probes established that `task_materials/nr_*.csv` files are semicolon-delimited and headerless;
-- each material file contains three more rows than the EEG sentence count;
-- no row was dropped based on outcome information;
-- a unique zero-cost monotonic word-count alignment showed that rows 1-3 are skipped in every NR run and all remaining rows map one-to-one to EEG sentence order.
-
-This mapping was frozen before EEG reliability.
-
-### `NEUROSEM-ZUCO2-NR-RELIABILITY-0001`
-
-Status: completed.
-
-Type: prospectively frozen, model-blind EEG-only reliability analysis.
+Type: prospectively frozen EEG-only reliability.
 
 Primary `row_mean_all`:
 
-- mean raw LOO 0.06739;
-- mean nuisance-residualized LOO **0.06742**;
-- median residualized LOO 0.06559;
+- mean residualized LOO **0.06742**;
 - 95% CI **[0.05831, 0.07687]**;
-- **17/17 participants positive**;
-- exact one-sided sign-flip **p=7.63e-06**.
+- **17/17** positive;
+- exact one-sided p=`7.63e-06`.
 
-Frozen sensitivities:
+## `NEUROSEM-ZUCO2-NR-E5-TRANSFER-0001`
 
-- `row_std_all` residual LOO about 0.04087;
-- `relative_8bin_all` residual LOO about 0.04682.
+Failed before outcome because of a Python import-path issue. No scientific output; protocol unchanged.
 
-### `NEUROSEM-ZUCO2-NR-E5-TRANSFER-0001`
+## `NEUROSEM-ZUCO2-NR-E5-TRANSFER-0002`
 
-Status: failed immediately before any scientific outcome.
-
-Reason: `ModuleNotFoundError: No module named 'scripts'` from direct script execution. No artifacts. The failure was purely a Python import-path issue.
-
-Scientific protocol was not modified.
-
-### `NEUROSEM-ZUCO2-NR-E5-TRANSFER-0002`
-
-Status: completed.
-
-Type: single frozen confirmatory cross-dataset/cross-language model-transfer test.
-
-Contrast: ChineseEEG-trained multilingual-E5 lambda 0.10 neural-guided minus matched lambda 0 text-only, evaluated on the frozen ZuCo temporal-mean EEG geometry with no ZuCo tuning.
+Type: single frozen confirmatory cross-dataset/cross-language transfer test.
 
 Result:
 
 - mean participant delta **+0.0016637**;
-- median delta **+0.0014871**;
-- **17/17 participants positive**;
+- median **+0.0014871**;
+- **17/17** positive;
 - bootstrap 95% CI **[+0.0012294, +0.0021452]**;
-- exact one-sided sign-flip **p=7.63e-06**;
-- exact two-sided sign-flip **p=1.53e-05**.
+- one-sided exact p=`7.63e-06`.
 
-Interpretation: positive task-matched transfer of neural alignment from ChineseEEG to independent English reading EEG.
+Interpretation: positive task-matched transfer from ChineseEEG to independent English reading EEG.
 
-Guardrail: stop ZuCo lambda/representation/window/sensor searches after this confirmatory result.
+Guardrail: stop ZuCo lambda/representation/window/sensor searches.
 
-## Phase G. ChineseEEG Garnett Dream
+# Phase F. ChineseEEG Garnett Dream
 
-Role: **same-participant / new-text validation**, not independent-cohort replication.
+Role: same-participant/new-text validation.
 
-### `NEUROSEM-GARNETT-STRUCTURE-PROBE-0001`
+## Structural/materialization sequence
 
-Completed. Model-blind inventory of Garnett files and participant/run structure.
+The analysis unit was frozen as ordered `ROWS -> ROWE` presentation rows. The filtered BrainVision source family and the exact chapter identities were frozen model-blind.
 
-Important follow-up: the first broad structure probe could over-include Little Prince files because both tasks use `task-reading`. Later probes explicitly restricted to `ses-GarnettDream`; no scientific outcome had been computed at that point.
+`NEUROSEM-GARNETT-INPUTS-0002` failed only because published BrainVision companion references use the internal typo `ses-GranettDream` while tracked filenames use `ses-GarnettDream`.
 
-### `NEUROSEM-GARNETT-ALIGNMENT-FREEZE-0001` and `0002`
+`NEUROSEM-GARNETT-INPUTS-0003` completed after a narrow validator normalization of that known typo.
 
-Completed model-blind structural/event/text/materialization freeze work.
-
-Frozen analysis unit: ordered `ROWS -> ROWE` presentation row within chapter/run.
-
-Frozen event/source family: `derivatives/preproc/filtered_0.5_30`.
-
-Sub-07's CH19 was not allowed to substitute post hoc for missing CH18.
-
-### `NEUROSEM-GARNETT-INPUTS-0002`
-
-Failed after long materialization because 171 BrainVision companion-reference checks detected the published internal typo `ses-GranettDream` versus tracked filename `ses-GarnettDream`.
-
-The EEG files themselves materialized; the failure was validator-only. No EEG outcome was computed.
-
-### `NEUROSEM-GARNETT-INPUTS-0003`
-
-Completed after a narrow validator normalization of only the known `GranettDream -> GarnettDream` typo.
-
-Frozen materialization summary:
+Frozen materialization:
 
 - 10 participants;
 - 171 valid participant-runs;
 - 18 chapters;
-- 85,865 participant x presentation-row records;
-- zero failures;
-- ready for reliability.
+- 85,865 participant x presentation-row records.
 
-No EEG samples or model outcomes were loaded during materialization.
+## `NEUROSEM-GARNETT-RELIABILITY-0001`
 
-### `NEUROSEM-GARNETT-RELIABILITY-0001`
-
-Status: completed.
-
-Type: prospectively frozen EEG-only same-participant/new-text reliability test.
+Type: prospectively frozen EEG-only same-participant/new-text reliability.
 
 Primary `row_mean_all`:
 
-- mean raw LOO reliability **0.03545**;
-- mean nuisance-residualized participant LOO reliability **0.01863**;
-- median residualized LOO **0.01895**;
-- **10/10 participants positive**;
-- participant-bootstrap 95% CI **[0.01636, 0.02085]**;
-- exact one-sided sign-flip **p=0.0009766**;
-- exact two-sided sign-flip **p=0.001953**.
+- raw mean LOO **0.03545**;
+- residual mean **0.01863**;
+- median **0.01895**;
+- **10/10** positive;
+- 95% CI **[0.01636, 0.02085]**;
+- one-sided exact p=`0.0009766`.
 
-Predeclared sensitivities:
+## Exact row-text mapping
 
-- `row_std_all`: residual mean about **0.04443**, 10/10 positive;
-- `relative_8bin_all`: residual mean about **0.00407**, 9/10 positive.
-
-Interpretation: neural geometry generalizes to a substantially different narrative in the same participant/acquisition family. `row_mean_all` remains primary despite stronger numerical SD reliability.
-
-### Row-text mapping probes
-
-`NEUROSEM-GARNETT-ROW-TEXT-MAPPING-0001` failed because the probe opened the wrong event-file family and then indexed past the event list. No outcome was computed.
-
-`0002` corrected only the source-family path and showed that `ROWS.value` is not text.
-
-`0003` broadened model-blind tracked-file discovery but did not establish a final row-text mapping.
-
-The segmented-XLSX probe then used the authors' documented non-display per-run XLSX analysis files and the documented `Chinese_text` header in physical row 1.
-
-### `NEUROSEM-GARNETT-XLSX-MAPPING-0002`
-
-Status: completed.
-
-Type: model-blind exact text-mapping freeze.
-
-Result:
-
-- all tracked XLSX files materialized;
-- exactly 18 unique non-display Garnett workbooks matched chapters/runs 1-18;
-- all had the expected `Chinese_text` header in physical row 1;
-- after excluding that header, all 18 workbook row counts exactly matched the frozen `ROWS -> ROWE` item counts;
-- total mapped linguistic items across chapters: **9,047**;
-- no missing or ambiguous run mapping.
-
-Frozen rule:
+Several narrow model-blind probes resolved the source text. The final segmented-XLSX freeze established:
 
 `CHxx_ROWyyyy -> physical XLSX row yyyy + 1`
 
-This mapping was established before any Garnett model-transfer outcome.
+with physical row 1 as the `Chinese_text` header.
 
-### Next Garnett action
+Across 18 chapters: **9,047** mapped items.
 
-Run one confirmatory multilingual-E5 transfer test:
+## `NEUROSEM-GARNETT-E5-TRANSFER-0002`
 
-- frozen `row_mean_all` target;
-- lambda 0.10 neural-guided minus lambda 0 text-only;
-- no Garnett tuning;
-- chapter-wise RSA;
-- participant-level Fisher-z aggregation;
-- full text-derived nuisance family restored from exact text: order, duration, character count, punctuation count, character-set Jaccard distance.
+Type: frozen confirmatory same-participant/new-text model-transfer test.
 
-Lock this result before any sensitivity analysis.
+Contrast: lambda .10 neural-guided minus lambda 0 text-only, with full nuisance family restored and chapters analyzed separately.
 
-## Phase H. Abbas AHBA transcriptomic extension
+Result:
 
-Status: planned; **no NeuroSem molecular outcome has been run**.
+- mean participant delta **+0.0003266**;
+- median **+0.0003319**;
+- **6/10** positive;
+- 95% CI **[-0.0001218, +0.0007560]**;
+- one-sided exact sign-flip p=`0.1015625`;
+- two-sided p=`0.203125`.
 
-Abbas proposed using the Allen Human Brain Atlas as a molecular-mechanistic spatial prior for the 128-channel ChineseEEG geometry.
+Interpretation: confirmatory null/inconclusive. Preserve this null; do not search Garnett alternatives to rescue it.
 
-Preferred mapping:
+# Phase G. AHBA model-blind mechanistic preparation
 
-`AHBA cortical transcriptomics -> cortical spatial map -> EEG forward/source-sensitivity projection -> 128-channel molecular weighting -> frozen NeuroSem analysis`
+The AHBA extension was developed as a separately frozen mechanistic track.
 
-The literal nearest-cortex-under-electrode interpretation is rejected because scalp electrodes measure mixtures of cortical generators.
+## Dependency and feasibility
 
-Model-blind preparation must freeze:
+- `NEUROSEM-AHBA-SETUP-0001`: failed only because of `pkg_resources` compatibility.
+- `NEUROSEM-AHBA-SETUP-0002`: completed with pinned `abagen 0.1.3` environment.
+- `NEUROSEM-AHBA-FORWARD-FEASIBILITY-0001`: completed; no forward-model blockers.
 
-- `abagen` preprocessing, including default-like `ibf_threshold=0.5`;
-- probe/gene aggregation and normalization;
-- donor handling;
-- bilateral/hemisphere strategy;
-- exact ChineseEEG montage and reference;
-- head model, source space, lead-field/sensitivity convention;
-- GABAergic, serotonergic, human cell-type, and small curated pathway panels;
-- spatial-null and random-gene-set frameworks.
+## Registration/source freezes
 
-Required robustness:
+- `NEUROSEM-AHBA-REG-SOURCE-FREEZE-0001`: froze fsaverage ico5, three-layer BEM, registration conventions, average reference, fixed surface-normal orientation, and absolute sensitivity.
+- `NEUROSEM-AHBA-REG-TRANSFORM-FREEZE-0001`: completed explicit rigid ICP registration; prespecified distance thresholds passed.
+- `NEUROSEM-AHBA-FORWARD-SENSITIVITY-0001`: completed 128 x 20,484 forward-sensitivity matrix.
+- `NEUROSEM-AHBA-DK-ICO5-MAPPING-0001`: completed 68-parcel DK mapping; 18,742 vertices mapped.
 
-- leave-one-donor-out;
-- spatial-autocorrelation-preserving null maps;
-- gene-set-size-matched random controls;
-- multiplicity correction;
-- robustness to frozen bilateral handling.
+## AHBA expression
 
-This extension cannot revise or rescue the existing ChineseEEG, TMNRED, ZuCo, Nature, or Garnett primary analyses.
+After technical iterations, `NEUROSEM-AHBA-EXPRESSION-DK-0006` completed.
 
-## Current evidence summary
+Primary mirrored:
+
+- 68 parcels;
+- 15,677 genes.
+
+No-mirror sensitivity:
+
+- 15,633 genes.
+
+## Molecular-sensitivity matrix
+
+`NEUROSEM-AHBA-MOLECULAR-MATRIX-0003` completed.
+
+Primary mirrored: 15,677 genes x 128 channels.
+
+No-mirror: 15,633 genes.
+
+## Biological panel freeze
+
+`NEUROSEM-AHBA-GENE-SETS-FREEZE-0001` completed with 14 frozen sets:
+
+- seven primary GABA/serotonin/pathway sets;
+- seven cell-type specificity controls.
+
+## Semantic spatial targets
+
+`NEUROSEM-AHBA-SEMANTIC-CHANNEL-TARGET-0002` completed the frozen BERT-based 128-channel semantic contribution target.
+
+`NEUROSEM-AHBA-SEMANTIC-PARCEL-TARGET-0001` completed the AHBA-blind deterministic DK68 sensitivity-weighted cortical phenotype. This is not EEG inverse source localization.
+
+# Phase H. Frozen AHBA mechanistic test
+
+## `NEUROSEM-AHBA-FROZEN-GENE-SET-ASSOCIATION-0001`
+
+Type: frozen primary molecular association.
+
+All seven prespecified GABAergic/serotonergic/pathway sets were null after participant-level inference and BH correction.
+
+Representative mean rho values ranged from about -0.050 to +0.056, with all primary BH q values about 0.695.
+
+Interpretation:
+
+> Population cortical transcriptomic variation in the prespecified GABAergic and serotonergic systems did not reliably explain the spatial channel-contribution pattern of established ChineseEEG semantic neural geometry.
+
+This primary mechanistic null is locked.
+
+# Phase I. Exploratory whole-transcriptome AHBA
+
+## `NEUROSEM-AHBA-EXPLORATORY-TRANSCRIPTOME-0001`
+
+Type: explicitly exploratory.
+
+PLS1:
+
+- observed score-phenotype `r = 0.4574`;
+- `R^2 = 0.2092`;
+- 5,000 hemisphere-constrained spatial rotations;
+- two-sided spatial p=`0.2745`.
+
+No transcriptomic gradient survived FDR. Gradient 10 was closest nominally (`rho = 0.2256`, p=`0.0566`, q=`0.4747`).
+
+Five valid donor LODO runs showed stable PLS gene-weight rankings (rho approximately 0.95-0.98), but stability does not imply significance.
+
+Interpretation: whole-transcriptome spatial discovery remains null after spatial correction.
+
+# Phase J. Published language-gene panels
+
+## Panel freezing
+
+Several attempts to retrieve the full Wong et al. supplemental 56-gene table failed because of changing PMC/PNAS distribution endpoints. Those were source-access failures, not scientific outcomes.
+
+The project then froze two exact gene panels explicitly listed in the peer-reviewed article text, independent of NeuroSem outcomes:
+
+- 6-gene language structural-connectivity panel;
+- 14-gene dyslexia-associated panel.
+
+`NEUROSEM-AHBA-PUBLISHED-LANGUAGE-PANELS-V2-FREEZE-0002` completed with 6/6 and 14/14 genes retained in AHBA.
+
+## Validation engineering failures
+
+`NEUROSEM-AHBA-PUBLISHED-LANGUAGE-PANEL-VALIDATION-0001` and `0002` failed before analysis because `gene_panels.json` stored panel values as direct lists while the validator expected dictionaries.
+
+The fix changed only serialization compatibility; no genes, nulls, thresholds, seeds, or analysis choices changed.
+
+## `NEUROSEM-AHBA-PUBLISHED-LANGUAGE-PANEL-VALIDATION-0003`
+
+Type: independent published-panel validation.
+
+Primary mirrored 6-gene connectivity panel:
+
+- `rho = -0.1515`;
+- spatial p=`0.4631`;
+- co-expression-profile p=`0.3889`;
+- jointly supported: false.
+
+Primary mirrored 14-gene dyslexia panel:
+
+- `rho = -0.2733`;
+- spatial p=`0.0516`, BH q=`0.1032`;
+- co-expression-profile p=`0.0990`, BH q=`0.1980`;
+- jointly supported: false.
+
+Interpretation: primary validation null. The dyslexia panel is suggestive but does not satisfy the frozen support rule.
+
+No-mirror sensitivity for the dyslexia panel:
+
+- `rho = -0.4776`;
+- spatial p=`0.00320`;
+- size-matched gene p=`0.00120`;
+- co-expression-profile gene p=`0.00100`.
+
+This sensitivity cannot rescue the null primary mirrored result.
+
+# Phase K. AHBA mirroring diagnostic
+
+## `NEUROSEM-AHBA-LANGUAGE-MIRRORING-DIAGNOSTIC-0001`
+
+Type: post-hoc methodological diagnostic.
+
+Question: why is the no-mirror dyslexia-panel association stronger?
+
+Main result: not a parcel-coverage artifact. Both maps had all 68 parcels.
+
+Hemisphere decomposition:
+
+- left hemisphere mirrored `rho = -0.5670`;
+- left hemisphere no-mirror `rho = -0.5804`;
+- right hemisphere mirrored `rho = +0.0038`;
+- right hemisphere no-mirror `rho = -0.4310`.
+
+Thus the sensitivity is driven primarily by a right-hemisphere expression-map shift.
+
+Gene-level decomposition showed distributed contributions, especially `OXR1`, `GABRD`, `SLIT2`, `CDH10`, and `GPR26`; these are not individually significant discoveries.
+
+All six matched-support donor LODO comparisons for the dyslexia panel remained more negative without mirroring, but native AHBA right-hemisphere sampling is sparse.
+
+Interpretation: reproducible hemispheric preprocessing sensitivity, not confirmatory molecular evidence.
+
+# Current evidence summary
 
 | Question | Current answer |
 |---|---|
-| Is there reproducible reading-related EEG geometry? | **Yes.** ChineseEEG development evidence, TMNRED weak independent Chinese replication, strong independent English ZuCo replication, and positive same-participant/new-text Garnett reliability. |
-| Does neural-guided training improve held-out alignment to the development EEG target? | **Yes.** BERT reproduced across two seeds; E5 qualitative architecture replication. |
-| Does that improvement robustly improve generic semantic benchmarks? | **No.** Generic benchmark advantage is unstable/not neural-specific. |
-| Does the neural-guided advantage transfer to independent reading EEG? | **Yes in ZuCo, not universally.** ZuCo frozen transfer is positive; TMNRED frozen transfer is null. |
-| Has Garnett different-text neural geometry replicated? | **Yes.** EEG reliability is positive; exact text mapping is frozen; final model-transfer test pending. |
-| Does the Nature directional result directly test the reading hypothesis? | **No.** It is an out-of-task boundary condition. |
-| Is there a molecular transcriptomic mechanism? | **Not yet tested.** AHBA is the planned separately frozen mechanistic extension proposed by Abbas. |
+| Is there reproducible reading-related EEG geometry? | **Yes.** ChineseEEG, TMNRED, ZuCo, and Garnett reliability support it. |
+| Does neural-guided training improve held-out alignment to development EEG? | **Yes.** Supported within ChineseEEG. |
+| Does neural-guided transfer generalize universally? | **No.** Positive in ZuCo; null/inconclusive in TMNRED, Garnett, and out-of-task Nature. |
+| Do prespecified GABA/serotonin systems explain the semantic spatial pattern? | **No.** Frozen AHBA primary tests are null. |
+| Does whole-transcriptome AHBA discovery survive spatial correction? | **No.** PLS and gradients are null after spatial inference. |
+| Do independent published language-gene panels validate? | **No under the frozen primary rule.** Dyslexia panel is suggestive only. |
+| Is there an AHBA bilateral sensitivity? | **Yes, exploratory.** No-mirror dyslexia alignment is stronger because of a right-hemisphere map shift. |
 
-See `5_CURRENT_ROADMAP.md` for the operational sequence from here.
+## Next ledger action
+
+No new outcome-bearing analysis is required for the current paper at this stage. The next work is selective code reconciliation, figure/table generation, manuscript drafting, and exact provenance cleanup. Any future molecular validation should be prospectively frozen and independent of the current AHBA outcome family.
