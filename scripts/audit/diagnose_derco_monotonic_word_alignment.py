@@ -5,6 +5,7 @@ import argparse
 import csv
 import json
 import re
+import unicodedata
 from pathlib import Path
 
 import mne
@@ -14,7 +15,10 @@ EVENT_RE = re.compile(r"^(?P<word>.+)_(?P<article>\d+)_(?P<event_id>-?\d+)$")
 
 
 def norm(s: str) -> str:
-    return str(s).strip().casefold()
+    # Match DERCo's published text preprocessing: lowercase and remove
+    # punctuation. Keep letters/numbers/whitespace otherwise unchanged.
+    text = str(s).strip().casefold()
+    return "".join(ch for ch in text if not unicodedata.category(ch).startswith("P"))
 
 
 def load_canonical(path: Path) -> list[str]:
@@ -55,7 +59,10 @@ def event_words(path: Path, article: int) -> list[str]:
             raise RuntimeError(f"unexpected label {label!r}")
         if int(m.group("article")) != article:
             raise RuntimeError(f"article mismatch in {label!r}")
-        out.append(norm(m.group("word")))
+        word = norm(m.group("word"))
+        if not word:
+            raise RuntimeError(f"empty normalized event word from {label!r}")
+        out.append(word)
     return out
 
 
@@ -138,9 +145,9 @@ def main() -> int:
     n_full = sum(r["full_monotonic_subsequence"] for r in rows)
     n_unique = sum(r["unique_monotonic_mapping"] for r in rows)
     summary = {
-        "schema_version": 2,
+        "schema_version": 3,
         "dataset": "DERCo",
-        "analysis": "model-blind monotonic alignment of retained FIF event-word sequence to deduplicated published article word sequence",
+        "analysis": "model-blind monotonic alignment of punctuation-normalized retained FIF event-word sequence to deduplicated published article word sequence",
         "model_blind": True,
         "computes_neural_outcomes": False,
         "computes_model_outcomes": False,
@@ -150,12 +157,12 @@ def main() -> int:
         "n_unique_monotonic_mapping_files": n_unique,
         "all_files_full_monotonic_subsequence": n_full == n_files,
         "all_files_unique_monotonic_mapping": n_unique == n_files,
-        "mapping_rule": "Deduplicate behavioural prediction rows by published word_id while requiring duplicate text agreement; then require retained event words to appear in canonical article order. Leftmost and rightmost greedy subsequence embeddings are compared; equality gives a unique exact monotonic item mapping without using EEG amplitudes or model outcomes.",
+        "mapping_rule": "Deduplicate behavioural prediction rows by published word_id while requiring duplicate text agreement; lowercase and remove Unicode punctuation from both public text and event-word labels; then require retained event words to appear in canonical article order. Leftmost and rightmost greedy subsequence embeddings are compared; equality gives a unique exact monotonic item mapping without using EEG amplitudes or model outcomes.",
         "guardrails": [
             "Uses only event labels and published text tables; EEG amplitudes are not loaded.",
             "Behavioural prediction rows are deduplicated by published word_id before article-sequence construction.",
-            "No participant selection, reliability, RSA, model embedding, or transfer outcome is computed.",
-            "No approximate/fuzzy word matching is used."
+            "Text normalization is limited to DERCo-motivated lowercasing and punctuation removal; no fuzzy matching is used.",
+            "No participant selection, reliability, RSA, model embedding, or transfer outcome is computed."
         ]
     }
     (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
