@@ -66,7 +66,7 @@ def _save_donor_bundle(outdir: Path, name: str, donors: list[pd.DataFrame], coun
     }
 
 
-def _run_abagen(abagen, atlas, atlas_info, data_dir: Path, mirror):
+def _run_abagen(abagen, atlas, atlas_info: pd.DataFrame, data_dir: Path, mirror):
     kwargs = dict(
         atlas_info=atlas_info,
         ibf_threshold=0.5,
@@ -123,17 +123,23 @@ def main() -> int:
     if not required.issubset(info.columns):
         raise RuntimeError(f"Desikan-Killiany atlas info missing required columns: {sorted(required - set(info.columns))}")
 
+    # The atlas-info table shipped with abagen is intentionally broader than the
+    # cortical surface analysis target. Use its documented structure metadata to
+    # constrain sample matching to cortex instead of assuming every info-table
+    # row is cortical. The surface GIFTIs themselves remain unchanged.
     cortex_info = info[info["structure"].astype(str).str.lower().eq("cortex")].copy()
-    if len(cortex_info) != len(info):
-        # The shipped DK surface atlas should be cortical. Fail instead of silently
-        # changing atlas content if that assumption stops being true.
-        raise RuntimeError("Expected the shipped DK surface atlas to contain cortex-only parcels")
+    if cortex_info.empty:
+        raise RuntimeError("Desikan-Killiany atlas info contains no cortical parcels")
+    cortex_info["id"] = pd.to_numeric(cortex_info["id"], errors="raise").astype(int)
+    hemis = set(cortex_info["hemisphere"].astype(str))
+    if not {"L", "R"}.issubset(hemis):
+        raise RuntimeError(f"Expected bilateral cortical DK metadata; observed hemispheres={sorted(hemis)}")
 
     primary_donors, primary_counts, primary_report = _run_abagen(
-        abagen, image, atlas["info"], data_dir, "leftright"
+        abagen, image, cortex_info, data_dir, "leftright"
     )
     sens_donors, sens_counts, sens_report = _run_abagen(
-        abagen, image, atlas["info"], data_dir, None
+        abagen, image, cortex_info, data_dir, None
     )
 
     primary = _save_donor_bundle(out, "primary_leftright", primary_donors, primary_counts, cortex_info)
@@ -163,7 +169,9 @@ def main() -> int:
         "atlas": {
             "name": "Desikan-Killiany",
             "space": "fsaverage5 surface",
+            "n_info_rows_total": int(len(info)),
             "n_cortical_regions": int(len(cortex_info)),
+            "cortical_info_filter": "structure == cortex",
         },
         "frozen_primary_preprocessing": {
             "donors": "all six AHBA donors",
