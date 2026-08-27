@@ -38,7 +38,7 @@ def main() -> int:
             inv = {int(code): label for label, code in ep.event_id.items()}
 
             metadata_present = md is not None
-            required_cols = {"index", "word"}
+            required_cols = {"WordID", "word"}
             columns = list(md.columns) if md is not None else []
             required_present = metadata_present and required_cols.issubset(set(columns))
 
@@ -52,7 +52,7 @@ def main() -> int:
             max_index = None
 
             if required_present and n_rows == n_epochs:
-                meta_index = [int(x) for x in md["index"].tolist()]
+                meta_index = [int(x) for x in md["WordID"].tolist()]
                 meta_word = [norm(x) for x in md["word"].tolist()]
 
                 event_index = []
@@ -85,12 +85,12 @@ def main() -> int:
                 "required_columns_present": required_present,
                 "metadata_columns": "|".join(columns),
                 "metadata_rows_match_epochs": n_rows == n_epochs,
-                "event_suffix_matches_metadata_index": event_matches_metadata,
+                "event_suffix_matches_metadata_WordID": event_matches_metadata,
                 "event_article_matches_folder": article_matches,
                 "event_word_matches_metadata_word": event_word_matches_metadata,
-                "metadata_index_strictly_monotonic_unique": monotonic_unique_index,
-                "min_metadata_index": min_index,
-                "max_metadata_index": max_index,
+                "metadata_WordID_strictly_monotonic_unique": monotonic_unique_index,
+                "min_metadata_WordID": min_index,
+                "max_metadata_WordID": max_index,
             })
 
     fields = list(rows[0].keys()) if rows else []
@@ -104,16 +104,16 @@ def main() -> int:
         "metadata_present",
         "required_columns_present",
         "metadata_rows_match_epochs",
-        "event_suffix_matches_metadata_index",
+        "event_suffix_matches_metadata_WordID",
         "event_article_matches_folder",
         "event_word_matches_metadata_word",
-        "metadata_index_strictly_monotonic_unique",
+        "metadata_WordID_strictly_monotonic_unique",
     ]
     counts = {k: sum(bool(r[k]) for r in rows) for k in checks}
     all_pass = all(counts[k] == n_files for k in checks)
 
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "DERCo",
         "analysis": "model-blind audit of authoritative preprocessed FIF metadata against DERCo event labels",
         "model_blind": True,
@@ -125,12 +125,13 @@ def main() -> int:
         "all_files_pass_authoritative_mapping_gate": all_pass,
         "mapping_rule": (
             "Use preprocessed FIF metadata created by DERCo's own preprocessing pipeline. "
-            "Require metadata columns index and word; one metadata row per retained epoch; "
-            "event-label stimulus suffix exactly equals metadata index; event word exactly equals metadata word; "
-            "article id matches folder; retained metadata indices are unique and strictly increasing."
+            "Require metadata columns WordID and word; one metadata row per retained epoch; "
+            "event-label stimulus suffix exactly equals metadata WordID; event word exactly equals metadata word; "
+            "article id matches folder; retained metadata WordID values are unique and strictly increasing."
         ),
         "guardrails": [
             "Uses only FIF event labels and attached metadata; EEG amplitudes are not loaded.",
+            "Uses DERCo's actual metadata column name WordID observed in the public preprocessed FIF files.",
             "No reconstruction from behavioural prediction tables is used for item identity.",
             "No participant selection, reliability, RSA, model embedding, or transfer outcome is computed.",
             "No fuzzy matching or outcome-driven exclusion is used."
