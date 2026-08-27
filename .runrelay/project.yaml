@@ -145,7 +145,7 @@ tasks:
       - outputs/ahba_registration_transform_freeze_v1/latest/chineseeeg-head-fsaverage-trans.fif
 
   prepare_ahba_expression_dk_v1:
-    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. The launcher restores only legacy pandas call signatures required by abagen 0.1.3. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
+    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killiany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. The launcher restores only legacy pandas call signatures required by abagen 0.1.3. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
     command:
       - .venv/bin/python
       - scripts/analysis/run_ahba_expression_dk_v1_compat.py
@@ -187,7 +187,7 @@ tasks:
       - outputs/ahba_forward_sensitivity_v1/latest/forward_sensitivity.npz
 
   freeze_ahba_dk_ico5_mapping_v1:
-    description: Freeze the model-blind mapping from the 68 cortical Desikan-Killany aparc parcels to the exact fsaverage ico-5 source vertices used by the frozen EEG forward-sensitivity matrix. Quantify unknown/corpus-callosum territory explicitly and fail closed on ambiguous parcel-name reconciliation. Do not load EEG signal samples, AHBA gene-expression values, NeuroSem/model outcomes, or biological gene-set results.
+    description: Freeze the model-blind mapping from the 68 cortical Desikan-Killiany aparc parcels to the exact fsaverage ico-5 source vertices used by the frozen EEG forward-sensitivity matrix. Quantify unknown/corpus-callosum territory explicitly and fail closed on ambiguous parcel-name reconciliation. Do not load EEG signal samples, AHBA gene-expression values, NeuroSem/model outcomes, or biological gene-set results.
     command:
       - .venv/bin/python
       - scripts/audit/freeze_ahba_dk_ico5_mapping_v1.py
@@ -422,3 +422,40 @@ tasks:
       - outputs/published_language_gene_panels_v2/latest/gene_panels.json
       - outputs/published_language_gene_panels_v2/latest/gene_panel_membership.csv
       - outputs/published_language_gene_panels_v2/latest/references.md
+
+  run_ahba_published_language_panel_validation_v1:
+    description: Run the frozen independent AHBA validation of the two literature-defined Wong et al. 2024 language-related gene panels against the frozen DK68 ChineseEEG semantic cortical phenotype. Use the mean spatially standardized panel-gene expression map, Spearman association, 5000 hemisphere-constrained spherical rotations, 5000 size-matched random-gene sets, 5000 panel-coexpression-profile-matched random-gene sets, BH-FDR across the two panels, six-donor leave-one-out robustness, and no-mirror bilateral sensitivity. A panel is jointly supported only if both spatial-spin and coexpression-profile BH q values are below 0.05.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_ahba_published_language_panel_validation_v1.py
+      - --parcel-summary
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/summary.json
+      - --parcel-target
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/population_parcel_target.csv
+      - --expression-root
+      - outputs/ahba_expression_dk_v1/latest
+      - --panel-summary
+      - outputs/published_language_gene_panels_v2/latest/summary.json
+      - --panel-json
+      - outputs/published_language_gene_panels_v2/latest/gene_panels.json
+      - --source-freeze
+      - outputs/ahba_registration_source_model_freeze_v1/latest/summary.json
+      - --vertex-map
+      - outputs/ahba_dk_ico5_mapping_v1/latest/vertex_parcel_map.csv
+      - --spins
+      - '5000'
+      - --random-sets
+      - '5000'
+      - --seed
+      - '20260827'
+      - --output-dir
+      - outputs/ahba_published_language_panel_validation_v1/latest
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_published_language_panel_validation_v1/latest/summary.json
+      - outputs/ahba_published_language_panel_validation_v1/latest/panel_results.csv
+      - outputs/ahba_published_language_panel_validation_v1/latest/donor_lodo_results.csv
+      - outputs/ahba_published_language_panel_validation_v1/latest/bilateral_sensitivity.csv
