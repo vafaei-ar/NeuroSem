@@ -145,10 +145,10 @@ tasks:
       - outputs/ahba_registration_transform_freeze_v1/latest/chineseeeg-head-fsaverage-trans.fif
 
   prepare_ahba_expression_dk_v1:
-    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killiany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
+    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killiany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. The launcher restores only legacy pandas call signatures required by abagen 0.1.3. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
     command:
       - .venv/bin/python
-      - scripts/analysis/prepare_ahba_expression_dk_v1.py
+      - scripts/analysis/run_ahba_expression_dk_v1_compat.py
       - --transform-freeze
       - outputs/ahba_registration_transform_freeze_v1/latest/summary.json
       - --data-dir
