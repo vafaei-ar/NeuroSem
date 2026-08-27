@@ -459,3 +459,27 @@ tasks:
       - outputs/ahba_published_language_panel_validation_v1/latest/panel_results.csv
       - outputs/ahba_published_language_panel_validation_v1/latest/donor_lodo_results.csv
       - outputs/ahba_published_language_panel_validation_v1/latest/bilateral_sensitivity.csv
+
+  run_ahba_language_mirroring_diagnostic_v1:
+    description: Post-hoc method-sensitivity diagnostic for the published Wong language panels. Explain the stronger no-mirror dyslexia-panel association without redefining the frozen panels or changing the confirmatory conclusion. Compare mirrored full-68 and mirrored/no-mirror results on identical no-mirror common parcel support, decompose by hemisphere, frozen panel gene, parcel, donor coverage, and leave-one-donor-out matched-support robustness.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_ahba_language_mirroring_diagnostic_v1.py
+      - --expression-root
+      - outputs/ahba_expression_dk_v1/latest
+      - --panel-json
+      - outputs/published_language_gene_panels_v2/latest/gene_panels.json
+      - --parcel-target
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/population_parcel_target.csv
+      - --output-dir
+      - outputs/ahba_language_mirroring_diagnostic_v1/latest
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_language_mirroring_diagnostic_v1/latest/summary.json
+      - outputs/ahba_language_mirroring_diagnostic_v1/latest/panel_decomposition.csv
+      - outputs/ahba_language_mirroring_diagnostic_v1/latest/gene_decomposition.csv
+      - outputs/ahba_language_mirroring_diagnostic_v1/latest/parcel_decomposition.csv
+      - outputs/ahba_language_mirroring_diagnostic_v1/latest/donor_lodo_matched_support.csv
