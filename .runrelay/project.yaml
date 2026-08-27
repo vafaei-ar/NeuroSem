@@ -43,3 +43,20 @@ tasks:
       - outputs/derco_reliability_input_materialization/latest/summary.json
       - outputs/derco_reliability_input_materialization/latest/session_inventory.csv
       - outputs/derco_reliability_input_materialization/latest/canonical_word_map.csv
+
+  diagnose_derco_event_index_offsets:
+    description: Model-blind diagnostic of constant small integer offsets between DERCo FIF event-label suffixes and published article word indices using already-materialized files only.
+    command:
+      - .venv/bin/python
+      - scripts/audit/diagnose_derco_event_index_offsets.py
+      - --data-root
+      - data/raw/derco
+      - --output-dir
+      - outputs/derco_event_index_offset_diagnostic/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/derco_event_index_offset_diagnostic/latest/summary.json
+      - outputs/derco_event_index_offset_diagnostic/latest/offset_diagnostic.csv
