@@ -18,12 +18,30 @@ def norm(s: str) -> str:
 
 
 def load_canonical(path: Path) -> list[str]:
-    rows = []
+    # The public prediction tables contain one row per behavioural respondent
+    # and therefore repeat each article word many times. Build the canonical
+    # article sequence from unique published word_id values, preserving the
+    # first-observed order and requiring duplicate rows to agree on text.
+    by_id: dict[str, str] = {}
+    order: list[str] = []
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         r = csv.DictReader(f)
+        if r.fieldnames is None or "word_id" not in r.fieldnames or "correct_word" not in r.fieldnames:
+            raise RuntimeError(f"missing word_id/correct_word columns in {path}")
         for row in r:
-            rows.append(norm(row["correct_word"]))
-    return rows
+            wid = str(row["word_id"]).strip()
+            word = norm(row["correct_word"])
+            if not wid or not word:
+                raise RuntimeError(f"empty word_id/correct_word in {path}")
+            if wid in by_id:
+                if by_id[wid] != word:
+                    raise RuntimeError(f"inconsistent correct_word for {wid} in {path}: {by_id[wid]!r} vs {word!r}")
+            else:
+                by_id[wid] = word
+                order.append(wid)
+    if not order:
+        raise RuntimeError(f"no canonical words in {path}")
+    return [by_id[wid] for wid in order]
 
 
 def event_words(path: Path, article: int) -> list[str]:
@@ -120,20 +138,22 @@ def main() -> int:
     n_full = sum(r["full_monotonic_subsequence"] for r in rows)
     n_unique = sum(r["unique_monotonic_mapping"] for r in rows)
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "DERCo",
-        "analysis": "model-blind monotonic alignment of retained FIF event-word sequence to published article word sequence",
+        "analysis": "model-blind monotonic alignment of retained FIF event-word sequence to deduplicated published article word sequence",
         "model_blind": True,
         "computes_neural_outcomes": False,
         "computes_model_outcomes": False,
         "n_files": n_files,
+        "canonical_word_counts": {str(a): len(canon[a]) for a in ARTICLES},
         "n_full_monotonic_subsequence_files": n_full,
         "n_unique_monotonic_mapping_files": n_unique,
         "all_files_full_monotonic_subsequence": n_full == n_files,
         "all_files_unique_monotonic_mapping": n_unique == n_files,
-        "mapping_rule": "Event words must appear in published article order. Leftmost and rightmost greedy subsequence embeddings are compared; equality gives a unique exact monotonic item mapping without using EEG amplitudes or model outcomes.",
+        "mapping_rule": "Deduplicate behavioural prediction rows by published word_id while requiring duplicate text agreement; then require retained event words to appear in canonical article order. Leftmost and rightmost greedy subsequence embeddings are compared; equality gives a unique exact monotonic item mapping without using EEG amplitudes or model outcomes.",
         "guardrails": [
             "Uses only event labels and published text tables; EEG amplitudes are not loaded.",
+            "Behavioural prediction rows are deduplicated by published word_id before article-sequence construction.",
             "No participant selection, reliability, RSA, model embedding, or transfer outcome is computed.",
             "No approximate/fuzzy word matching is used."
         ]
