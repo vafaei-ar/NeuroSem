@@ -211,3 +211,30 @@ tasks:
       - outputs/ahba_dk_ico5_mapping_v1/latest/summary.json
       - outputs/ahba_dk_ico5_mapping_v1/latest/vertex_parcel_map.csv
       - outputs/ahba_dk_ico5_mapping_v1/latest/parcel_coverage.csv
+
+  build_ahba_molecular_sensitivity_matrix_v1:
+    description: Build donor-level 128 x G AHBA molecular-sensitivity matrices using only the frozen AHBA expression preprocessing, frozen 128 x V EEG forward sensitivity, and frozen DK-to-ico5 mapping. Renormalize each channel within the DK-mapped domain, expand donor parcel expression to mapped ico-5 vertices, spatially z-score each gene map, and project without testing any biological gene sets or NeuroSem outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/build_ahba_molecular_sensitivity_matrix_v1.py
+      - --forward-freeze
+      - outputs/ahba_forward_sensitivity_v1/latest/summary.json
+      - --forward-matrix
+      - outputs/ahba_forward_sensitivity_v1/latest/forward_sensitivity.npz
+      - --mapping-freeze
+      - outputs/ahba_dk_ico5_mapping_v1/latest/summary.json
+      - --vertex-map
+      - outputs/ahba_dk_ico5_mapping_v1/latest/vertex_parcel_map.csv
+      - --expression-summary
+      - outputs/ahba_expression_dk_v1/latest/summary.json
+      - --expression-root
+      - outputs/ahba_expression_dk_v1/latest
+      - --output-dir
+      - outputs/ahba_molecular_sensitivity_matrix_v1/latest
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_molecular_sensitivity_matrix_v1/latest/summary.json
+      - outputs/ahba_molecular_sensitivity_matrix_v1/latest/projection_qc.csv
