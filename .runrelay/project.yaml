@@ -350,3 +350,37 @@ tasks:
       - outputs/chineseeeg_semantic_parcel_target_v1/latest/population_parcel_target.csv
       - outputs/chineseeeg_semantic_parcel_target_v1/latest/participant_parcel_target.csv
       - outputs/chineseeeg_semantic_parcel_target_v1/latest/channel_parcel_sensitivity.csv
+
+  run_ahba_exploratory_transcriptome_v1:
+    description: Run a new exploratory imaging-transcriptomics phase using the frozen AHBA-blind DK68 semantic phenotype and frozen primary mirrored AHBA expression. Compute whole-transcriptome PLS1 gene weights, intrinsic transcriptomic gradients, six-donor LODO weight stability, and 5000 hemisphere-constrained spherical-rotation nulls. This remains separate from the prior frozen GABA/serotonin null. Published language-gene panels are not tested here and will be frozen independently before validation.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_ahba_exploratory_transcriptome_v1.py
+      - --parcel-summary
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/summary.json
+      - --parcel-target
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/population_parcel_target.csv
+      - --expression-summary
+      - outputs/ahba_expression_dk_v1/latest/summary.json
+      - --expression-root
+      - outputs/ahba_expression_dk_v1/latest
+      - --source-freeze
+      - outputs/ahba_registration_source_model_freeze_v1/latest/summary.json
+      - --vertex-map
+      - outputs/ahba_dk_ico5_mapping_v1/latest/vertex_parcel_map.csv
+      - --spins
+      - '5000'
+      - --seed
+      - '20260827'
+      - --output-dir
+      - outputs/ahba_exploratory_transcriptome_v1/latest
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_exploratory_transcriptome_v1/latest/summary.json
+      - outputs/ahba_exploratory_transcriptome_v1/latest/gene_weights.csv
+      - outputs/ahba_exploratory_transcriptome_v1/latest/gradient_results.csv
+      - outputs/ahba_exploratory_transcriptome_v1/latest/donor_lodo_weight_stability.csv
+      - outputs/ahba_exploratory_transcriptome_v1/latest/spin_null_summary.csv
