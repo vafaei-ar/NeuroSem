@@ -145,7 +145,7 @@ tasks:
       - outputs/ahba_registration_transform_freeze_v1/latest/chineseeeg-head-fsaverage-trans.fif
 
   prepare_ahba_expression_dk_v1:
-    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killiany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. The launcher restores only legacy pandas call signatures required by abagen 0.1.3. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
+    description: Prepare model-blind donor-level AHBA expression on the fsaverage5 Desikan-Killany cortical atlas using frozen abagen settings, with left-to-right mirroring as primary and no-mirror as a prespecified sensitivity. The launcher restores only legacy pandas call signatures required by abagen 0.1.3. No EEG samples, model quantities, NeuroSem outcomes, or gene-set association tests are accessed.
     command:
       - .venv/bin/python
       - scripts/analysis/run_ahba_expression_dk_v1_compat.py
@@ -187,7 +187,7 @@ tasks:
       - outputs/ahba_forward_sensitivity_v1/latest/forward_sensitivity.npz
 
   freeze_ahba_dk_ico5_mapping_v1:
-    description: Freeze the model-blind mapping from the 68 cortical Desikan-Killiany aparc parcels to the exact fsaverage ico-5 source vertices used by the frozen EEG forward-sensitivity matrix. Quantify unknown/corpus-callosum territory explicitly and fail closed on ambiguous parcel-name reconciliation. Do not load EEG signal samples, AHBA gene-expression values, NeuroSem/model outcomes, or biological gene-set results.
+    description: Freeze the model-blind mapping from the 68 cortical Desikan-Killany aparc parcels to the exact fsaverage ico-5 source vertices used by the frozen EEG forward-sensitivity matrix. Quantify unknown/corpus-callosum territory explicitly and fail closed on ambiguous parcel-name reconciliation. Do not load EEG signal samples, AHBA gene-expression values, NeuroSem/model outcomes, or biological gene-set results.
     command:
       - .venv/bin/python
       - scripts/audit/freeze_ahba_dk_ico5_mapping_v1.py
@@ -287,3 +287,37 @@ tasks:
       - outputs/chineseeeg_semantic_channel_target_v1/latest/population_channel_target.csv
       - outputs/chineseeeg_semantic_channel_target_v1/latest/participant_channel_target.csv
       - outputs/chineseeeg_semantic_channel_target_v1/latest/run_subject_channel_contributions.csv
+
+  run_ahba_frozen_gene_set_association_v1:
+    description: Run the first outcome-bearing frozen NeuroSem-AHBA gene-set association. Use the prospectively frozen 9-participant ChineseEEG semantic channel target, frozen AHBA molecular-sensitivity matrices, and frozen biological gene sets. The seven neurochemical/pathway sets are the primary mechanistic family and seven broad cell-type panels are a separate specificity-control family. Primary inference is participant-level two-sided exact sign-flip on Fisher-z transformed 128-channel Spearman associations, with BH-FDR within each family. Also compute six-donor LODO robustness, the no-mirror bilateral sensitivity, and 5000 size-matched random-gene-set nulls per set. Spatial-autocorrelation and broad cortical-gradient controls remain required before any mechanistic claim.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_ahba_frozen_gene_set_association_v1.py
+      - --matrix-root
+      - outputs/ahba_molecular_sensitivity_matrix_v1/latest
+      - --matrix-summary
+      - outputs/ahba_molecular_sensitivity_matrix_v1/latest/summary.json
+      - --gene-set-summary
+      - outputs/ahba_biological_gene_sets_v1/latest/summary.json
+      - --gene-sets
+      - outputs/ahba_biological_gene_sets_v1/latest/gene_sets.json
+      - --channel-target-summary
+      - outputs/chineseeeg_semantic_channel_target_v1/latest/summary.json
+      - --participant-target
+      - outputs/chineseeeg_semantic_channel_target_v1/latest/participant_channel_target.csv
+      - --random-sets
+      - '5000'
+      - --seed
+      - '20260827'
+      - --output-dir
+      - outputs/ahba_frozen_gene_set_association_v1/latest
+    approval: manual
+    timeout_minutes: 240
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_frozen_gene_set_association_v1/latest/summary.json
+      - outputs/ahba_frozen_gene_set_association_v1/latest/set_results.csv
+      - outputs/ahba_frozen_gene_set_association_v1/latest/participant_results.csv
+      - outputs/ahba_frozen_gene_set_association_v1/latest/donor_and_bilateral_sensitivity.csv
+      - outputs/ahba_frozen_gene_set_association_v1/latest/size_matched_random_set_nulls.csv
