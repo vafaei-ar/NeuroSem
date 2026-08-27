@@ -1,0 +1,1 @@
+Compatibility fix: the named validation task continues to call run_ahba_published_language_panel_validation_v1.py; that path is replaced in the next commit by a wrapper that normalizes list-valued frozen panel JSON and delegates to the unchanged core validator.
