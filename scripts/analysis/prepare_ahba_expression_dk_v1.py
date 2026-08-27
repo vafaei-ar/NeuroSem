@@ -61,6 +61,19 @@ def _install_pandas_append_compat() -> bool:
     return True
 
 
+def _install_numpy_row_stack_compat() -> bool:
+    """Restore the removed ``np.row_stack`` alias for abagen 0.1.3 only.
+
+    NumPy removed ``row_stack`` after deprecating it as an exact alias of
+    ``np.vstack``. abagen 0.1.3 still references the old name internally.
+    Rebinding the alias therefore preserves the historical numerical operation.
+    """
+    if hasattr(np, "row_stack"):
+        return False
+    np.row_stack = np.vstack
+    return True
+
+
 def _save_donor_bundle(outdir: Path, name: str, donors: list[pd.DataFrame], counts: pd.DataFrame, info: pd.DataFrame) -> dict:
     sub = outdir / name
     sub.mkdir(parents=True, exist_ok=True)
@@ -150,6 +163,7 @@ def main() -> int:
         raise SystemExit("registration transform is not frozen")
 
     pandas_append_compat_installed = _install_pandas_append_compat()
+    numpy_row_stack_compat_installed = _install_numpy_row_stack_compat()
     import abagen
 
     out = args.output_dir.resolve()
@@ -207,7 +221,9 @@ def main() -> int:
         "downloads_public_ahba": True,
         "registration_transform_gate_reused": True,
         "abagen_version": getattr(abagen, "__version__", None),
+        "numpy_version": np.__version__,
         "pandas_version": pd.__version__,
+        "numpy_row_stack_compat_installed": numpy_row_stack_compat_installed,
         "pandas_append_compat_installed": pandas_append_compat_installed,
         "atlas": {
             "name": "Desikan-Killiany",
@@ -248,6 +264,7 @@ def main() -> int:
             "Primary bilateral handling is left-to-right mirroring fixed before molecular association testing; no-mirror remains a prespecified sensitivity analysis.",
             "Keep donor-level matrices for leave-one-donor-out robustness; do not collapse away donor identity before mechanistic testing.",
             "The pandas compatibility shim only restores the removed DataFrame.append API used internally by abagen 0.1.3; it must not alter scientific preprocessing settings.",
+            "The NumPy compatibility shim only restores row_stack as its documented vstack alias for abagen 0.1.3; it must not alter scientific preprocessing settings.",
             "Do not test GABA, serotonin, cell-type, or pathway hypotheses in this preprocessing stage.",
         ],
     }
@@ -258,6 +275,7 @@ def main() -> int:
         "primary_n_donors": primary["n_donors"],
         "primary_n_regions": primary["n_regions"],
         "primary_n_genes": primary["n_genes"],
+        "numpy_row_stack_compat_installed": numpy_row_stack_compat_installed,
         "pandas_append_compat_installed": pandas_append_compat_installed,
         "blockers": blockers,
     }, indent=2))
