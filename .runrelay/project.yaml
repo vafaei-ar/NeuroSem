@@ -60,3 +60,20 @@ tasks:
     artifacts:
       - outputs/derco_event_index_offset_diagnostic/latest/summary.json
       - outputs/derco_event_index_offset_diagnostic/latest/offset_diagnostic.csv
+
+  diagnose_derco_monotonic_word_alignment:
+    description: Model-blind diagnostic aligning retained DERCo event-word sequences monotonically to the published article word sequence, testing whether exact item identity is uniquely recoverable without EEG amplitudes or model outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/audit/diagnose_derco_monotonic_word_alignment.py
+      - --data-root
+      - data/raw/derco
+      - --output-dir
+      - outputs/derco_monotonic_word_alignment_diagnostic/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/derco_monotonic_word_alignment_diagnostic/latest/summary.json
+      - outputs/derco_monotonic_word_alignment_diagnostic/latest/alignment_diagnostic.csv
