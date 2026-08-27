@@ -1,232 +1,219 @@
 # 5. Current Roadmap
 
-**Last updated:** 2026-08-26
+**Last updated:** 2026-08-27
 
-This document states the current NeuroSem plan after completion of the ZuCo external validation, Garnett Dream EEG reliability, and Garnett Dream exact row-text mapping. It is the operational roadmap for the next manuscript-level analyses.
+This document states the current NeuroSem plan after completion of the ZuCo external validation, Garnett Dream EEG and model-transfer analyses, the frozen AHBA mechanistic tests, exploratory transcriptomics, published language-panel validation, and the post-hoc AHBA mirroring diagnostic.
+
+The project is now in a **consolidation phase**. The immediate goal is not to search for additional positive results. It is to reconcile final code/provenance, build manuscript-ready figures and tables, and write the paper around the full positive-and-null evidence chain.
 
 ## Current position
 
-The project has now established four distinct forms of evidence:
+The project has established six major evidence blocks:
 
 1. **ChineseEEG Little Prince:** discovery of reproducible reading-related EEG geometry and development of neural-guided language-model tuning.
 2. **TMNRED:** independent Chinese-reading EEG replication, but null frozen E5 transfer.
 3. **ZuCo 2.0 Task 1 Normal Reading:** strong independent English-reading EEG replication and positive frozen ChineseEEG-to-ZuCo E5 transfer.
-4. **ChineseEEG Garnett Dream:** same-participant/new-text EEG reliability has passed, and the exact presentation-row to segmented-text mapping is now frozen. The model-transfer result has not yet been run.
-
-The Nature directional-word dataset remains an out-of-task boundary condition rather than a task-matched reading replication.
-
-The project also has a separately planned mechanistic extension proposed by Abbas: transcriptomic modulation of the 128-channel ChineseEEG geometry using the Allen Human Brain Atlas (AHBA).
+4. **ChineseEEG Garnett Dream:** positive same-participant/new-text EEG reliability, but null/inconclusive frozen E5 transfer.
+5. **Nature directional-word dataset:** out-of-task inner-speech boundary condition with null transfer.
+6. **AHBA transcriptomic extension:** completed primary mechanistic nulls, spatially corrected exploratory nulls, independent published language-panel primary nulls, and a strong but exploratory no-mirror hemispheric sensitivity.
 
 ## Roadmap overview
 
 ```mermaid
 flowchart TD
-    A[Existing evidence locked] --> B[Garnett final confirmatory model validation]
-    A --> C[AHBA model-blind transcriptomic preparation]
+    A[Core analyses complete] --> B[Canonical code/provenance reconciliation]
+    A --> C[Manuscript figures and tables]
+    A --> D[Results and Methods drafting]
 
-    B --> B1[Freeze lambda .10 vs 0 contrast]
-    B1 --> B2[Restore exact text-derived nuisances]
-    B2 --> B3[Run chapter-wise participant-level RSA]
-    B3 --> B4[Lock Garnett result]
+    B --> B1[Selectively reconcile execution-branch scripts]
+    B1 --> B2[Remove temporary wrappers / reduced-manifest artifacts]
+    B2 --> B3[Update experiment ledger]
 
-    C --> C1[Process AHBA with frozen abagen workflow]
-    C1 --> C2[Resolve ChineseEEG 128-channel forward/source sensitivity]
-    C2 --> C3[Construct 128 x gene molecular-sensitivity matrix]
-    C3 --> C4[Freeze GABA / serotonin / cell-type / pathway sets]
-    C4 --> C5[Freeze spatial nulls and donor-robustness tests]
-    C5 --> C6[Run AHBA mechanistic analysis]
+    C --> C1[Cross-dataset EEG geometry figure]
+    C --> C2[Neural-guided transfer figure]
+    C --> C3[AHBA mechanistic/null figure]
+    C --> C4[AHBA mirroring diagnostic figure]
 
-    B4 --> D[Manuscript integration]
-    C6 --> D
-    D --> E[Nature Machine Intelligence first target]
-    D --> F[Nature Neuroscience alternative]
+    D --> E[Integrated manuscript]
+    C --> E
+    B3 --> E
+
+    E --> F[Journal framing decision]
+    E --> G[Future independent molecular validation, separate study]
 ```
 
-## Track 1. Finish Garnett Dream confirmatory validation
+## Track 1. Lock the core analysis family
 
-### What is already frozen
+### Garnett Dream
 
-Garnett Dream is a **same-participant / new-text validation**, not an independent cohort replication.
+Garnett is complete for the main paper.
 
-Completed steps:
+Primary EEG reliability:
 
-- model-blind structural audit;
-- frozen `ROWS -> ROWE` presentation-row unit;
-- frozen filtered BrainVision source family;
-- materialization of the structurally valid Garnett input set;
-- EEG-only primary reliability analysis;
-- exact non-display segmented-XLSX row-text mapping.
+- mean nuisance-residualized participant LOO reliability **0.01863**;
+- 95% CI **[0.01636, 0.02085]**;
+- **10/10** participants positive.
 
-### Garnett EEG reliability already passed
+Frozen E5 neural-guided lambda .10 minus text-only lambda 0 transfer:
 
-Primary `row_mean_all` result:
+- mean delta **+0.0003266**;
+- median **+0.0003319**;
+- **6/10** participants positive;
+- 95% CI **[-0.0001218, +0.0007560]**;
+- one-sided exact sign-flip **p = 0.1016**;
+- two-sided exact sign-flip **p = 0.2031**.
 
-- mean nuisance-residualized participant LOO reliability: **0.01863**;
-- median: **0.01895**;
-- **10/10 participants positive**;
-- participant-bootstrap 95% CI: **[0.01636, 0.02085]**;
-- exact one-sided sign-flip p: **0.0009766**;
-- mean raw LOO reliability: **0.03545**.
+Interpretation: same-participant/new-text neural geometry generalizes, but the model-transfer advantage does not generalize convincingly.
 
-Predeclared sensitivity representations were also positive:
+Do not search alternative Garnett lambdas, architectures, representations, sensors, layers, or nuisance families to rescue this result.
 
-- `row_std_all`: residual mean about **0.04443**, 10/10 participants positive;
-- `relative_8bin_all`: residual mean about **0.00407**, 9/10 participants positive.
+### AHBA
 
-These sensitivity results do not replace the prospectively designated `row_mean_all` primary representation.
+The AHBA analysis family is also complete for the current paper.
 
-### Exact text mapping is now frozen
+Primary prespecified GABAergic/serotonergic/pathway associations are null.
 
-The segmented-XLSX mapping probe established a unique header-aware mapping for all 18 Garnett chapters/runs.
+Exploratory whole-transcriptome PLS1 is spatially nonsignificant despite moderate in-sample alignment (`r = 0.4574`, spatial `p = 0.2745`). No transcriptomic gradient survives FDR.
 
-Frozen rule:
+Independent published language-related panels are also primary-null:
 
-`CHxx_ROWyyyy -> physical XLSX row yyyy + 1`
+- six-gene connectivity panel: `rho = -0.1515`, spatial `p = 0.4631`;
+- fourteen-gene dyslexia panel: `rho = -0.2733`, spatial `p = 0.0516`, spatial BH `q = 0.1032`, co-expression-profile `p = 0.0990`, `q = 0.1980`.
 
-where physical row 1 is the validated `Chinese_text` schema header in the unique non-display segmented workbook for that chapter/run.
+The no-mirror dyslexia-panel sensitivity is strong (`rho = -0.4776`, spatial `p = 0.0032`, co-expression-profile `p = 0.0010`) but remains exploratory. The post-hoc diagnostic shows that this difference is driven primarily by a right-hemisphere expression-map shift rather than parcel missingness.
 
-Across the 18 chapters, the frozen presentation set contains **9,047** linguistic items. The mapping was resolved model-blind, before any Garnett model-transfer outcome.
+Do not add unrestricted gene sets, pathway libraries, alternative cortical phenotypes, or post-hoc subsets based on these outcomes.
 
-### Next Garnett analysis
+## Track 2. Reconcile final code and provenance
 
-Run exactly one confirmatory model validation using the already-trained ChineseEEG multilingual-E5 adapters:
+Several AHBA jobs ran on narrow execution branches with reduced manifests, compatibility launchers, or temporary technical fixes. These branches should **not** be merged wholesale into canonical `main`.
 
-- EEG target: frozen `row_mean_all` only;
-- primary model contrast: **lambda 0.10 neural-guided minus lambda 0 text-only**;
-- no Garnett training or tuning;
-- no lambda sweep;
-- no sensor, time-window, layer, architecture, pooling, item, or participant search based on Garnett outcomes;
-- analyze chapters separately;
-- use participant as the inferential unit;
-- Fisher-z aggregate chapter-level RSA values within participant.
+Instead:
 
-Now that exact text is available, restore the full applicable nuisance family prospectively:
+1. Identify the final scientific scripts for each completed analysis.
+2. Selectively port only the scientifically relevant code into canonical `main`.
+3. Remove temporary compatibility files, placeholder files, and execution-only notes where they are no longer needed.
+4. Preserve exact commit/job provenance in `4_EXPERIMENT_LEDGER.md`.
+5. Ensure `.runrelay/project.yaml` on `main` contains only intentional canonical tasks.
+6. Verify documentation points to the final script/task names rather than failed intermediate variants.
 
-1. within-chapter row/order difference;
-2. presentation-duration difference;
-3. character-count difference;
-4. punctuation-count difference;
-5. character-set Jaccard distance.
+This code-reconciliation work is a documentation/reproducibility task, not a new scientific analysis.
 
-Primary endpoint:
+## Track 3. Manuscript figures and tables
 
-`Delta RSA = residual RSA(lambda=.10) - residual RSA(lambda=0)`
+### Figure family A: reproducible neural geometry
 
-Report mean and median participant delta, fraction positive, participant-bootstrap 95% CI, and exact sign-flip inference.
+Show the hierarchy of EEG-only evidence:
 
-After this result is produced, lock it before running any post-confirmatory sensitivity analysis.
+- ChineseEEG Little Prince development geometry;
+- TMNRED independent Chinese-reading reliability;
+- ZuCo independent English-reading reliability;
+- Garnett same-participant/new-text reliability.
 
-## Track 2. Abbas AHBA transcriptomic extension
+The figure should make clear that the same simple temporal-mean representation was prospectively carried across datasets.
 
-Abbas proposed adding an Allen Human Brain Atlas molecular layer to the ChineseEEG 128-channel spatial geometry. This is a central planned mechanistic extension, not an optional note.
+### Figure family B: model transfer
 
-### Scientific question
+Show the frozen neural-guided-minus-text-only contrasts:
 
-> Are cortical locations that contribute more strongly to the established semantic neural geometry preferentially associated with specific molecular systems?
+- TMNRED: null;
+- ZuCo: positive and highly consistent;
+- Garnett: null/inconclusive;
+- Nature: out-of-task null.
 
-A secondary operational question is whether prespecified molecular spatial weightings systematically change the frozen EEG-model RSA.
+The message is **task-matched transfer can occur but is not universal**.
 
-### Required mapping
+### Figure family C: AHBA mechanistic extension
 
-Do **not** treat scalp electrodes as literal cortical parcels.
+Recommended panels:
 
-Use:
+1. AHBA-to-EEG spatial mapping schematic.
+2. Prespecified GABA/serotonin/pathway null results.
+3. Exploratory PLS1 versus spatial-null distribution.
+4. Published connectivity/dyslexia panel primary results.
+5. Mirrored versus no-mirror dyslexia-panel hemisphere decomposition.
 
-`AHBA cortical transcriptomics -> cortical spatial map -> EEG forward/source-sensitivity projection -> 128-channel molecular weighting -> frozen NeuroSem analysis`
+Captions must explicitly label confirmatory, exploratory, and post-hoc diagnostic components.
 
-For cortical gene or gene-set map `X(v)` and electrode/source sensitivity `L(e,v)`:
+### Core tables
 
-`w_e = sum_v L(e,v) X(v)`
+Prepare manuscript-ready tables for:
 
-The target preparation output is a reproducible **128 x G** molecular-sensitivity matrix, where `G` is the retained gene set after frozen AHBA preprocessing.
+- dataset/task roles and independence;
+- EEG reliability across datasets;
+- frozen model-transfer contrasts;
+- AHBA primary/exploratory/published-panel results;
+- exact RunRelay job/commit provenance for reproducibility supplements.
 
-### AHBA Stage A. Model-blind preprocessing
+## Track 4. Results and Methods drafting
 
-Before touching NeuroSem molecular outcomes:
+Draft Results in evidence order rather than chronological debugging order:
 
-- process AHBA using a reproducible `abagen` workflow;
-- freeze default-like intensity filtering with `ibf_threshold=0.5`;
-- freeze probe selection/gene aggregation;
-- freeze normalization;
-- freeze donor handling;
-- freeze the bilateral/hemisphere strategy;
-- record the retained gene count rather than forcing a target count;
-- resolve and freeze the exact ChineseEEG 128-channel montage, reference, head model, cortical source space, and sensitivity convention.
+1. ChineseEEG discovery geometry.
+2. BERT/E5 neural-guided within-development alignment.
+3. Independent reading EEG replication.
+4. Cross-dataset model transfer, including both positive and null results.
+5. Garnett same-participant/new-text boundary.
+6. Nature out-of-task boundary.
+7. AHBA mechanistic extension and null framework.
+8. AHBA mirroring sensitivity as a separate methodological observation.
 
-### AHBA Stage B. Freeze biological families
+Draft Methods directly from frozen protocols and final committed scripts. Failed jobs belong mainly in provenance/supplementary audit material unless they explain an important methodological choice.
 
-Prespecify the molecular families before outcome analysis.
+## Track 5. Journal framing
 
-Core groups:
+Do not choose the journal by adding analyses to fit a narrative.
 
-- **GABA-A receptor subunits**;
-- broader **GABAergic machinery**, including synthesis/transport/vesicular genes such as `GAD1`, `GAD2`, `SLC6A1`, `SLC32A1` subject to final annotation review;
-- **serotonin receptors**;
-- broader **serotonergic machinery**;
-- human cell-type marker sets for excitatory neurons, inhibitory neurons, astrocytes, oligodendrocytes, OPCs, microglia, endothelial/vascular cells, and only other prespecified justified classes;
-- a **small curated pathway panel**, not an unrestricted screen of thousands of pathways.
+Current evidence supports a paper centered on:
 
-For multi-gene sets, standardize each gene spatially before averaging. Do not sum raw expression values with incomparable dynamic ranges.
+- reproducible semantic neural geometry across reading datasets/languages;
+- a neural-guided modeling effect that transfers strongly to ZuCo but not universally;
+- a disciplined mechanistic AHBA extension whose main result is null and whose most interesting finding is a hemispheric preprocessing sensitivity.
 
-### AHBA Stage C. Frozen mechanistic tests
+Possible framing:
 
-Two complementary analyses may be run if both are frozen before outcome access:
+- **Nature Machine Intelligence** if the neural-guided representation-learning contribution remains central after manuscript assembly.
+- **Nature Neuroscience** if the stronger story is reproducible neural geometry, cross-language validation, and the methodological/biological implications of the transcriptomic extension.
 
-1. **Molecular weighting analysis:** multiply the frozen EEG channel representation by each prespecified 128-element molecular map and test the change in the existing neural-model geometry.
-2. **Spatial contribution analysis:** estimate a stable channel/source contribution map for the established semantic effect, then test association with the prespecified molecular maps.
+The final target should follow the integrated manuscript.
 
-The second analysis is expected to provide the cleaner biological interpretation.
+## Track 6. Future molecular validation, separate from current paper
 
-### Required AHBA controls
+If the AHBA no-mirror dyslexia-panel signal is pursued further, the next step should be **independent validation**, not more AHBA subset search.
 
-- leave-one-donor-out robustness;
-- spatial-autocorrelation-preserving null maps;
-- gene-set-size-matched random gene sets;
-- multiplicity correction across the prespecified molecular families;
-- robustness to the frozen bilateral handling strategy;
-- broad cortical-gradient/nonspecific spatial controls where feasible.
+Preferred future directions:
 
-Interpret AHBA as a population-level spatial prior from six postmortem donors, not as molecular measurements of the ChineseEEG participants.
+- a transcriptomic resource with stronger bilateral cortical sampling;
+- prospectively frozen left/right language-network analyses;
+- cortical layer-resolved spatial transcriptomics;
+- an independent imaging-transcriptomic dataset using the same frozen 14-gene panel and hemispheric hypothesis.
 
-## Track 3. Manuscript consolidation
-
-Manuscript work should proceed while Garnett and AHBA are being completed. Do not wait until every analysis is done to structure the paper.
-
-Proposed evidence architecture:
-
-1. **ChineseEEG Little Prince:** discovery and development neural geometry.
-2. **Neural-guided BERT/E5:** within-development neural alignment improvement.
-3. **TMNRED:** independent Chinese-reading geometry replication and null model-transfer boundary.
-4. **ZuCo:** independent English-reading/cross-language geometry replication and positive frozen E5 transfer.
-5. **Garnett Dream:** same-participant/new-narrative generalization.
-6. **Nature directional:** out-of-task boundary condition.
-7. **AHBA transcriptomics:** separately frozen molecular-mechanistic extension.
-
-The manuscript must preserve the null findings rather than present only the positive ZuCo result.
+A future study should preregister the hemisphere hypothesis and the exact published gene panel before inspecting the new outcome.
 
 ## Stopping rules
 
 - Do not reopen ZuCo lambda, representation, sensor, layer, pooling, or window searches.
-- Do not change the Garnett primary representation based on Garnett sensitivity results.
-- Do not search alternative Garnett lambdas or model architectures if the confirmatory transfer is null.
-- Do not use AHBA outcomes to redefine the primary EEG representation or the existing external validation analyses.
-- Do not screen unrestricted pathway libraries after inspecting molecular results.
-- A null Garnett result narrows narrative/model-transfer generalization.
-- A null AHBA result narrows molecular interpretation and leaves the primary cross-dataset evidence unchanged.
+- Do not reopen Garnett lambda, architecture, representation, or nuisance searches.
+- Do not redefine the AHBA primary mirrored result after observing the no-mirror sensitivity.
+- Do not screen additional gene subsets/pathway libraries until significance appears.
+- Do not promote individual dyslexia-panel genes as discoveries from the post-hoc decomposition.
+- Do not interpret AHBA as participant-specific molecular measurement or causal receptor evidence.
+- Preserve null findings in the main manuscript.
 
 ## Immediate operational order
 
-1. Implement and run the frozen Garnett E5 lambda .10 vs 0 model-transfer analysis.
-2. In parallel, begin AHBA model-blind preprocessing and 128-channel source-sensitivity preparation.
-3. Freeze AHBA biological families, cell-type marker references, bilateral strategy, and spatial-null framework.
-4. Run the frozen AHBA mechanistic analyses.
-5. Lock manuscript figures/tables and finalize the submission narrative.
+1. Update authoritative docs and experiment ledger with final Garnett and AHBA outcomes.
+2. Selectively reconcile final analysis code from execution branches into canonical `main`.
+3. Build the manuscript figure/table set.
+4. Draft Results and Methods from the frozen evidence chain.
+5. Prepare supplementary provenance tables with exact jobs/commits and analysis classifications.
+6. Review the complete manuscript narrative before deciding whether any genuinely necessary analysis is still missing.
+7. Treat any future bilateral transcriptomic test as a separate, prospectively frozen validation study.
 
-## Publication target
+## Related documents
 
-Current aspirational order:
-
-1. **Nature Machine Intelligence** if the full evidence supports a machine-learning contribution centered on transferable neural alignment and mechanistic interpretation.
-2. **Nature Neuroscience** if the final strength lies more in reproducible neural geometry and biological mechanism than in transferable representation learning.
-
-The target should follow the final evidence, not drive post-hoc analysis choices.
+- `1_PROJECT_OVERVIEW.md`
+- `3_RESULTS_AND_COMPARISONS.md`
+- `4_EXPERIMENT_LEDGER.md`
+- `6_AHBA_CURRENT_STATUS_AND_NEXT_STEPS.md`
+- `abbas_ahba_transcriptomic_extension.md`
