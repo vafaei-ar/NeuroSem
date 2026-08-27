@@ -146,3 +146,25 @@ tasks:
     artifacts:
       - outputs/derco_eeg_reliability/latest/summary.json
       - outputs/derco_eeg_reliability/latest/participant_article_reliability.csv
+
+  run_derco_e5_transfer:
+    description: Run the single prospectively gated DERCo model-transfer contrast using the frozen ChineseEEG-trained multilingual-E5 lambda 0.10 neural-guided adapter versus matched lambda 0 text-only adapter, with no DERCo tuning or alternative model search.
+    command:
+      - .venv/bin/python
+      - scripts/tuning/evaluate_derco_e5_transfer_v1.py
+      - --data-root
+      - data/raw/derco
+      - --reliability-summary
+      - outputs/derco_eeg_reliability/latest/summary.json
+      - --output-dir
+      - outputs/derco_e5_transfer_v1/latest
+      - --device
+      - auto
+    approval: manual
+    timeout_minutes: 180
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/derco_e5_transfer_v1/latest/summary.json
+      - outputs/derco_e5_transfer_v1/latest/participant_results.csv
+      - outputs/derco_e5_transfer_v1/latest/participant_article_results.csv
