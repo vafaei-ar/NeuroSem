@@ -259,3 +259,31 @@ tasks:
       - outputs/ahba_biological_gene_sets_v1/latest/gene_sets.json
       - outputs/ahba_biological_gene_sets_v1/latest/gene_set_membership.csv
       - outputs/ahba_biological_gene_sets_v1/latest/references.md
+
+  freeze_chineseeeg_semantic_channel_target_v1:
+    description: Freeze an AHBA-blind 128-channel contribution target for the established ChineseEEG semantic RSA. On held-out Little Prince runs 01-06, compute full residual partial-Spearman RSA to the pinned bert-base-chinese final-layer semantic target and the drop caused by leaving out each channel, then average channel contributions across runs within subjects and across common subjects. This task never loads AHBA expression, molecular-sensitivity values, biological gene sets, or molecular-association results.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/freeze_chineseeeg_semantic_channel_target_v1.py
+      - --runs
+      - '1'
+      - '2'
+      - '3'
+      - '4'
+      - '5'
+      - '6'
+      - --feature-root
+      - outputs/chineseeeg_row_features
+      - --embedding-root
+      - outputs/chineseeeg_pinned_embeddings
+      - --output-dir
+      - outputs/chineseeeg_semantic_channel_target_v1/latest
+    approval: manual
+    timeout_minutes: 240
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/chineseeeg_semantic_channel_target_v1/latest/summary.json
+      - outputs/chineseeeg_semantic_channel_target_v1/latest/population_channel_target.csv
+      - outputs/chineseeeg_semantic_channel_target_v1/latest/participant_channel_target.csv
+      - outputs/chineseeeg_semantic_channel_target_v1/latest/run_subject_channel_contributions.csv
