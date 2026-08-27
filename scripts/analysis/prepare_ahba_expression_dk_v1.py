@@ -21,6 +21,46 @@ import numpy as np
 import pandas as pd
 
 
+def _install_pandas_append_compat() -> bool:
+    """Restore the removed DataFrame.append API for abagen 0.1.3 only.
+
+    pandas 2 removed ``DataFrame.append``. abagen 0.1.3 still calls that API
+    internally. This shim reproduces the historical append behavior with
+    ``pd.concat`` and does not alter any AHBA preprocessing parameter or value.
+    """
+    if hasattr(pd.DataFrame, "append"):
+        return False
+
+    def _append(self, other, ignore_index=False, verify_integrity=False, sort=False):
+        if isinstance(other, dict):
+            other = pd.DataFrame([other])
+        elif isinstance(other, pd.Series):
+            other = other.to_frame().T
+        elif isinstance(other, list):
+            if not other:
+                return self.copy()
+            if all(isinstance(x, dict) for x in other):
+                other = pd.DataFrame(other)
+                frames = [self, other]
+            else:
+                frames = [self, *other]
+            return pd.concat(
+                frames,
+                ignore_index=ignore_index,
+                verify_integrity=verify_integrity,
+                sort=sort,
+            )
+        return pd.concat(
+            [self, other],
+            ignore_index=ignore_index,
+            verify_integrity=verify_integrity,
+            sort=sort,
+        )
+
+    pd.DataFrame.append = _append
+    return True
+
+
 def _save_donor_bundle(outdir: Path, name: str, donors: list[pd.DataFrame], counts: pd.DataFrame, info: pd.DataFrame) -> dict:
     sub = outdir / name
     sub.mkdir(parents=True, exist_ok=True)
@@ -109,6 +149,7 @@ def main() -> int:
     if not gate.get("registration_transform_frozen", False):
         raise SystemExit("registration transform is not frozen")
 
+    pandas_append_compat_installed = _install_pandas_append_compat()
     import abagen
 
     out = args.output_dir.resolve()
@@ -166,6 +207,8 @@ def main() -> int:
         "downloads_public_ahba": True,
         "registration_transform_gate_reused": True,
         "abagen_version": getattr(abagen, "__version__", None),
+        "pandas_version": pd.__version__,
+        "pandas_append_compat_installed": pandas_append_compat_installed,
         "atlas": {
             "name": "Desikan-Killiany",
             "space": "fsaverage5 surface",
@@ -204,6 +247,7 @@ def main() -> int:
             "Do not use NeuroSem, EEG reliability/RSA, model embeddings, or gene-set association outcomes to alter AHBA preprocessing.",
             "Primary bilateral handling is left-to-right mirroring fixed before molecular association testing; no-mirror remains a prespecified sensitivity analysis.",
             "Keep donor-level matrices for leave-one-donor-out robustness; do not collapse away donor identity before mechanistic testing.",
+            "The pandas compatibility shim only restores the removed DataFrame.append API used internally by abagen 0.1.3; it must not alter scientific preprocessing settings.",
             "Do not test GABA, serotonin, cell-type, or pathway hypotheses in this preprocessing stage.",
         ],
     }
@@ -214,6 +258,7 @@ def main() -> int:
         "primary_n_donors": primary["n_donors"],
         "primary_n_regions": primary["n_regions"],
         "primary_n_genes": primary["n_genes"],
+        "pandas_append_compat_installed": pandas_append_compat_installed,
         "blockers": blockers,
     }, indent=2))
     return 0 if not blockers else 2
