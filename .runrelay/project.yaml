@@ -163,3 +163,25 @@ tasks:
       - outputs/ahba_expression_dk_v1/latest/summary.json
       - outputs/ahba_expression_dk_v1/latest/abagen_primary_methods.txt
       - outputs/ahba_expression_dk_v1/latest/abagen_sensitivity_methods.txt
+
+  freeze_ahba_forward_sensitivity_v1:
+    description: Compute and freeze the model-blind 128-channel by cortical-vertex EEG forward-sensitivity matrix from the exact dataset-provided CapTrak geometry, frozen explicit head-to-fsaverage transform, fsaverage ico-5 source space, and 3-layer BEM. Apply the frozen average-reference, fixed surface-normal, absolute lead-field, and per-channel L1 normalization conventions. No EEG signal samples, AHBA expression, NeuroSem/model outcomes, or gene-set tests are accessed.
+    command:
+      - .venv/bin/python
+      - scripts/audit/freeze_ahba_forward_sensitivity_v1.py
+      - --data-root
+      - data/raw/chineseeeg
+      - --source-freeze
+      - outputs/ahba_registration_source_model_freeze_v1/latest/summary.json
+      - --transform-freeze
+      - outputs/ahba_registration_transform_freeze_v1/latest/summary.json
+      - --output-dir
+      - outputs/ahba_forward_sensitivity_v1/latest
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_forward_sensitivity_v1/latest/summary.json
+      - outputs/ahba_forward_sensitivity_v1/latest/channel_sensitivity_qc.csv
+      - outputs/ahba_forward_sensitivity_v1/latest/forward_sensitivity.npz
