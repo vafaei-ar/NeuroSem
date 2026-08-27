@@ -129,3 +129,20 @@ tasks:
       - outputs/derco_event_label_item_identity/latest/summary.json
       - outputs/derco_event_label_item_identity/latest/file_audit.csv
       - outputs/derco_event_label_item_identity/latest/item_key_audit.csv
+
+  run_derco_eeg_reliability:
+    description: Run the prospectively frozen DERCo EEG-only leave-one-participant-out neural-geometry reliability analysis on all 22 participants and five articles, using event-label item identity, row_mean_all, and prespecified nuisance residualization, with no model or transfer outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_derco_eeg_reliability.py
+      - --data-root
+      - data/raw/derco
+      - --output-dir
+      - outputs/derco_eeg_reliability/latest
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/derco_eeg_reliability/latest/summary.json
+      - outputs/derco_eeg_reliability/latest/participant_article_reliability.csv
