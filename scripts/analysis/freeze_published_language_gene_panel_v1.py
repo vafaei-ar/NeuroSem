@@ -18,47 +18,57 @@ import hashlib
 import io
 import json
 import re
+import tarfile
 import urllib.request
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pandas as pd
 
-SOURCE_URLS = [
-    "https://www.pnas.org/doi/suppl/10.1073/pnas.2401687121/suppl_file/pnas.2401687121.sd05.xlsx",
-    "https://pmc.ncbi.nlm.nih.gov/articles/PMC11348331/bin/pnas.2401687121.sd05.xlsx?download=1",
-    "https://pmc.ncbi.nlm.nih.gov/articles/instance/11348331/bin/pnas.2401687121.sd05.xlsx?download=1",
-    "https://pmc.ncbi.nlm.nih.gov/articles/PMC11348331/bin/pnas.2401687121.sd05.xlsx",
-]
+PMCID = "PMC11348331"
+DATASET_NAME = "pnas.2401687121.sd05.xlsx"
+OA_API = f"https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id={PMCID}"
 ANCHORS = {"PTPRK", "SOSTDC1", "NELL1", "NELL2", "SLIT1", "SLIT2", "RYR3", "SNCA", "LMO3", "LMO4", "CDH10"}
-XLSX_MAGIC = b"PK\x03\x04"
 
 
-def download_first(urls: list[str]) -> tuple[str, bytes]:
+def get_url(url: str, timeout: int = 90) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": "NeuroSem/1.0 scientific reproducibility"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read()
+
+
+def download_dataset_s5() -> tuple[str, bytes]:
+    """Retrieve Dataset S5 from the official PMC Open Access article package."""
+    xml_bytes = get_url(OA_API)
+    root = ET.fromstring(xml_bytes)
+    tgz_urls = []
+    for link in root.findall(".//link"):
+        if str(link.attrib.get("format", "")).lower() == "tgz" and link.attrib.get("href"):
+            tgz_urls.append(link.attrib["href"])
+    if not tgz_urls:
+        raise RuntimeError(f"PMC OA API returned no tgz package for {PMCID}: {xml_bytes[:500]!r}")
+
     errors = []
-    for url in urls:
+    for tgz_url in tgz_urls:
         try:
-            req = urllib.request.Request(
-                url,
-                headers={
-                    "User-Agent": "Mozilla/5.0 NeuroSem/1.0 scientific reproducibility",
-                    "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*;q=0.8",
-                },
-            )
-            with urllib.request.urlopen(req, timeout=60) as r:
-                data = r.read()
-                content_type = str(r.headers.get("Content-Type", ""))
-                final_url = str(r.geturl())
-            if len(data) < 1000:
-                raise RuntimeError(f"response too small: {len(data)} bytes")
-            if not data.startswith(XLSX_MAGIC):
-                prefix = data[:80].decode("utf-8", errors="replace").replace("\n", " ")
-                raise RuntimeError(
-                    f"response is not XLSX ZIP bytes; content_type={content_type!r}; final_url={final_url!r}; prefix={prefix!r}"
-                )
-            return final_url, data
+            raw_tgz = get_url(tgz_url, timeout=120)
+            if len(raw_tgz) < 1000:
+                raise RuntimeError(f"OA package too small: {len(raw_tgz)} bytes")
+            with tarfile.open(fileobj=io.BytesIO(raw_tgz), mode="r:gz") as tf:
+                members = [m for m in tf.getmembers() if m.isfile() and Path(m.name).name.lower() == DATASET_NAME.lower()]
+                if len(members) != 1:
+                    names = [Path(m.name).name for m in tf.getmembers() if m.isfile() and "sd05" in m.name.lower()]
+                    raise RuntimeError(f"Expected exactly one {DATASET_NAME} in OA package; matches={names}")
+                f = tf.extractfile(members[0])
+                if f is None:
+                    raise RuntimeError("Could not extract Dataset S5 from OA package")
+                data = f.read()
+            if not data.startswith(b"PK\x03\x04"):
+                raise RuntimeError(f"Extracted Dataset S5 is not XLSX/ZIP bytes; prefix={data[:80]!r}")
+            return f"{tgz_url}#{members[0].name}", data
         except Exception as e:
-            errors.append(f"{url}: {type(e).__name__}: {e}")
-    raise RuntimeError("Could not retrieve Dataset S5 as XLSX: " + " | ".join(errors))
+            errors.append(f"{tgz_url}: {type(e).__name__}: {e}")
+    raise RuntimeError("Could not retrieve Dataset S5 from PMC OA package: " + " | ".join(errors))
 
 
 def norm_gene(x) -> str:
@@ -118,7 +128,7 @@ def main() -> int:
     ap.add_argument("--output-dir", type=Path, default=Path("outputs/published_language_gene_panel_v1/latest"))
     args = ap.parse_args()
 
-    url, raw = download_first(SOURCE_URLS)
+    url, raw = download_dataset_s5()
     sha = hashlib.sha256(raw).hexdigest()
     genes, extraction = extract_panel(raw)
     if len(genes) != 56:
@@ -151,6 +161,7 @@ def main() -> int:
     refs = (
         "# Published language-gene panel v1\n\n"
         "Primary source: Wong MMK, Sha Z, Luetje L, Kong X-Z, et al. The neocortical infrastructure for language involves region-specific patterns of laminar gene expression. PNAS. 2024;121(34):e2401687121. doi:10.1073/pnas.2401687121.\n\n"
+        f"Dataset S5 was retrieved from the official NCBI PMC Open Access package for {PMCID} and hashed before extraction.\n\n"
         "Frozen definition: the 56 genes in Dataset S5 satisfying FDR < 0.01 for layer-by-lobe interaction and upregulation in layer II/III and/or layer V/VI excitatory corticocortical projection neurons, as defined by the paper.\n"
     )
     (out / "references.md").write_text(refs, encoding="utf-8")
