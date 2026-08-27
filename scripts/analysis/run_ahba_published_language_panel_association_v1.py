@@ -95,7 +95,7 @@ def mean_internal_corr(X,idx):
 def coexpr_null(X,y,n_genes,target_corr,n_null,seed):
     rng=np.random.default_rng(seed); G=X.shape[1]; pool=[]; n_candidates=max(50000,n_null*10)
     for _ in range(n_candidates):
-        idx=rng.choice(G,size=n_genes,replace=False); mc=mean_internal_corr(X,idx); r=spearman(A:=X[:,idx].mean(1),y); pool.append((abs(mc-target_corr),mc,r,idx))
+        idx=rng.choice(G,size=n_genes,replace=False); mc=mean_internal_corr(X,idx); r=spearman(X[:,idx].mean(1),y); pool.append((abs(mc-target_corr),mc,r))
     pool.sort(key=lambda t:t[0]); chosen=pool[:n_null]
     return np.asarray([x[2] for x in chosen]),np.asarray([x[1] for x in chosen]),float(chosen[-1][0])
 
@@ -121,7 +121,7 @@ def main():
     results=[]; participant_rows=[]; donor_rows=[]; null_rows=[]
     panel_items=panels["panels"] if isinstance(panels,dict) and "panels" in panels else panels
     for pi,(pid,pobj) in enumerate(panel_items.items()):
-        pgenes=pobj.get("retained_primary_ahba_genes",pobj.get("genes",pobj.get("published_genes")))
+        pgenes=list(pobj) if isinstance(pobj,list) else pobj.get("retained_primary_ahba_genes",pobj.get("genes",pobj.get("published_genes")))
         if not pgenes: raise RuntimeError(f"no genes for {pid}")
         if any(g not in gix for g in pgenes): raise RuntimeError(f"panel gene missing from expression {pid}")
         idx=[gix[g] for g in pgenes]; v=X[:,idx].mean(1); obs=spearman(v,y)
