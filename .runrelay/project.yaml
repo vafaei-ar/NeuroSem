@@ -42,3 +42,19 @@ tasks:
     artifacts:
       - outputs/smn4lang_metadata_audit/latest/summary.json
       - outputs/smn4lang_metadata_audit/latest/file_inventory.csv
+
+  probe_smn4lang_fmri_mapping:
+    description: Model-blind representative SMN4Lang fMRI mapping probe that materializes story 1 text/timing annotations and one sub-01 preprocessed CIFTI run to inspect exact temporal axes, brainordinate dimensions, and annotation schemas before freezing the fMRI semantic unit or HRF treatment.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_smn4lang_fmri_mapping.py
+      - --data-root
+      - data/raw/smn4lang
+      - --output-dir
+      - outputs/smn4lang_fmri_mapping_probe/latest
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_fmri_mapping_probe/latest/summary.json
