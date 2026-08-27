@@ -422,3 +422,43 @@ tasks:
       - outputs/published_language_gene_panels_v2/latest/gene_panels.json
       - outputs/published_language_gene_panels_v2/latest/gene_panel_membership.csv
       - outputs/published_language_gene_panels_v2/latest/references.md
+
+  run_ahba_published_language_panel_association_v1:
+    description: Test exactly two independently frozen literature-defined language-related gene panels against the frozen AHBA-blind DK68 NeuroSem semantic map. Use two-sided population Spearman associations with 5000 hemisphere-constrained cortical spins, participant-level exact sign-flip inference across nine subjects, BH-FDR across the two spatial tests, 5000 size-matched co-expression-aware random-gene-set nulls, and six-donor leave-one-out robustness. Do not alter panel membership, the semantic target, or inference after outcomes are observed.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_ahba_published_language_panel_association_v1.py
+      - --parcel-summary
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/summary.json
+      - --population-target
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/population_parcel_target.csv
+      - --participant-target
+      - outputs/chineseeeg_semantic_parcel_target_v1/latest/participant_parcel_target.csv
+      - --panel-summary
+      - outputs/published_language_gene_panels_v2/latest/summary.json
+      - --panels
+      - outputs/published_language_gene_panels_v2/latest/gene_panels.json
+      - --expression-root
+      - outputs/ahba_expression_dk_v1/latest
+      - --source-freeze
+      - outputs/ahba_registration_source_model_freeze_v1/latest/summary.json
+      - --vertex-map
+      - outputs/ahba_dk_ico5_mapping_v1/latest/vertex_parcel_map.csv
+      - --spins
+      - '5000'
+      - --random-sets
+      - '5000'
+      - --seed
+      - '20260827'
+      - --output-dir
+      - outputs/ahba_published_language_panel_association_v1/latest
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/ahba_published_language_panel_association_v1/latest/summary.json
+      - outputs/ahba_published_language_panel_association_v1/latest/panel_results.csv
+      - outputs/ahba_published_language_panel_association_v1/latest/participant_results.csv
+      - outputs/ahba_published_language_panel_association_v1/latest/donor_lodo.csv
+      - outputs/ahba_published_language_panel_association_v1/latest/coexpression_matched_nulls.csv
