@@ -741,3 +741,27 @@ tasks:
       - outputs/smn4lang_meg_primary_reliability/latest/summary.json
       - outputs/smn4lang_meg_primary_reliability/latest/subject_metrics.csv
       - outputs/smn4lang_meg_primary_reliability/latest/run_inventory.csv
+
+  run_smn4lang_meg_exploratory_granularity:
+    description: Run the frozen post-confirmatory model-blind SMN4Lang MEG temporal-granularity reliability family for 4, 8, and 16 normalized-time RMS bins, with familywise-corrected reliability gating and no model evaluation.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_smn4lang_meg_exploratory_granularity.py
+      - --data-root
+      - data/raw/smn4lang
+      - --format-probe
+      - outputs/smn4lang_meg_format_probe/latest/summary.json
+      - --primary-summary
+      - outputs/smn4lang_meg_primary_reliability/latest/summary.json
+      - --output-dir
+      - outputs/smn4lang_meg_exploratory_granularity/latest
+    approval: manual
+    timeout_minutes: 720
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_meg_exploratory_granularity/latest/summary.json
+      - outputs/smn4lang_meg_exploratory_granularity/latest/candidate_metrics.csv
+      - outputs/smn4lang_meg_exploratory_granularity/latest/subject_metrics.csv
+      - outputs/smn4lang_meg_exploratory_granularity/latest/run_inventory.csv
+      - outputs/smn4lang_meg_exploratory_granularity/latest/derived_run_features.npz
