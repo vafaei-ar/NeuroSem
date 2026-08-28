@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import importlib.util
 import itertools
 import json
 import math
@@ -16,7 +17,12 @@ import mne
 import numpy as np
 from scipy.stats import rankdata
 
-from scripts.analysis import run_smn4lang_meg_primary_reliability as base
+BASE_PATH = Path(__file__).with_name("run_smn4lang_meg_primary_reliability.py")
+BASE_SPEC = importlib.util.spec_from_file_location("smn4lang_meg_primary_reliability", BASE_PATH)
+if BASE_SPEC is None or BASE_SPEC.loader is None:
+    raise RuntimeError(f"could not load primary MEG helper module: {BASE_PATH}")
+base = importlib.util.module_from_spec(BASE_SPEC)
+BASE_SPEC.loader.exec_module(base)
 
 CANDIDATE_BINS = (4, 8, 16)
 N_SUBJECTS = 12
