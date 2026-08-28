@@ -109,6 +109,22 @@ tasks:
     artifacts:
       - outputs/smn4lang_lana_spm_atlas/latest/summary.json
 
+  audit_smn4lang_lana_hash_provenance:
+    description: Model-blind checksum diagnostic for the LanA SPM Atlas release, comparing the MD5-verified archive, the raw LanA_n806.nii member bytes read directly from the ZIP, and the extracted local atlas file. Computes no neural or model outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_smn4lang_lana_hash_provenance.py
+      - --data-root
+      - data/raw/smn4lang
+      - --output-dir
+      - outputs/smn4lang_lana_hash_provenance/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_lana_hash_provenance/latest/summary.json
+
   run_smn4lang_fmri_reliability:
     description: Prospectively frozen model-blind SMN4Lang fMRI neural-geometry reliability analysis across all 12 participants and 60 stories in the independently defined LanA language-network mask, with temporal, HRF word-density, and HRF acoustic-envelope nuisance controls. Before the unchanged frozen analysis, repair any stale local atlas member by re-extracting the exact file from the MD5-verified LanA release archive and re-verifying its SHA256.
     command:
