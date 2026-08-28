@@ -721,3 +721,23 @@ tasks:
       - outputs/smn4lang_meg_format_probe/latest/summary.json
       - outputs/smn4lang_meg_format_probe/latest/file_inventory.csv
       - outputs/smn4lang_meg_format_probe/latest/channel_inventory.csv
+
+  run_smn4lang_meg_primary_reliability:
+    description: Run the prospectively frozen model-blind SMN4Lang MEG story-geometry reliability gate using all retained magnetometers and planar gradiometers, 32 normalized-time RMS bins per channel type, and participant leave-one-out Spearman reliability; stop before any model evaluation if the frozen gate fails.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_smn4lang_meg_primary_reliability.py
+      - --data-root
+      - data/raw/smn4lang
+      - --format-probe
+      - outputs/smn4lang_meg_format_probe/latest/summary.json
+      - --output-dir
+      - outputs/smn4lang_meg_primary_reliability/latest
+    approval: manual
+    timeout_minutes: 720
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_meg_primary_reliability/latest/summary.json
+      - outputs/smn4lang_meg_primary_reliability/latest/subject_metrics.csv
+      - outputs/smn4lang_meg_primary_reliability/latest/run_inventory.csv
