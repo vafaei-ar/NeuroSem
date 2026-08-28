@@ -138,3 +138,25 @@ tasks:
       - outputs/smn4lang_fmri_reliability/latest/summary.json
       - outputs/smn4lang_fmri_reliability/latest/participant_results.csv
       - outputs/smn4lang_fmri_reliability/latest/story_results.csv
+
+  run_smn4lang_fmri_e5_transfer:
+    description: Prospectively frozen confirmatory SMN4Lang fMRI transfer test comparing only the established ChineseEEG-trained multilingual-E5 lambda=0.10 neural-guided adapter against the matched lambda=0 text-only adapter. Uses causal within-sentence prefix embeddings at released word onsets, the fixed canonical HRF, the frozen LanA language-network fMRI representation, and the same temporal, word-density, and acoustic nuisance controls. No SMN4Lang training, model/layer/lambda/checkpoint/ROI/lag/semantic-unit search is allowed.
+    command:
+      - .venv/bin/python
+      - scripts/tuning/evaluate_smn4lang_fmri_e5_transfer_v1.py
+      - --data-root
+      - data/raw/smn4lang
+      - --reliability-summary
+      - outputs/smn4lang_fmri_reliability/latest/summary.json
+      - --output-dir
+      - outputs/smn4lang_fmri_e5_transfer_v1/latest
+      - --device
+      - auto
+    approval: manual
+    timeout_minutes: 720
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_fmri_e5_transfer_v1/latest/summary.json
+      - outputs/smn4lang_fmri_e5_transfer_v1/latest/participant_results.csv
+      - outputs/smn4lang_fmri_e5_transfer_v1/latest/story_results.csv
