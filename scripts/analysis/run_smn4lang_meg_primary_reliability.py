@@ -126,27 +126,32 @@ def run_representation(fif_path: Path) -> tuple[np.ndarray, dict]:
 
     all_picks = np.concatenate([mag_picks, grad_picks])
     n_mag = len(mag_picks)
-    edges = np.linspace(0, raw.n_times, N_BINS + 1, dtype=int)
+
+    # The prospective freeze specifies 32 equal bins over the full VALID run
+    # duration after excluding released bad annotations. First mark samples
+    # covered by released bad annotations as NaN, concatenate only time samples
+    # that remain finite across all retained MEG channels, and divide that
+    # valid-sample sequence into 32 equal normalized-time bins. This is a
+    # literal implementation of the frozen rule and uses no outcome information.
+    data = raw.get_data(picks=all_picks, reject_by_annotation="NaN")
+    valid_time = np.isfinite(data).all(axis=0)
+    n_valid = int(valid_time.sum())
+    if n_valid < N_BINS:
+        raise RuntimeError(f"too few valid MEG samples for {N_BINS} bins: {n_valid}")
+    valid_data = data[:, valid_time]
+    edges = np.linspace(0, n_valid, N_BINS + 1, dtype=int)
     mag_vals = np.empty(N_BINS, dtype=float)
     grad_vals = np.empty(N_BINS, dtype=float)
-    valid_fractions = np.empty(N_BINS, dtype=float)
 
     for b in range(N_BINS):
         start, stop = int(edges[b]), int(edges[b + 1])
-        data = raw.get_data(
-            picks=all_picks,
-            start=start,
-            stop=stop,
-            reject_by_annotation="NaN",
-        )
-        finite = np.isfinite(data)
-        valid_fractions[b] = float(finite.mean())
-        mag = data[:n_mag]
-        grad = data[n_mag:]
-        if not np.isfinite(mag).any() or not np.isfinite(grad).any():
-            raise RuntimeError(f"bin {b} contains no valid MEG samples")
-        mag_vals[b] = float(np.sqrt(np.nanmean(np.square(mag))))
-        grad_vals[b] = float(np.sqrt(np.nanmean(np.square(grad))))
+        if stop <= start:
+            raise RuntimeError(f"valid-sample bin {b} is empty")
+        chunk = valid_data[:, start:stop]
+        mag = chunk[:n_mag]
+        grad = chunk[n_mag:]
+        mag_vals[b] = float(np.sqrt(np.mean(np.square(mag))))
+        grad_vals[b] = float(np.sqrt(np.mean(np.square(grad))))
 
     rep = np.concatenate([zscore_1d(mag_vals), zscore_1d(grad_vals)])
     if rep.shape != (64,) or not np.isfinite(rep).all():
@@ -154,11 +159,12 @@ def run_representation(fif_path: Path) -> tuple[np.ndarray, dict]:
     meta = {
         "n_times": int(raw.n_times),
         "duration_seconds": float(raw.n_times / raw.info["sfreq"]),
+        "n_valid_times": n_valid,
+        "valid_fraction": float(n_valid / raw.n_times),
         "n_mag": int(len(mag_picks)),
         "n_grad": int(len(grad_picks)),
         "n_bads": int(len(raw.info.get("bads", []))),
         "n_annotations": int(len(raw.annotations)),
-        "min_valid_fraction_across_bins": float(valid_fractions.min()),
     }
     return rep, meta
 
@@ -303,7 +309,7 @@ def main() -> int:
             "feature_dim": 64,
             "within_type_standardization": "z-score 32 RMS bins separately for magnetometers and gradiometers",
             "story_rdm": "correlation distance between 64-dimensional story vectors",
-            "bad_annotation_handling": "samples covered by released annotations beginning with bad excluded via NaN",
+            "bad_annotation_handling": "released bad-annotation samples excluded, then remaining valid samples concatenated in temporal order and divided into 32 equal normalized-time bins",
         },
         "reliability": {
             "metric": "participant leave-one-out Spearman correlation of upper-triangle story-RDM edges",
