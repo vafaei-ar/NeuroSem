@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import shutil
 import subprocess
 import sys
 import zipfile
@@ -20,29 +22,54 @@ def digest(path: Path, algo: str) -> str:
     return h.hexdigest()
 
 
-def main() -> int:
-    root = Path("data/raw/smn4lang").resolve()
-    atlas_zip = root / "external/lana/SPM_Atlas.zip"
-    atlas_path = root / "external/lana/spm_atlas" / LANA_REL
+def link_dir(src: Path, dst: Path) -> None:
+    if dst.is_symlink() or dst.exists():
+        if dst.is_symlink() or dst.is_file():
+            dst.unlink()
+        else:
+            shutil.rmtree(dst)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    os.symlink(src, dst, target_is_directory=True)
 
-    if not atlas_zip.exists() or digest(atlas_zip, "md5") != LANA_ZIP_MD5:
+
+def main() -> int:
+    source_root = Path("data/raw/smn4lang").resolve()
+    source_zip = source_root / "external/lana/SPM_Atlas.zip"
+    if not source_zip.exists() or digest(source_zip, "md5") != LANA_ZIP_MD5:
         raise RuntimeError("Verified LanA archive is missing or has wrong MD5")
 
-    if (not atlas_path.exists()) or digest(atlas_path, "sha256") != LANA_SHA256:
-        atlas_path.parent.mkdir(parents=True, exist_ok=True)
-        atlas_path.unlink(missing_ok=True)
-        with zipfile.ZipFile(atlas_zip) as zf:
-            with zf.open(LANA_REL) as src, atlas_path.open("wb") as dst:
-                while True:
-                    chunk = src.read(1024 * 1024)
-                    if not chunk:
-                        break
-                    dst.write(chunk)
+    # Use a fresh runtime data root so the verified LanA member is never affected by
+    # persistent files or links under data/raw/smn4lang/external. The actual SMN4Lang
+    # dataset directories remain the same via directory symlinks.
+    runtime_root = Path("outputs/smn4lang_fmri_reliability/runtime_data").resolve()
+    runtime_root.mkdir(parents=True, exist_ok=True)
+    for name in ["derivatives", "stimuli"] + [f"sub-{i:02d}" for i in range(1, 13)]:
+        link_dir(source_root / name, runtime_root / name)
 
-    if digest(atlas_path, "sha256") != LANA_SHA256:
-        raise RuntimeError("LanA atlas SHA256 mismatch after verified re-extraction")
+    runtime_zip = runtime_root / "external/lana/SPM_Atlas.zip"
+    runtime_zip.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source_zip, runtime_zip)
+    if digest(runtime_zip, "md5") != LANA_ZIP_MD5:
+        raise RuntimeError("Runtime LanA archive MD5 mismatch")
 
-    cmd = [sys.executable, "scripts/analysis/run_smn4lang_fmri_reliability.py", "--data-root", "data/raw/smn4lang", "--output-dir", "outputs/smn4lang_fmri_reliability/latest"]
+    atlas_path = runtime_root / "external/lana/spm_atlas" / LANA_REL
+    atlas_path.parent.mkdir(parents=True, exist_ok=True)
+    atlas_path.unlink(missing_ok=True)
+    with zipfile.ZipFile(runtime_zip) as zf:
+        with zf.open(LANA_REL) as src, atlas_path.open("wb") as dst:
+            shutil.copyfileobj(src, dst, length=1024 * 1024)
+    observed = digest(atlas_path, "sha256")
+    if observed != LANA_SHA256:
+        raise RuntimeError(f"LanA runtime atlas SHA256 mismatch: {observed}")
+
+    cmd = [
+        sys.executable,
+        "scripts/analysis/run_smn4lang_fmri_reliability.py",
+        "--data-root",
+        str(runtime_root),
+        "--output-dir",
+        "outputs/smn4lang_fmri_reliability/latest",
+    ]
     return subprocess.call(cmd)
 
 
