@@ -108,3 +108,21 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/smn4lang_lana_spm_atlas/latest/summary.json
+
+  run_smn4lang_fmri_reliability:
+    description: Prospectively frozen model-blind SMN4Lang fMRI neural-geometry reliability analysis across all 12 participants and 60 stories in the independently defined LanA language-network mask, with temporal, HRF word-density, and HRF acoustic-envelope nuisance controls.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_smn4lang_fmri_reliability.py
+      - --data-root
+      - data/raw/smn4lang
+      - --output-dir
+      - outputs/smn4lang_fmri_reliability/latest
+    approval: manual
+    timeout_minutes: 720
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_fmri_reliability/latest/summary.json
+      - outputs/smn4lang_fmri_reliability/latest/participant_results.csv
+      - outputs/smn4lang_fmri_reliability/latest/story_results.csv
