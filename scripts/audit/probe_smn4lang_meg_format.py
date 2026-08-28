@@ -5,7 +5,6 @@ import argparse
 import hashlib
 import json
 import os
-import re
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -14,7 +13,9 @@ from pathlib import Path
 import mne
 
 S3_BUCKET = "openneuro.org"
-S3_BASE = f"https://{S3_BUCKET}.s3.amazonaws.com/"
+# Use path-style S3 URLs. The dotted bucket name cannot be used safely as a
+# virtual-host TLS name (openneuro.org.s3.amazonaws.com certificate mismatch).
+S3_BASE = f"https://s3.amazonaws.com/{S3_BUCKET}/"
 DATASET_PREFIX = "ds004078/"
 REP_REL = "derivatives/preprocessed_data/sub-01/MEG/sub-01_task-RDR_run-10_meg.fif"
 EXPECTED_MD5 = "f58c0e675bb36f17d23a0a22420ba98a"
@@ -47,6 +48,7 @@ def list_objects(prefix: str):
 def find_representative() -> tuple[str, int, str]:
     matches = []
     for key, size, etag in list_objects(DATASET_PREFIX):
+        # Accept both direct and snapshot-prefixed dataset object layouts.
         if key.endswith(REP_REL):
             matches.append((key, size, etag))
     if len(matches) != 1:
@@ -113,6 +115,7 @@ def main() -> int:
         "public_materialization_route": {
             "source": "OpenNeuro public AWS S3 mirror",
             "bucket": S3_BUCKET,
+            "endpoint_style": "path-style HTTPS",
             "object_key": key,
             "object_url": object_url,
             "s3_size_bytes": s3_size,
@@ -151,6 +154,7 @@ def main() -> int:
             "no_frequency_search": True,
             "no_sensor_subset_search": True,
             "no_source_localization_search": True,
+            "tls_verification_disabled": False,
         },
     }
     (out / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
