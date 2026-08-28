@@ -1,191 +1,273 @@
 # NeuroSem figure and table plan
 
-**Status:** working manuscript plan, 2026-08-27
+**Status:** Nature-facing working plan, 2026-08-28
 
-The goal is to present the locked evidence hierarchy without hiding null results. Main figures should emphasize the core neural-geometry and transfer story. AHBA should be a mechanistic extension with explicit confirmatory/exploratory labels.
+The main figures should communicate one compact conceptual story: a reproducible neural relational target can be learned by a language model and can transfer prospectively across language and neural measurement modality. Null transfer datasets should define scope. AHBA should not compete with that central story.
 
-## Main Figure 1. NeuroSem concept and analysis framework
+## Main Figure 1. From neural geometry to neural-guided learning
 
-Panels:
+### Panel A. Concept
 
-A. Scientific question: text items -> EEG relational geometry -> model geometry -> neural-guided training -> external validation.
+Natural-language items -> reproducible neural relational geometry -> neural-guided model training -> frozen external validation.
 
-B. Primary EEG representation: average each item epoch across time within channel, retain the channel vector, standardize features, construct correlation-distance RDM.
+The diagram should emphasize that the neural target is an RDM/geometry, not a class label or decoder output.
 
-C. Residual RSA: separately rank-transform neural/model RDM edges and nuisance RDMs, residualize, then correlate residuals.
+### Panel B. ChineseEEG neural target
 
-D. Validation hierarchy: ChineseEEG Little Prince discovery; TMNRED independent Chinese reading; ZuCo independent English reading; Garnett same-participant/new-text; Nature out-of-task boundary condition.
+Show the reliability-led temporal-mean channel representation, nuisance residualization, and cross-subject neural geometry.
 
-Do not include AHBA in the same visual causal chain as model training. Show it as a later mechanistic branch.
+### Panel C. Residual semantic correspondence
 
-## Main Figure 2. Reproducible reading-related neural geometry
+Run-wise Little Prince residual BERT RSA across runs 01-06, emphasizing 6/6 positive and mean effect 0.0085.
 
-Suggested plot: participant-level residual LOO reliability distributions or compact forest/interval plot across datasets.
+### Panel D. Sealed neural-guided learning
 
-Include:
+BERT run-07 paired comparison across base, text-only, neural-guided, and shuffled-neural arms for two seeds.
 
-- ChineseEEG Little Prince primary reliability;
-- TMNRED primary `row_mean_all`: mean 0.00724, 95% CI [0.00356, 0.01079];
-- ZuCo primary `row_mean_all`: mean 0.06742, 95% CI [0.05831, 0.07687], 17/17 positive;
-- Garnett primary `row_mean_all`: mean 0.01863, 95% CI [0.01636, 0.02085], 10/10 positive.
+Take-home label: **reliable neural geometry can serve as a learnable relational supervision target.**
 
-A secondary panel can show sensitivity representations, but the primary temporal mean must remain visually privileged.
+## Main Figure 2. Cross-language transfer to independent EEG
 
-## Main Figure 3. Neural-guided model alignment and external transfer
+ZuCo 2.0 should be the clean external EEG validation.
 
-Panel A. ChineseEEG sealed run-07 BERT result, four arms and two seeds.
+### Panel A. Independence schematic
 
-Panel B. External transfer effects for frozen E5 lambda 0.10 minus text-only lambda 0:
+ChineseEEG -> ZuCo with icons/labels for:
 
-- TMNRED: +0.000020, CI crosses zero;
-- ZuCo: +0.001664, 95% CI [+0.001229, +0.002145], 17/17 positive;
-- Garnett: +0.0003266, 95% CI [-0.0001218, +0.0007560], one-sided p=0.1016;
-- Nature directional: approximately -0.001786, out-of-task null.
+- new participants;
+- new laboratory/dataset;
+- new texts;
+- Chinese -> English;
+- same frozen model contrast.
 
-Panel C. Generic semantic benchmark boundary: neural-specific advantage is not stable across seeds.
+### Panel B. ZuCo neural reliability
 
-Use the same effect direction convention across datasets.
+Participant-level residual LOO reliability or forest/paired display:
 
-## Main Figure 4. AHBA mechanistic pipeline and frozen molecular nulls
+- mean 0.06742;
+- 95% CI [0.05831, 0.07687];
+- 17/17 positive.
 
-Panel A. Schematic:
+### Panel C. Frozen E5 transfer
 
-AHBA DK cortical expression -> mapped fsaverage ico5 cortex -> EEG forward/source sensitivity -> 128-channel molecular map and deterministic DK68 semantic phenotype.
+Participant-level delta plot for lambda 0.10 - lambda 0:
 
-Important label: "population postmortem spatial prior, not participant molecular data."
+- mean +0.0016637;
+- 95% CI [+0.0012294,+0.0021452];
+- 17/17 positive;
+- exact one-sided p=7.63e-06.
 
-Panel B. Forest plot of the seven prespecified primary GABA/serotonin/pathway associations with sign-flip p/q and random-set nulls.
+Use paired points or slope lines showing text-only and neural-guided RSA within participant.
 
-All should be shown, not only the largest effects.
+Take-home label: **the learned neural constraint transfers across language in independent EEG.**
 
-Panel C. Control cell-type panels, visually separated from the primary family.
+## Main Figure 3. Prospective cross-modal transfer to language-network fMRI
 
-The panel title should explicitly say that prespecified molecular systems were not supported.
+This should be the visual centerpiece.
 
-## Main Figure 5. Exploratory transcriptomics and published language panels
+### Panel A. SMN4Lang design
 
-Panel A. Whole-transcriptome PLS1: observed score-phenotype r=0.457, R2=0.209, with the 5,000-spin null distribution and two-sided p=0.2745.
+ChineseEEG-trained frozen E5 -> independent SMN4Lang participants hearing 60 Mandarin stories -> LanA language-network fMRI.
 
-Panel B. Intrinsic transcriptomic gradients, emphasizing no FDR-significant component. Gradient 10 may be labeled as the closest nominal trend, p=0.0566, q=0.4747, without promotion.
+Make explicit:
 
-Panel C. Wong published panels:
+- no SMN4Lang model training;
+- independent participants;
+- auditory naturalistic task;
+- fMRI rather than EEG.
 
-- connectivity 6: rho=-0.152, spatial p=0.463, coexpression-aware p=0.389;
-- dyslexia 14: rho=-0.273, spatial p=0.0516, spatial q=0.103, coexpression-aware p=0.099, q=0.198.
+### Panel B. Model-blind reliability gate
 
-This figure should visually separate frozen validation from later post-hoc diagnostics.
+Show LanA mask and participant-level fMRI reliability:
 
-## Main Figure 6. AHBA bilateral-handling diagnostic
+- mean residual LOO 0.65327;
+- 95% CI [0.63945,0.66843];
+- 12/12 positive;
+- exact one-sided p=0.000244.
 
-This is optional for the main paper. If space is limited, move it to Extended Data.
+Label clearly: **reliability established before model loading.**
 
-Panel A. Dyslexia panel whole-cortex association: mirrored rho=-0.273 vs no-mirror rho=-0.478.
+### Panel C. Frozen semantic-to-fMRI mapping
 
-Panel B. Hemisphere decomposition:
+Compact schematic:
 
-- left: mirrored -0.567 vs no-mirror -0.580;
-- right: mirrored +0.0038 vs no-mirror -0.431.
+released word onset -> causal within-sentence prefix E5 state -> fixed canonical HRF -> TR-level model geometry -> nuisance-residualized RSA with LanA multivoxel geometry.
 
-Panel C. Mirrored vs no-mirror map similarity:
+Avoid excessive implementation detail in the main panel. Put exact punctuation/reset and timing rules in Methods/Extended Data.
 
-- full dyslexia map rho=0.738;
-- left hemisphere rho=0.988;
-- right hemisphere rho=0.505.
+### Panel D. Primary paired participant result
 
-Panel D. Donor LODO matched-support dyslexia results showing that every no-mirror estimate remains more negative than its mirrored counterpart.
+Paired participant points for:
 
-Interpretation label: "post-hoc method-sensitivity diagnostic; does not revise the frozen primary null."
+- text-only lambda 0 mean RSA 0.12092396;
+- neural-guided lambda 0.10 mean RSA 0.12177646.
 
-## Extended Data / Supplementary figures
+Show all 12 participant lines; all should point upward.
 
-1. ChineseEEG representation-selection reliability benchmark.
-2. Little Prince run-wise residual BERT RSA and subject influence.
-3. TMNRED sensitivity representations and null transfer follow-ups.
-4. ZuCo structural/material mapping QC and subject-level transfer deltas.
-5. Garnett structural mapping, reliability sensitivities, and chapter-level transfer estimates.
-6. AHBA registration and forward-model QC.
-7. AHBA DK mapping and channel sensitivity QC.
-8. AHBA donor coverage and bilateral expression support.
-9. Random-gene-set null diagnostics.
-10. Published-panel gene-level decomposition.
-11. Mirroring parcel-level decomposition.
+### Panel E. Delta inference
 
-## Main Table 1. Dataset and validation design
+- mean +0.00085250;
+- median +0.00086365;
+- 12/12 positive;
+- 95% CI [+0.00078966,+0.00091398];
+- exact one-sided p=0.000244.
+
+Take-home label: **an EEG-derived neural constraint survives prospective transfer to independent cortical fMRI geometry.**
+
+## Main Figure 4. Selectivity, boundary conditions, and semantic dissociation
+
+This figure prevents overclaiming and strengthens causal interpretation.
+
+### Panel A. External transfer effects
+
+Aligned forest/effect plot with consistent direction convention for:
+
+- ZuCo: positive;
+- SMN4Lang fMRI: positive;
+- TMNRED: null;
+- Garnett Dream: null/inconclusive;
+- directional-word dataset: negative/null boundary.
+
+Because effect scales differ by modality/dataset, either use standardized visual encoding with exact numerical labels or separate axes rather than visually implying direct magnitude comparability.
+
+### Panel B. Independence dimensions
+
+Matrix showing for each external test whether it changes participants, text, language, task, laboratory, and neural modality.
+
+This lets the reader see why SMN4Lang carries special inferential weight even though its absolute delta is small.
+
+### Panel C. Generic semantic benchmark
+
+Show that neural-guided training does not produce a stable neural-specific generic semantic gain.
+
+Take-home label: **transfer is selective and neural-alignment-specific, not a universal semantic uplift.**
+
+## Extended Data
+
+### ED1. ChineseEEG representation selection and nuisance controls
+
+- flattened versus temporal-mean neural reliability;
+- run-wise BERT residual RSA;
+- participant influence.
+
+### ED2. Neural-guided training controls
+
+- both BERT seeds;
+- shuffled-neural control;
+- E5 architecture replication;
+- Pareto exploration clearly labeled exploratory.
+
+### ED3. TMNRED
+
+- structural/input freeze;
+- reliability distributions;
+- primary null transfer;
+- alternative-representation follow-ups labeled post-confirmatory exploratory.
+
+### ED4. Garnett Dream
+
+- exact text mapping;
+- reliability;
+- participant and chapter/story transfer heterogeneity;
+- null/inconclusive frozen model contrast.
+
+### ED5. SMN4Lang structural and timing QC
+
+- metadata/timebase audit;
+- LanA atlas provenance and geometry;
+- model-blind reliability details;
+- story-level transfer heterogeneity;
+- semantic-to-TR mapping checks;
+- frozen guardrail checklist.
+
+### ED6. Directional-word boundary condition
+
+- task description;
+- fixed model contrast;
+- negative/null result.
+
+### ED7-ED9. AHBA mechanistic constraint
+
+If retained in the current paper:
+
+- AHBA spatial mapping and prespecified GABA/serotonin nulls;
+- whole-transcriptome spatial-null analysis and published-panel primary nulls;
+- mirroring diagnostic explicitly labeled post-hoc methodological sensitivity.
+
+If space or conceptual clarity suffers, move the full AHBA package to Supplementary Information or a separate manuscript.
+
+## Main Table 1. Validation design and independence
+
+Rows:
+
+- ChineseEEG Little Prince;
+- ZuCo 2.0 NR;
+- SMN4Lang fMRI;
+- TMNRED;
+- Garnett Dream;
+- directional-word condition.
 
 Columns:
 
-- dataset;
+- modality;
 - task;
 - language;
 - participant independence;
 - text independence;
-- primary EEG representation;
-- role in project;
-- whether model tuning occurred on the dataset;
-- confirmatory/exploratory status.
+- laboratory/dataset independence;
+- neural representation;
+- model trained on target dataset?;
+- frozen model contrast;
+- confirmatory status;
+- role in claim.
 
-## Main Table 2. Frozen neural-geometry and model-transfer results
-
-Rows: Little Prince, TMNRED, ZuCo, Garnett, Nature.
+## Main Table 2. Neural reliability and frozen transfer
 
 Columns:
 
-- reliability effect and CI;
-- primary model-transfer contrast;
-- mean delta;
-- CI;
+- reliability metric;
+- reliability mean and CI;
+- model arm values where applicable;
+- mean lambda 0.10 - lambda 0 delta;
+- bootstrap CI;
 - fraction positive;
 - exact inference;
 - interpretation.
 
-## Main Table 3. AHBA hypothesis families
-
-Rows:
-
-- GABA-A;
-- GABA-B;
-- GABA machinery;
-- serotonin receptors;
-- serotonin machinery;
-- Reactome GABA activation;
-- Reactome serotonin receptors;
-- seven cell-type controls;
-- Wong connectivity 6;
-- Wong dyslexia 14.
-
-Columns:
-
-- family type;
-- frozen vs exploratory;
-- n genes;
-- effect;
-- spatial/sign-flip p;
-- random/coexpression-aware p;
-- FDR q;
-- conclusion.
-
-## Supplementary Table S1. RunRelay provenance
+## Supplementary Table S1. Full RunRelay provenance
 
 For every outcome-bearing analysis include:
 
 - job id;
 - exact NeuroSem commit;
-- task name;
+- task;
 - status;
 - runtime;
 - artifact directory;
-- confirmatory/exploratory label;
-- whether a preceding failed job changed only engineering code or changed scientific protocol.
+- confirmatory/exploratory/post-hoc label;
+- whether preceding failures altered engineering only or scientific protocol.
 
-## Supplementary Table S2. AHBA preprocessing freeze
+## Supplementary Table S2. Frozen analysis choices by dataset
 
-Include abagen version/settings, donor handling, bilateral strategy, retained genes, parcel support, forward-model conventions, DK mapping coverage, and null-generation settings.
+Include:
+
+- participant/item cohort;
+- neural representation;
+- nuisance family;
+- model revision;
+- adapter paths/provenance;
+- semantic unit;
+- temporal mapping;
+- inferential unit;
+- bootstrap/permutation seed;
+- stop rules.
 
 ## Figure-generation guardrails
 
-- Plot all prespecified families, not selected significant-looking subsets.
-- Use identical axes when comparing transfer deltas where scale permits.
-- Distinguish confirmatory, exploratory, and post-hoc diagnostic results by labels and layout, not by overstated visual emphasis.
-- Show uncertainty intervals and null distributions where they are central to the inference.
-- Do not label the no-mirror dyslexia sensitivity as a validated molecular mechanism.
-- Preserve exact numerical values from locked artifacts when figure scripts are implemented.
+- Plot every participant for the two key positive transfer results where feasible.
+- Do not visually inflate the SMN4Lang effect by hiding absolute RSA values.
+- Emphasize consistency and independence, not only p-values.
+- Keep confirmatory, exploratory, and post-hoc results visually distinct.
+- Do not compare raw delta magnitudes across EEG and fMRI as if they were on a common measurement scale.
+- Preserve all null external tests.
+- Keep AHBA out of the main causal chain from neural geometry to model transfer.
