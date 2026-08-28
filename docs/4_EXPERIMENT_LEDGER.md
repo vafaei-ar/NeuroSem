@@ -1,8 +1,10 @@
 # 4. Experiment Ledger
 
-**Last updated:** 2026-08-27
+**Last updated:** 2026-08-28
 
 This is the chronological audit trail for major NeuroSem analyses. It records what was run, why it was run, whether it was confirmatory, exploratory, or post-hoc diagnostic, and what changed afterward. Exact code/configuration should be recovered from the NeuroSem commit associated with each RunRelay job.
+
+The manuscript does not need to follow this chronology. Scientific presentation is defined separately in `paper/NATURE_POSITIONING.md` and `paper/outline.md`.
 
 ## Project chronology at a glance
 
@@ -16,12 +18,11 @@ flowchart LR
     F --> G[E5 architecture replication]
     G --> H[Nature / TMNRED / ZuCo external validation]
     H --> I[Garnett reliability + transfer]
-    I --> J[AHBA model-blind preparation]
-    J --> K[Frozen GABA / serotonin molecular test]
-    K --> L[Exploratory transcriptome PLS / gradients]
-    L --> M[Published language-gene panels]
-    M --> N[Mirroring diagnostic]
-    N --> O[Consolidation / manuscript]
+    I --> J[AHBA mechanistic track]
+    J --> K[SMN4Lang model-blind fMRI freeze]
+    K --> L[SMN4Lang fMRI reliability gate]
+    L --> M[SMN4Lang frozen E5 transfer]
+    M --> N[Manuscript consolidation]
 ```
 
 ## Ledger conventions
@@ -384,13 +385,107 @@ All six matched-support donor LODO comparisons for the dyslexia panel remained m
 
 Interpretation: reproducible hemispheric preprocessing sensitivity, not confirmatory molecular evidence.
 
+# Phase L. SMN4Lang prospective cross-modal validation
+
+SMN4Lang / OpenNeuro `ds004078` was selected before any SMN4Lang NeuroSem model outcome to test a qualitatively stronger generalization claim than another EEG replication: whether a neural relational constraint learned from Chinese reading EEG generalizes to naturalistic auditory-language fMRI in independent participants.
+
+The prospective sequence was frozen as metadata/timebase audit -> independent spatial representation -> model-blind neural reliability -> one frozen model contrast.
+
+## Metadata, temporal, and spatial freezes
+
+The project established:
+
+- 12 native-Mandarin participants;
+- 60 shared naturalistic stories;
+- TR = 0.710 s;
+- exact word timing and participant-comparable fMRI timebases;
+- an independently published LanA probabilistic language-network atlas on the exact 2-mm MNI grid;
+- LanA threshold 0.20 frozen before neural/model outcomes;
+- fixed temporal, HRF word-density, and HRF acoustic-envelope nuisance controls.
+
+The final LanA member checksum is SHA256 `3d366a20d50a97ecabb4b9980359b2cc093e99ef7bd125bca26ed1c53babcaa3`.
+
+Several reliability jobs failed only because an earlier frozen checksum literal was malformed at 63 hexadecimal characters. The observed atlas member had a valid 64-character SHA256. The final retry wrapper changed only the provenance check and executed the otherwise frozen scientific analysis.
+
+## `NEUROSEM-SMN4LANG-FMRI-RELIABILITY-0005`
+
+Type: prospectively frozen, model-blind fMRI reliability gate.
+
+Commit: `a440d70aa86ea2906e1c2ff98b36010ce837c217`.
+
+Result:
+
+- 12 participants x 60 stories = 720 runs;
+- 25,137 LanA-mask voxels;
+- mean participant residual LOO reliability **0.653265**;
+- median **0.647598**;
+- **12/12** positive;
+- bootstrap 95% CI **[0.639451, 0.668430]**;
+- exact one-sided sign-flip **p = 0.00024414**.
+
+Raw mean reliability was 0.654773, showing that the fixed temporal/word-density/acoustic nuisance family explained little of the shared geometry.
+
+Decision: reliability gate passed decisively. Do not optimize the neural representation further. Proceed to the already frozen model comparison.
+
+## SMN4Lang semantic/model freeze
+
+The model test was frozen before loading either adapter:
+
+- model `intfloat/multilingual-e5-large`;
+- pinned revision `3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3`;
+- sole contrast: ChineseEEG-trained lambda 0.10 neural-guided adapter minus matched lambda 0 text-only adapter;
+- causal within-sentence prefix embeddings at released word onsets;
+- sentence reset at sentence-final punctuation;
+- fixed word-to-TR mapping;
+- same fixed canonical HRF and nuisance family as the reliability analysis;
+- participant as inferential unit;
+- no SMN4Lang training;
+- no model/layer/lambda/checkpoint/ROI/lag/HRF/semantic-unit search.
+
+## `NEUROSEM-SMN4LANG-FMRI-E5-TRANSFER-0001`
+
+Type: prospectively frozen confirmatory cross-modal transfer.
+
+Commit: `abfbac4d54269d96c52ac0cd61776cc2a0c2f892`.
+
+Runtime: 02:21:56. Exit 0. Three declared artifacts delivered.
+
+Mean participant residual RSA:
+
+- lambda 0 text-only: **0.12092396**;
+- lambda 0.10 neural-guided: **0.12177646**.
+
+Primary contrast:
+
+- mean delta **+0.00085250**;
+- median delta **+0.00086365**;
+- **12/12** participants positive;
+- bootstrap 95% CI **[+0.00078966, +0.00091398]**;
+- exact one-sided sign-flip **p = 0.00024414**.
+
+Participant deltas ranged from approximately +0.000646 to +0.001020.
+
+Interpretation: small absolute effect, exceptionally consistent direction, and strong scientific importance because the frozen neural-guided change generalized from Chinese natural-reading EEG to independent language-network fMRI in different participants during auditory narrative comprehension.
+
+Decision:
+
+- primary SMN4Lang fMRI validation is complete and positive;
+- no fMRI rescue/model search;
+- SMN4Lang becomes the capstone external validation in the manuscript;
+- ZuCo provides complementary cross-language EEG convergence;
+- TMNRED, Garnett, and directional-word results remain visible boundary conditions;
+- optional SMN4Lang MEG is secondary and must begin with a separately frozen model-blind reliability analysis.
+
 # Current evidence summary
 
 | Question | Current answer |
 |---|---|
-| Is there reproducible reading-related EEG geometry? | **Yes.** ChineseEEG, TMNRED, ZuCo, and Garnett reliability support it. |
-| Does neural-guided training improve held-out alignment to development EEG? | **Yes.** Supported within ChineseEEG. |
-| Does neural-guided transfer generalize universally? | **No.** Positive in ZuCo; null/inconclusive in TMNRED, Garnett, and out-of-task Nature. |
+| Is there reproducible language-related neural geometry? | **Yes.** Supported across ChineseEEG, TMNRED, ZuCo, Garnett, and strongly in SMN4Lang fMRI. |
+| Does neural-guided training improve held-out alignment to development neural geometry? | **Yes.** Supported within ChineseEEG. |
+| Can the learned neural constraint transfer across language in EEG? | **Yes.** ZuCo is positive in 17/17 participants. |
+| Can the learned neural constraint transfer across measurement modality? | **Yes.** SMN4Lang fMRI is positive in 12/12 participants under a frozen test. |
+| Does neural-guided transfer generalize universally? | **No.** TMNRED and Garnett are null/inconclusive; directional inner speech is a negative/null boundary. |
+| Does neural guidance improve generic semantic performance? | **Not stably.** Neural alignment and generic semantic quality are distinct objectives. |
 | Do prespecified GABA/serotonin systems explain the semantic spatial pattern? | **No.** Frozen AHBA primary tests are null. |
 | Does whole-transcriptome AHBA discovery survive spatial correction? | **No.** PLS and gradients are null after spatial inference. |
 | Do independent published language-gene panels validate? | **No under the frozen primary rule.** Dyslexia panel is suggestive only. |
@@ -398,4 +493,4 @@ Interpretation: reproducible hemispheric preprocessing sensitivity, not confirma
 
 ## Next ledger action
 
-No new outcome-bearing analysis is required for the current paper at this stage. The next work is selective code reconciliation, figure/table generation, manuscript drafting, and exact provenance cleanup. Any future molecular validation should be prospectively frozen and independent of the current AHBA outcome family.
+No additional fMRI dataset search is justified. The primary next work is manuscript consolidation around transferable neural relational constraints, figure/table generation, exact provenance cleanup, and selective code reconciliation. Optional SMN4Lang MEG is scientifically interesting but is not required to rescue the present paper and must remain prospectively frozen if pursued.

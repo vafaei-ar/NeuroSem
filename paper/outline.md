@@ -1,121 +1,180 @@
 # NeuroSem manuscript outline
 
-**Status:** working scaffold, 2026-08-27
+**Status:** Nature-facing working scaffold, 2026-08-28
 
-This outline follows the locked scientific evidence hierarchy rather than the chronological debugging history. Null results and post-hoc diagnostics are part of the story and must remain visible.
+This outline follows the strongest scientific evidence hierarchy rather than the chronological order of experiments. The manuscript should be organized around a transferable neural relational constraint, with positive external convergence followed by explicit boundary conditions.
 
 ## Central claim
 
-Reading-related EEG contains a small but reproducible relational geometry across datasets, texts, and languages. Neural-guided training can improve alignment to that geometry, but transfer is not universal. A frozen cross-language transfer result is positive in ZuCo, whereas TMNRED and Garnett model-transfer tests are null or inconclusive. Population AHBA transcriptomics does not provide confirmatory support for the prespecified GABAergic or serotonergic mechanisms; exploratory language-panel work identifies a hemispheric preprocessing sensitivity that should not be promoted to confirmatory molecular evidence.
+A relational semantic target derived from human EEG can be learned by a language model and can generalize prospectively to independent neural measurements across participants, language, task, and measurement modality.
+
+The strongest evidence chain is:
+
+**ChineseEEG reproducible neural geometry -> neural-guided learning -> ZuCo cross-language EEG transfer -> SMN4Lang cross-modal fMRI transfer -> selective null boundary conditions.**
+
+The paper should not be framed as "brain supervision improves language models" or as a universal semantic enhancement claim.
 
 ## Results narrative
 
-### 1. Reproducible semantic neural geometry in Chinese natural reading
+### 1. Human language responses contain a reproducible relational neural geometry
 
-- Introduce ChineseEEG Little Prince and the reliability-led selection of the temporal-mean channel vector.
-- Show residual cross-subject neural geometry after nuisance control.
-- Show small but consistent residual correspondence with pinned Chinese BERT across six narrative runs.
-- Establish the neural geometry before discussing model tuning.
+Use ChineseEEG Little Prince to establish the target before discussing model optimization.
 
-### 2. Neural-guided training improves held-out alignment within the development dataset
+- The temporal-mean channel representation was selected using neural reliability, not semantic-model performance.
+- Residual cross-subject neural geometry remains after nuisance control.
+- Pinned Chinese BERT shows small but consistent residual correspondence across six narrative runs.
+- This defines a biologically grounded relational target rather than a decoder label or scalar neural objective.
 
-- Present the sealed Little Prince run-07 BERT comparison.
-- Show replication of the qualitative effect with multilingual E5.
-- Separate neural-target alignment from generic semantic benchmark performance.
-- Preserve the null/unstable generic semantic result.
+### 2. Neural relational supervision produces a learnable model change
 
-### 3. Independent reading datasets separate neural-geometry replication from model-transfer replication
+- Present sealed Little Prince run-07 BERT evaluation with base, text-only, neural-guided, and shuffled-neural controls.
+- Neural-guided BERT is strongest in two independent seeds.
+- Show multilingual E5 as an architecture replication and the frozen source model for external testing.
+- Show generic semantic benchmark results here: no stable neural-specific improvement.
 
-Present datasets by scientific independence rather than acquisition chronology.
+Interpretation: neural alignment is learnable, but it is not equivalent to generic semantic quality.
+
+### 3. The learned neural constraint transfers across language in independent EEG
+
+Use ZuCo 2.0 normal reading as the first major external validation.
+
+- New participants, laboratory, texts, acquisition context, and language.
+- Strong prospectively inherited EEG reliability.
+- Frozen E5 lambda 0.10 versus matched lambda 0 transfer is positive in 17/17 participants.
+- No ZuCo tuning or outcome-driven representation/model search.
+
+Interpretation: a neural constraint learned from Chinese reading EEG transfers to independent English natural-reading EEG.
+
+### 4. The learned neural constraint transfers across measurement modality to fMRI
+
+Make SMN4Lang the capstone result.
+
+#### Model-blind fMRI gate
+
+- 12 Mandarin participants listening to 60 naturalistic stories.
+- Independently defined LanA language-network mask.
+- Frozen TR-level multivoxel geometry and nuisance family.
+- Model-blind leave-one-participant-out reliability passes strongly: mean residual reliability 0.65327, 12/12 positive, 95% CI [0.63945, 0.66843], exact one-sided p=0.000244.
+
+#### Single frozen model contrast
+
+- ChineseEEG-trained multilingual-E5 lambda 0.10 neural-guided versus matched lambda 0 text-only.
+- Causal within-sentence prefix embeddings at released word onsets.
+- Same fixed canonical HRF.
+- No SMN4Lang training, layer search, lambda search, checkpoint search, ROI search, lag/HRF search, or semantic-unit search.
+
+Result:
+
+- lambda 0 mean participant residual RSA 0.12092396;
+- lambda 0.10 mean 0.12177646;
+- mean delta +0.00085250;
+- 12/12 participants positive;
+- 95% CI [+0.00078966,+0.00091398];
+- exact one-sided sign-flip p=0.000244.
+
+Interpretation: a small but highly consistent model change learned from EEG generalizes prospectively to independent cortical fMRI geometry during auditory narrative comprehension.
+
+### 5. Null transfers define the boundary of the phenomenon
+
+Group these results together instead of presenting them as failed replications scattered across the manuscript.
 
 #### TMNRED
 
-- EEG geometry replicates weakly but positively.
-- Frozen E5 lambda 0.10 versus text-only lambda 0 transfer is null.
-- Exploratory SD and 8-bin follow-ups do not rescue transfer.
-
-#### ZuCo 2.0 normal reading
-
-- Strong independent English-reading reliability replication.
-- Frozen ChineseEEG-to-ZuCo E5 transfer is positive across all 17 participants.
-- Emphasize cross-dataset and cross-language generalization without claiming generic semantic improvement.
+- Neural geometry replicates weakly but positively.
+- Frozen E5 transfer is null.
+- Post-confirmatory alternative representations do not rescue transfer.
 
 #### Garnett Dream
 
-- Same participants/acquisition family, different narrative.
-- EEG reliability replicates with the frozen representation.
-- Frozen E5 neural-guided minus text-only transfer is null/inconclusive.
-- Use this to distinguish generalization of neural geometry from generalization of the trained model advantage.
+- Same-participant/new-text EEG geometry is reliable.
+- Frozen E5 transfer is null/inconclusive.
+- This dissociates generalization of neural geometry from generalization of the trained-model advantage.
 
-#### Nature directional-word EEG
+#### Directional-word dataset
 
-- Treat as an out-of-task boundary condition, not a task-matched reading replication.
+- Out-of-task covert/inner-speech condition.
+- Frozen transfer is negative/null.
+- Treat as a task boundary, not a task-matched refutation.
 
-### 4. Molecular-mechanistic extension using AHBA
+Synthesis: the neural-guided shift is not a trivial global RSA increase and is not universally expressed across datasets/tasks.
 
-#### Model-blind spatial/transcriptomic preparation
+### 6. Secondary mechanistic constraint: AHBA does not establish a molecular explanation
 
-- Show the cortical transcriptomic to EEG sensitivity pipeline.
-- State that dataset-provided CapTrak geometry is standardized and not individualized source localization.
-- Explain the deterministic DK68 parcel phenotype as sensitivity-weighted back-projection, not an inverse solution.
+This section should be compact in the main paper or moved to Extended Data.
 
-#### Frozen prespecified mechanisms
+- Prespecified GABAergic/serotonergic/pathway tests are null.
+- Whole-transcriptome PLS does not survive spatial null inference.
+- Published language-gene panels remain primary-null.
+- No-mirror dyslexia sensitivity is exploratory and driven mainly by right-hemisphere expression-map changes.
 
-- GABA-A, GABA-B, broader GABA machinery, serotonin receptors/machinery, Reactome pathways, and cell-type controls.
-- All primary GABA/serotonin mechanistic tests are null after the frozen inference framework.
-- Preserve the conclusion that population cortical transcriptomic variation in these prespecified systems does not reliably explain the established ChineseEEG semantic spatial pattern.
-
-### 5. Exploratory transcriptomic analyses do not produce a spatially robust genome-wide mechanism
-
-- Whole-transcriptome PLS1 gives moderate in-sample alignment but is not significant under hemisphere-constrained spatial rotations.
-- Intrinsic transcriptomic gradients are not FDR significant.
-- Stable LODO gene ranks are robustness of ranking, not evidence of phenotype association.
-
-### 6. Independent published language panels remain primary-null but reveal a bilateral-handling sensitivity
-
-- Freeze the two exact Wong 2024 main-article subsets before outcome testing.
-- Six-gene connectivity panel is null.
-- Fourteen-gene dyslexia panel shows a suggestive negative primary trend but fails the frozen spatial and coexpression-aware criteria after correction.
-- No-mirror sensitivity is strong, but remains exploratory because the primary mirrored analysis failed.
-
-### 7. Mirroring diagnostic localizes the sensitivity to the right hemisphere
-
-- Matched-support analysis rules out parcel-coverage loss as the explanation.
-- Left-hemisphere dyslexia-panel association is strong under both mirrored and no-mirror processing.
-- Right-hemisphere association changes from approximately zero under mirroring to strongly negative without mirroring.
-- Donor LODO preserves the direction of the no-mirror shift.
-- Interpret as a methodological warning about bilateral AHBA handling, not confirmatory molecular evidence.
+Interpretation: the current data establish representational transfer, not a molecular mechanism.
 
 ## Discussion structure
 
 ### What is supported
 
-1. Reading-related EEG contains reproducible relational geometry.
-2. Neural-guided training can improve held-out neural alignment.
-3. That advantage can transfer across dataset and language, as shown in ZuCo.
-4. Neural-geometry replication is more robust than model-transfer replication.
+1. Language-related neural relational geometry is reproducible.
+2. That relational target can modify a language model under held-out neural evaluation.
+3. The learned change can transfer across dataset and language in EEG.
+4. The learned change can transfer prospectively from EEG to independent language-network fMRI.
+5. Generalization is selective rather than universal.
 
 ### What is not supported
 
-1. A broad claim that brain-guided training improves generic semantic representations.
-2. Universal neural-guided transfer across reading datasets.
-3. A confirmatory GABAergic or serotonergic molecular mechanism from AHBA.
-4. A confirmatory published-language-gene association after the frozen primary null framework.
+1. A broad claim that neural guidance improves generic semantic representations.
+2. Universal transfer across all reading/language datasets.
+3. A claim that the absolute cross-modal effect is large.
+4. A confirmatory GABAergic, serotonergic, or published language-gene molecular mechanism.
 
-### Mechanistic interpretation
+### Conceptual interpretation
 
-- Treat AHBA as a population postmortem spatial prior from six donors.
-- Do not claim receptor causality or participant-specific molecular biology.
-- Discuss the mirroring diagnostic as evidence that bilateral preprocessing can materially alter language-related transcriptomic maps when right-hemisphere sampling is sparse.
+The conceptual contribution is a shift from using neural data only as a prediction target to using reproducible neural relational structure as a model-training constraint whose portability can be tested prospectively in independent brains.
+
+This creates a general framework:
+
+1. establish reliable biological geometry;
+2. train a model toward that geometry;
+3. freeze the trained representation;
+4. test whether the change generalizes to new neural systems and modalities;
+5. use null datasets to identify the scope of transfer.
+
+### Effect-size interpretation
+
+The external model advantages are small in absolute RSA units. This should be explicit.
+
+The argument for importance is not magnitude alone. It is the conjunction of:
+
+- directional consistency;
+- prospective design;
+- matched controls;
+- cross-language transfer;
+- cross-modal transfer;
+- model-blind reliability gates;
+- preserved null boundary conditions.
 
 ### Limitations
 
-- EEG spatial localization is coarse and based on standardized dataset geometry and fsaverage forward modeling.
-- Cross-dataset acquisition and task differences constrain transfer interpretation.
-- Neural-model effects are small in absolute RSA units.
-- AHBA donor number and asymmetric right-hemisphere sampling limit molecular inference.
-- No-mirror dyslexia result is post-hoc diagnostic and requires independent bilateral transcriptomic validation.
+- Neural-model transfer effects are small in absolute RSA units.
+- Dataset/task differences prevent a simple universal-transfer model.
+- EEG source specificity is limited.
+- SMN4Lang semantic-to-TR mapping depends on a frozen HRF-based encoding convention rather than direct neural timing.
+- The current work does not establish molecular causality.
+- AHBA has only six donors and sparse right-hemisphere sampling.
+- The optional MEG arm is not yet part of the evidence chain.
+
+## Main-paper figure sequence
+
+1. **Figure 1:** concept, ChineseEEG neural target, reliability, held-out neural-guided learning.
+2. **Figure 2:** ZuCo cross-language EEG reliability and transfer.
+3. **Figure 3:** SMN4Lang fMRI reliability gate and cross-modal transfer, visual centerpiece.
+4. **Figure 4:** boundary conditions and generic-semantic dissociation.
+
+AHBA moves to Extended Data unless an editor/reviewer specifically asks for the molecular track in the main narrative.
 
 ## Final framing
 
-The paper should not be framed as "brain supervision improves language models." The stronger framing is that reproducible neural semantic geometry can serve as a biologically grounded relational target whose learnability and transfer can be tested prospectively, revealing both successful cross-language neural transfer and clear boundaries on semantic and molecular generalization.
+The strongest paper is about **transferable neural relational constraints**.
+
+A concise statement is:
+
+> Neural geometry learned from human EEG can shape language-model representations in a way that survives prospective transfer to independent brains across language and measurement modality, while null datasets define the limits of that transfer.
