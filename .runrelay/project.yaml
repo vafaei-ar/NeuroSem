@@ -110,14 +110,10 @@ tasks:
       - outputs/smn4lang_lana_spm_atlas/latest/summary.json
 
   run_smn4lang_fmri_reliability:
-    description: Prospectively frozen model-blind SMN4Lang fMRI neural-geometry reliability analysis across all 12 participants and 60 stories in the independently defined LanA language-network mask, with temporal, HRF word-density, and HRF acoustic-envelope nuisance controls.
+    description: Prospectively frozen model-blind SMN4Lang fMRI neural-geometry reliability analysis across all 12 participants and 60 stories in the independently defined LanA language-network mask, with temporal, HRF word-density, and HRF acoustic-envelope nuisance controls. Before the unchanged frozen analysis, repair any stale local atlas member by re-extracting the exact file from the MD5-verified LanA release archive and re-verifying its SHA256.
     command:
       - .venv/bin/python
-      - scripts/analysis/run_smn4lang_fmri_reliability.py
-      - --data-root
-      - data/raw/smn4lang
-      - --output-dir
-      - outputs/smn4lang_fmri_reliability/latest
+      - scripts/analysis/run_smn4lang_fmri_reliability_retry.py
     approval: manual
     timeout_minutes: 720
     requires_gpu: false
