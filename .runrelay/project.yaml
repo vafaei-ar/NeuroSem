@@ -76,3 +76,19 @@ tasks:
       - outputs/smn4lang_fmri_timebase_audit/latest/summary.json
       - outputs/smn4lang_fmri_timebase_audit/latest/run_timebase.csv
       - outputs/smn4lang_fmri_timebase_audit/latest/story_timing.csv
+
+  audit_smn4lang_lana_inventory:
+    description: Model-blind inventory of the independently published LanA probabilistic language atlas and one representative SMN4Lang MNI-space fMRI derivative, recording atlas file provenance and exact MNI image geometry before freezing the language-network mask or computing any neural/model outcome.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_smn4lang_lana_inventory.py
+      - --data-root
+      - data/raw/smn4lang
+      - --output-dir
+      - outputs/smn4lang_lana_inventory/latest
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_lana_inventory/latest/summary.json
