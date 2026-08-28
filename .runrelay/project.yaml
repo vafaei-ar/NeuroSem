@@ -703,3 +703,21 @@ tasks:
       - outputs/manuscript_figures_v1/latest/table2_reliability_summary.csv
       - outputs/manuscript_figures_v1/latest/table3_ahba_gene_sets.csv
       - outputs/manuscript_figures_v1/latest/source_manifest.json
+
+  probe_smn4lang_meg_format:
+    description: Model-blind deterministic SMN4Lang MEG format/materialization probe; inventory all released preprocessed task-rdr MEG derivatives and inspect metadata from the lexicographically first representative FIF with preload disabled before freezing any MEG neural representation.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_smn4lang_meg_format.py
+      - --data-root
+      - data/raw/smn4lang
+      - --output-dir
+      - outputs/smn4lang_meg_format_probe/latest
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_meg_format_probe/latest/summary.json
+      - outputs/smn4lang_meg_format_probe/latest/file_inventory.csv
+      - outputs/smn4lang_meg_format_probe/latest/channel_inventory.csv
