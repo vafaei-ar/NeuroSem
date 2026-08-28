@@ -92,3 +92,19 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/smn4lang_lana_inventory/latest/summary.json
+
+  audit_smn4lang_lana_spm_atlas:
+    description: Model-blind inspection of the independently released LanA SPM Atlas archive, verifying its checksum, enumerating all atlas NIfTI files, and comparing their image geometry with a representative SMN4Lang 2-mm MNI derivative before any neural or model outcome.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_smn4lang_lana_spm_atlas.py
+      - --data-root
+      - data/raw/smn4lang
+      - --output-dir
+      - outputs/smn4lang_lana_spm_atlas/latest
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_lana_spm_atlas/latest/summary.json
