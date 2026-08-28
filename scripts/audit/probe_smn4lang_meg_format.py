@@ -55,7 +55,9 @@ def annex_pointer_size(path: Path) -> int | None:
 
 def materialized(path: Path) -> bool:
     try:
-        return path.is_file() and not path.is_symlink() and path.stat().st_size > 0
+        if path.is_symlink():
+            return path.exists() and path.resolve().is_file() and path.resolve().stat().st_size > 0
+        return path.is_file() and path.stat().st_size > 0
     except OSError:
         return False
 
@@ -154,12 +156,13 @@ def main() -> int:
                 per_subject_tsv[sid] += 1
             if rid is not None:
                 per_subject_runs[sid].add(rid)
+        size = annex_pointer_size(root / rel)
         inventory_rows.append({
             "path": rel,
             "suffix": suffix,
             "subject": "" if sid is None else f"sub-{sid:02d}",
             "run": "" if rid is None else rid,
-            "annex_payload_bytes": "" if annex_pointer_size(root / rel) is None else annex_pointer_size(root / rel),
+            "annex_payload_bytes": "" if size is None else size,
             "materialized": materialized(root / rel),
         })
 
