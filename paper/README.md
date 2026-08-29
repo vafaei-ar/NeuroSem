@@ -2,38 +2,62 @@
 
 This directory contains the submission-facing NeuroSem manuscript sources. The scientific evidence is locked; manuscript work should preserve the final inferential hierarchy and should not trigger new outcome-bearing analysis.
 
-## Current review master
+## Current NMI review master
 
-- `NeuroSem_Nature_Manuscript_v0.5_nature_streamlined.docx` is the current author-review master outside the repository working tree. It incorporates the Nature-reviewer revisions, final main figures, ethics/data/code statements, explicit lambda-selection chronology, full neural-guided objective details, and the reviewer-facing Extended Data reorganization.
-- `NATURE_REVIEWER_STREAMLINING_V05.md` records the exact editorial decisions applied in v0.5.
-- `NATURE_MANUSCRIPT_DRAFT_V3.md` remains the last fully synchronized Markdown source before the reviewer-stage Word revisions. Do not treat it as the latest submission wording while v0.5 is under author review. A full Markdown synchronization should be performed after this review round to avoid maintaining two simultaneous substantive masters.
-- `NATURE_SUBMISSION_PACKAGE.md` remains the Nature-facing editorial scaffold, figure architecture, claim limits and cover-letter core argument.
-- `REFERENCE_SOURCE_AUDIT.md` contains the verified literature/source audit and the distinction between external provenance references and NeuroSem-generated statistics.
+- `NeuroSem_Nature_Manuscript_v0.6_NMI_revised.docx` is the current Nature Machine Intelligence-focused author-review master outside the repository working tree. It incorporates the multi-reviewer NMI revision, final main figures, ethics/data/code statements, explicit lambda-selection chronology, the complete neural-guided objective, and reviewer-facing Extended Data organization.
+- `NMI_REVIEW_RESPONSE_V1.md` records how the NMI reviewer concerns were addressed and the scope limits that must remain intact.
+- `NATURE_REVIEWER_STREAMLINING_V05.md` is retained as the preceding Nature-style reviewer-stage record.
+- `NATURE_MANUSCRIPT_DRAFT_V3.md` is the last fully committed historical Markdown manuscript before the reviewer-stage Word revisions. Do not treat it as the latest NMI wording.
+- `NATURE_SUBMISSION_PACKAGE.md` remains a historical Nature-facing editorial scaffold; the current submission strategy is NMI-focused.
+- `REFERENCE_SOURCE_AUDIT.md` is updated for the NMI literature set and distinguishes external provenance/related-work references from NeuroSem-generated statistics.
 - `FIGURE_GENERATION.md` documents figure-build provenance and workflow.
+
+The NMI Word master remains the current submission-text master for this review round. A final Markdown back-port should be made after author review, once wording is no longer changing rapidly, rather than maintaining two competing substantive masters during revision.
+
+## NMI central contribution
+
+The manuscript is not positioned as a general downstream-performance improvement. Its central machine-learning claim is:
+
+> Biological supervision should be evaluated by whether the representation it induces transfers to independent biological targets, not merely by improved fit to the training brain or conventional downstream benchmarks.
+
+NeuroSem tests this criterion using a neural relational intervention developed from ChineseEEG and challenged on genuinely independent neural targets.
 
 ## Final evidence architecture
 
-1. ChineseEEG reproducible neural relational geometry.
-2. Neural-guided learning under sealed development evaluation.
-3. An explicitly exploratory E5 dose-response identified lambda=0.10 as a development-stage candidate only; ChineseEEG run-07 and generic semantic outcomes had already been observed, so they do not provide confirmatory evidence for that candidate.
-4. ZuCo provides the fresh cross-language EEG test, with 17/17 positive participant-level transfer effects.
+1. ChineseEEG provides reproducible neural relational geometry and the development target.
+2. Neural-guided learning is established under sealed development evaluation in BERT and replicated qualitatively in multilingual E5.
+3. An explicitly exploratory E5 dose-response identified lambda=0.10 as a development-stage candidate only; ChineseEEG run-07 and generic semantic outcomes had already been observed.
+4. ZuCo provides the genuinely fresh cross-language EEG test, with 17/17 positive participant-level transfer effects.
 5. SMN4Lang fMRI provides the prospective cross-modal validation, with 12/12 positive participant-level effects after a model-blind reliability gate.
 6. TMNRED, Garnett Dream and directional inner speech are explicit transfer boundaries.
 7. SMN4Lang MEG is a reliability boundary: the prospectively frozen 32-bin target failed before model evaluation, and the bounded 4/8/16-bin family also failed.
-8. Generic semantic benchmark performance is distinct from neural alignment.
+8. Generic semantic benchmark performance is distinct from external biological transfer.
 9. AHBA is secondary/Extended Data material and does not establish a molecular mechanism.
 
-## Reviewer-stage writing rules
+## NMI reviewer-stage writing rules
 
-1. Keep **target reliability**, **model learnability**, **candidate selection** and **fresh external transfer** as separate empirical stages.
-2. Preserve the explicit history that lambda=0.10 was selected in exploratory development and was tested confirmatorily only on genuinely fresh external neural targets.
+1. Keep **target reliability**, **model learnability**, **candidate selection**, **fresh external biological transfer** and **conventional task performance** as distinct empirical stages.
+2. Preserve the explicit history that lambda=0.10 was selected in exploratory development and could support a transfer claim only through genuinely fresh external neural targets.
 3. Preserve all null/inconclusive external results and the MEG reliability failure.
 4. Never describe SMN4Lang MEG as negative model transfer because no model evaluation was performed.
 5. Do not imply raw EEG, fMRI and MEG RSA values share a common effect-size scale.
-6. Describe the SMN4Lang fMRI effect as a small directional representational shift. The manuscript explicitly notes that +0.00085250 is about 0.7% of the text-only mean RSA; the evidential value lies in prospective independence and 12/12 directional consistency, not magnitude.
-7. Use **neural relational geometry** or **language-related neural geometry** rather than claiming pure semantic coding from naturalistic data.
-8. Keep AHBA outside the primary transfer narrative; it is Extended Data/secondary material.
-9. Do not reopen model, lambda, participant, representation, ROI, lag, frequency, sensor or molecular searches to improve the narrative.
+6. Describe the SMN4Lang fMRI effect as a small directional representational shift. +0.00085250 is about 0.7% of the text-only mean RSA; the evidential value lies in prospective independence and 12/12 directional consistency, not magnitude.
+7. Treat cross-participant reliability as a necessary **measurement gate**, not evidence of semantic purity, causal relevance or mechanistic specificity.
+8. State explicitly that fresh external transfer was evaluated for one frozen multilingual-E5 architecture. Generalization is across neural contexts, not yet model families.
+9. Use **neural relational geometry**, **language-related neural geometry** and **external biological transfer** rather than claiming a universal semantic code or general model improvement.
+10. Keep AHBA outside the primary transfer narrative.
+11. Do not reopen model, lambda, participant, representation, ROI, lag, frequency, sensor, downstream-benchmark or molecular searches to improve the manuscript.
+
+## NMI related-work positioning
+
+The current reference audit includes:
+
+- Moussa, Klakow & Toneva (ICLR 2025), brain-tuning with semantic downstream gains;
+- Merlin, Moussa & Toneva (CoNLL 2026), comparison of brain/joint tuning with stimulus-only tuning;
+- Hadidi et al. (Nature Communications 2026), robustness and confound risks in brain–LLM alignment;
+- Xiao, Du & Lin (Nature Machine Intelligence 2026), brain-guided LLM reasoning improvements.
+
+The submission-facing distinction is deliberate: recent work establishes that neural signals can improve neural fit and/or downstream behavior; NeuroSem asks whether the **biologically induced relational perturbation itself** transfers to neural systems that did not participate in model optimization or selection.
 
 ## Figure status
 
@@ -46,23 +70,37 @@ All four main figures have presentation-only reproducible builders:
 
 The main figures are assembled strictly from locked summaries/participant outputs or locked numerical summaries. They do not refit models, recompute neural RDMs, select representations or create new inferential tests.
 
-Figure 4 should remain an **outcome-status/generalization map**, not a cross-modality effect-size comparison. The final standalone MEG panel and AHBA molecular-null panel remain available for Extended Data/supporting use.
+Figure 1 should foreground the machine-learning object: text -> embeddings -> pairwise model geometry + neural target -> relational loss -> frozen intervention -> external biological targets. Figure 4 remains an **outcome-status/generalization map**, not a cross-modality effect-size comparison.
 
-## Extended Data organization for v0.5
+## Extended Data organization
 
 - **Extended Data Table 1:** analysis provenance and outcome visibility, including development, sealed holdout, exploratory dose-response, fresh ZuCo validation, prospective SMN4Lang fMRI validation and the MEG reliability boundary.
 - **Extended Data Note 1:** secondary AHBA transcriptomic analyses and their frozen null conclusion.
 
-The full provenance table is referenced prominently from Methods but is no longer embedded in the main Methods flow.
+The provenance table is referenced prominently from Methods rather than interrupting the main narrative.
 
 ## Reference and Word workflow
 
-The reference audit is stored in `REFERENCE_SOURCE_AUDIT.md`. Literature citations support dataset, model, atlas and methodological provenance; they do not replace NeuroSem-generated numerical evidence.
+The NMI reference audit is stored in `REFERENCE_SOURCE_AUDIT.md`. Literature citations support datasets, models, related work, atlases and methodological context; they do not replace NeuroSem-generated numerical evidence.
 
-The current v0.5 Word file preserves Zotero-compatible citation fields and the Zotero bibliography field. Once the authors complete this review round, synchronize the accepted wording back into a new Markdown manuscript version before the final submission build.
+The v0.6 Word file preserves Zotero-compatible citation fields and the Zotero bibliography field, including the new Xiao et al. NMI citation. A matching RIS export accompanies the Word master. After authors complete this review round, back-port the accepted wording into a new Markdown manuscript version before the final submission build.
+
+## Remaining author/production items
+
+- final author order, affiliations and corresponding-author information;
+- author contributions;
+- funding/acknowledgements;
+- competing interests;
+- final Zotero refresh/reconnection if needed;
+- persistent archival DOI for the accepted/submission code snapshot;
+- final NMI reporting-summary and formatting compliance pass.
+
+No additional outcome-bearing scientific analysis is required for the reviewer-driven revision.
 
 ## Supporting documentation
 
+- `NMI_REVIEW_RESPONSE_V1.md`
+- `REFERENCE_SOURCE_AUDIT.md`
 - `../docs/1_PROJECT_OVERVIEW.md`
 - `../docs/3_RESULTS_AND_COMPARISONS.md`
 - `../docs/4_EXPERIMENT_LEDGER.md`
