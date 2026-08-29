@@ -2,70 +2,64 @@
 
 This directory contains the submission-facing NeuroSem manuscript sources. The scientific evidence is locked; manuscript work should preserve the final inferential hierarchy and should not trigger new outcome-bearing analysis.
 
-## Authoritative current files
+## Current review master
 
-- `NATURE_SUBMISSION_PACKAGE.md` — final Nature-facing editorial scaffold, figure architecture, claim limits and cover-letter core argument.
-- `NATURE_MANUSCRIPT_DRAFT_V3.md` — current main manuscript source. This version was synchronized from the author-edited Word working copy `NeuroSem_Nature_Manuscript_v0.1.docx` (SHA256 `1f4185dd5266a03d5de04e7e8f2991e3c9796997c146a8ce965bb7634ec5b7b7`) and supersedes v2 for substantive wording, citation placement and submission-facing figure notes.
-- `REFERENCE_SOURCE_AUDIT.md` — verified literature/source audit and the distinction between external provenance references and NeuroSem-generated statistics.
-- `FIGURE_GENERATION.md` — figure-build provenance and workflow notes.
-- `FIGURE_TABLE_PLAN.md` — historical/working figure-table planning; where it conflicts with `NATURE_SUBMISSION_PACKAGE.md`, the submission package is authoritative.
-
-## Retained development history
-
-The following files are intentionally retained for provenance but are not the current manuscript source of truth:
-
-- `NATURE_MANUSCRIPT_DRAFT_V1.md`
-- `NATURE_MANUSCRIPT_DRAFT_V2.md`
-- `outline.md`
-- `results.md`
-- `methods.md`
-- `NATURE_POSITIONING.md`
-
-Do not silently merge older wording or claims back into v3.
+- `NeuroSem_Nature_Manuscript_v0.5_nature_streamlined.docx` is the current author-review master outside the repository working tree. It incorporates the Nature-reviewer revisions, final main figures, ethics/data/code statements, explicit lambda-selection chronology, full neural-guided objective details, and the reviewer-facing Extended Data reorganization.
+- `NATURE_REVIEWER_STREAMLINING_V05.md` records the exact editorial decisions applied in v0.5.
+- `NATURE_MANUSCRIPT_DRAFT_V3.md` remains the last fully synchronized Markdown source before the reviewer-stage Word revisions. Do not treat it as the latest submission wording while v0.5 is under author review. A full Markdown synchronization should be performed after this review round to avoid maintaining two simultaneous substantive masters.
+- `NATURE_SUBMISSION_PACKAGE.md` remains the Nature-facing editorial scaffold, figure architecture, claim limits and cover-letter core argument.
+- `REFERENCE_SOURCE_AUDIT.md` contains the verified literature/source audit and the distinction between external provenance references and NeuroSem-generated statistics.
+- `FIGURE_GENERATION.md` documents figure-build provenance and workflow.
 
 ## Final evidence architecture
 
 1. ChineseEEG reproducible neural relational geometry.
 2. Neural-guided learning under sealed development evaluation.
-3. ZuCo cross-language EEG transfer, 17/17 positive.
-4. SMN4Lang prospective cross-modal fMRI transfer, 12/12 positive.
-5. TMNRED, Garnett Dream and directional inner speech as transfer boundaries.
-6. SMN4Lang MEG as a reliability boundary: the prospectively frozen target failed before model evaluation; a bounded 4/8/16-bin family also failed.
-7. Generic semantic benchmark dissociation.
-8. AHBA as secondary/Extended Data mechanistic nulls and exploratory sensitivity.
+3. An explicitly exploratory E5 dose-response identified lambda=0.10 as a development-stage candidate only; ChineseEEG run-07 and generic semantic outcomes had already been observed, so they do not provide confirmatory evidence for that candidate.
+4. ZuCo provides the fresh cross-language EEG test, with 17/17 positive participant-level transfer effects.
+5. SMN4Lang fMRI provides the prospective cross-modal validation, with 12/12 positive participant-level effects after a model-blind reliability gate.
+6. TMNRED, Garnett Dream and directional inner speech are explicit transfer boundaries.
+7. SMN4Lang MEG is a reliability boundary: the prospectively frozen 32-bin target failed before model evaluation, and the bounded 4/8/16-bin family also failed.
+8. Generic semantic benchmark performance is distinct from neural alignment.
+9. AHBA is secondary/Extended Data material and does not establish a molecular mechanism.
 
-## Writing rules
+## Reviewer-stage writing rules
 
-1. Keep **target reliability**, **model learnability** and **external transfer** as separate empirical claims.
-2. Preserve all null/inconclusive external results and the MEG reliability failure.
-3. Never describe SMN4Lang MEG as negative model transfer because no model evaluation was performed.
-4. Do not imply raw EEG, fMRI and MEG RSA values share a common effect-size scale.
-5. Describe the SMN4Lang fMRI effect as small in absolute RSA units but prospectively frozen and directionally consistent.
-6. Use **neural relational geometry** or **language-related neural geometry** rather than claiming pure semantic coding from naturalistic data.
-7. Keep AHBA outside the primary transfer claim.
-8. Link each main-text number to its locked source output, exact analysis status and inferential unit.
-9. Do not reopen model, representation, participant, ROI, lag, frequency, sensor or molecular searches to improve the narrative.
+1. Keep **target reliability**, **model learnability**, **candidate selection** and **fresh external transfer** as separate empirical stages.
+2. Preserve the explicit history that lambda=0.10 was selected in exploratory development and was tested confirmatorily only on genuinely fresh external neural targets.
+3. Preserve all null/inconclusive external results and the MEG reliability failure.
+4. Never describe SMN4Lang MEG as negative model transfer because no model evaluation was performed.
+5. Do not imply raw EEG, fMRI and MEG RSA values share a common effect-size scale.
+6. Describe the SMN4Lang fMRI effect as a small directional representational shift. The manuscript explicitly notes that +0.00085250 is about 0.7% of the text-only mean RSA; the evidential value lies in prospective independence and 12/12 directional consistency, not magnitude.
+7. Use **neural relational geometry** or **language-related neural geometry** rather than claiming pure semantic coding from naturalistic data.
+8. Keep AHBA outside the primary transfer narrative; it is Extended Data/secondary material.
+9. Do not reopen model, lambda, participant, representation, ROI, lag, frequency, sensor or molecular searches to improve the narrative.
 
-## Current figure status
+## Figure status
 
-All four main-figure composites now have presentation-only reproducible builders:
+All four main figures have presentation-only reproducible builders:
 
-- `scripts/paper/build_figure1_chineseeeg.py` — conceptual relational constraint, ChineseEEG target reliability, held-out BERT correspondence, sealed run-07 model comparison and generic semantic-benchmark dissociation.
-- `scripts/paper/build_figure2_zuco.py` — frozen ChineseEEG-to-ZuCo design, participant-level ZuCo reliability, paired λ=0 versus λ=0.10 RSA and participant transfer deltas.
-- `scripts/paper/build_figure3_smn4lang.py` — prospective SMN4Lang design, model-blind fMRI reliability, frozen causal E5-to-fMRI mapping, paired participant RSA and participant transfer deltas.
-- `scripts/paper/build_figure4_boundaries.py` — harmonized external outcome map, SMN4Lang MEG reliability boundary, independence/design matrix and generic semantic-benchmark dissociation.
+- `scripts/paper/build_figure1_chineseeeg.py`
+- `scripts/paper/build_figure2_zuco.py`
+- `scripts/paper/build_figure3_smn4lang.py`
+- `scripts/paper/build_figure4_boundaries.py`
 
-The older `build_manuscript_figures_v1.py` / `v2.py` builders remain useful for the reading-reliability overview, the final standalone MEG reliability-boundary panel, AHBA Extended Data candidate and normalized source tables.
+The main figures are assembled strictly from locked summaries/participant outputs or locked numerical summaries. They do not refit models, recompute neural RDMs, select representations or create new inferential tests.
 
-The main figures are assembled strictly from already locked summary/participant outputs or locked numerical summaries. They do not refit models, recompute neural RDMs, select representations, or create new inferential tests.
+Figure 4 should remain an **outcome-status/generalization map**, not a cross-modality effect-size comparison. The final standalone MEG panel and AHBA molecular-null panel remain available for Extended Data/supporting use.
 
-The remaining submission-production task is to integrate Figures 1–4 into the author-edited Word manuscript, remove obsolete figure placeholders/supporting-only artwork, and render the complete DOCX for visual QA.
+## Extended Data organization for v0.5
+
+- **Extended Data Table 1:** analysis provenance and outcome visibility, including development, sealed holdout, exploratory dose-response, fresh ZuCo validation, prospective SMN4Lang fMRI validation and the MEG reliability boundary.
+- **Extended Data Note 1:** secondary AHBA transcriptomic analyses and their frozen null conclusion.
+
+The full provenance table is referenced prominently from Methods but is no longer embedded in the main Methods flow.
 
 ## Reference and Word workflow
 
-The reference audit is stored in `REFERENCE_SOURCE_AUDIT.md`. Literature citations support dataset, model, atlas and methodological provenance. They do not replace NeuroSem-generated numerical evidence.
+The reference audit is stored in `REFERENCE_SOURCE_AUDIT.md`. Literature citations support dataset, model, atlas and methodological provenance; they do not replace NeuroSem-generated numerical evidence.
 
-The author-edited Word file is explicitly synchronized into `NATURE_MANUSCRIPT_DRAFT_V3.md`. The repository Markdown remains the scientific manuscript source of truth; the Word manuscript is the submission-packaging master for Zotero fields, page layout and final figure placement. Any future substantive Word edit should be back-ported into the Markdown source before the next submission build.
+The current v0.5 Word file preserves Zotero-compatible citation fields and the Zotero bibliography field. Once the authors complete this review round, synchronize the accepted wording back into a new Markdown manuscript version before the final submission build.
 
 ## Supporting documentation
 
@@ -79,5 +73,7 @@ The author-edited Word file is explicitly synchronized into `NATURE_MANUSCRIPT_D
 - `../docs/12_SMN4LANG_MEG_MODEL_BLIND_PROBE_PROTOCOL.md`
 - `../docs/13_SMN4LANG_MEG_REPRESENTATION_FREEZE.md`
 - `../docs/14_SMN4LANG_MEG_EXPLORATORY_GRANULARITY_FREEZE.md`
+- `../docs/e5_neural_tuning_protocol_v1.md`
+- `../docs/e5_pareto_exploratory_protocol_v1.md`
 
 Detailed frozen protocols and reconciled scripts remain the methods/provenance source of truth.
