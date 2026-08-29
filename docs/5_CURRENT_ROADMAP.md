@@ -1,8 +1,8 @@
 # 5. Current Roadmap
 
-**Last updated:** 2026-08-28
+**Last updated:** 2026-08-29
 
-NeuroSem is now in an **evidence-locked manuscript-consolidation phase**. The primary scientific analyses for the current paper are complete. The immediate goal is not to search for additional positive datasets or larger effects; it is to finish the submission package, complete the remaining composite figures, preserve provenance, and keep the repository internally consistent.
+NeuroSem is now in an **evidence-locked manuscript-consolidation phase** for the primary paper, with a separate **deferred post-confirmatory generalization queue** documented below. The immediate goal remains to finish the submission package and preserve the current prospective evidential chain. Any newly proposed outcome-bearing experiment must remain explicitly secondary/post-confirmatory and must be frozen before execution.
 
 ## Final scientific position for the present paper
 
@@ -37,12 +37,12 @@ flowchart TD
 
 ### fMRI
 
-The fMRI analysis is complete and positive:
+The primary fMRI analysis is complete and positive:
 
 - reliability mean residual LOO **0.65327**, 95% CI **[0.63945,0.66843]**, **12/12** positive, exact one-sided **p = 0.000244**;
 - frozen E5 transfer mean delta **+0.00085250**, 95% CI **[+0.00078966,+0.00091398]**, **12/12** positive, exact one-sided **p = 0.000244**.
 
-No fMRI model/representation search should be reopened.
+No fMRI target-side model/representation search should be reopened for the primary analysis.
 
 ### MEG
 
@@ -87,22 +87,33 @@ The current Word submission working copy was produced from v2 with Zotero-compat
 
 ## Immediate operational order
 
-1. Keep canonical documentation synchronized with the final fMRI and MEG decisions.
-2. Complete the missing composite artwork for Figures 1, 3 and Figure 4a/c/d strictly from locked outputs.
-3. Replace placeholders in the submission working copy and run a final figure/legend consistency audit.
-4. Keep the reference/source audit synchronized with any citation edits.
+1. Complete and interpret the currently running post-confirmatory robustness suite without changing its frozen design.
+2. Keep canonical documentation synchronized with the final fMRI and MEG decisions.
+3. Complete submission-facing manuscript/figure consistency work from locked outputs.
+4. Keep the reference/source audit synchronized with citation edits.
 5. Recheck exact job/commit/artifact provenance for every main-text numerical result and figure source.
-6. Perform final repository hygiene and submission-readiness checks; do not generate new outcome-bearing analyses.
+6. Perform final repository hygiene and submission-readiness checks.
+
+## Deferred post-confirmatory generalization queue
+
+These are **not required to preserve the validity of the current primary claim**. They are designed to address stronger generalization questions and must remain secondary/post-confirmatory because the current external outcomes are already known.
+
+1. **Second-model-family robustness.** Test the same neural-relational training principle in one prespecified substantially different multilingual sentence-representation model, with no external-target-driven model/lambda search. Highest priority for the remaining NMI model-generality concern.
+2. **Bidirectional cross-modal transfer analysis.** Use the already-frozen SMN4Lang fMRI representation as a source relational constraint, select/freeze the fMRI-guided candidate using source-only validation, then test transfer to independent EEG, with ZuCo as the primary EEG target. Highest conceptual priority.
+3. **Full model-family x source-modality factorial extension.** Defer unless the first two experiments are informative and a genuinely independent fMRI target is available; otherwise the design is asymmetric because SMN4Lang cannot be both the fMRI training source and an independent fMRI target.
+
+The detailed design and guardrails are frozen at the planning level in `15_POSTCONFIRMATORY_GENERALIZATION_TODO.md`. Execution requires a separate committed protocol and named RunRelay task for each experiment.
 
 ## Stopping rules
 
-- No new dataset search for positive transfer.
-- No reopening of ZuCo or SMN4Lang fMRI model/representation choices.
+- No new dataset search for positive transfer within the current primary analysis.
+- No reopening of ZuCo or SMN4Lang fMRI target-side model/representation choices.
 - No rescue search for TMNRED or Garnett.
 - No E5 evaluation on failed MEG targets.
 - No further MEG bands, sensors, sources, latencies or temporal alternatives.
 - No additional AHBA significance search or molecular-panel screening.
 - Preserve all confirmatory nulls and reliability failures.
+- Any Experiment A/B/C execution must use a separately frozen protocol, report all prespecified outcomes, and stop after the prespecified analysis rather than launching outcome-driven rescue searches.
 
 ## Related documents
 
@@ -115,6 +126,7 @@ The current Word submission working copy was produced from v2 with Zotero-compat
 - `12_SMN4LANG_MEG_MODEL_BLIND_PROBE_PROTOCOL.md`
 - `13_SMN4LANG_MEG_REPRESENTATION_FREEZE.md`
 - `14_SMN4LANG_MEG_EXPLORATORY_GRANULARITY_FREEZE.md`
+- `15_POSTCONFIRMATORY_GENERALIZATION_TODO.md`
 - `paper/NATURE_SUBMISSION_PACKAGE.md`
 - `paper/NATURE_MANUSCRIPT_DRAFT_V2.md`
 - `paper/REFERENCE_SOURCE_AUDIT.md`
