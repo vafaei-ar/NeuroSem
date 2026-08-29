@@ -27,7 +27,10 @@ monitoring:
 
 tasks:
   run_nmi_postconfirmatory_robustness_v1:
-    description: Run the frozen post-confirmatory NMI robustness suite: participant-by-stimulus bootstrap, model-space characterization, and three additional fixed E5 optimization seeds evaluated on frozen ZuCo and SMN4Lang fMRI targets.
+    description: >-
+      Run the frozen post-confirmatory NMI robustness suite: participant-by-stimulus
+      bootstrap, model-space characterization, and three additional fixed E5
+      optimization seeds evaluated on frozen ZuCo and SMN4Lang fMRI targets.
     command:
       - bash
       - scripts/robustness/run_nmi_postconfirmatory_suite_v1.sh
