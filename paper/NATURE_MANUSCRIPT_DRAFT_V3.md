@@ -84,7 +84,7 @@ The appropriate conclusion is not that brain supervision generally improves lang
 
 The prospective fMRI result provides the strongest evidence because it crosses participants, task context and measurement modality without target-dataset model optimization. Its absolute effect is small, so the claim does not rest on effect size alone. More informative is the combination of a model-blind reliability gate, an independently defined language-network mask, frozen mapping choices, absence of outcome-driven model search, and a positive participant-level direction in all 12 individuals. Under these constraints, the result shows that a model intervention learned from EEG altered relational structure in a direction that remained detectable in independently measured cortical language responses.
 
-The selectivity of transfer also constrains the construct itself. Naturalistic EEG and fMRI reflect correlated lexical, syntactic, discourse, temporal, acoustic and attentional structure; the transferable target should therefore not be equated with pure lexical or semantic coding. We use the broader terms **neural relational geometry** and **language-related neural geometry** to reflect this uncertainty. Future mechanistic work will need experimental designs that dissociate these dimensions rather than infer semantic specificity from naturalistic alignment alone.
+The selectivity of transfer also constrains the construct itself. Naturalistic EEG and fMRI reflect correlated lexical, syntactic, discourse, temporal, acoustic and attentional structure; the transferable target should therefore not be equated with pure lexical or semantic coding. We use the broader terms *neural relational geometry* and *language-related neural geometry* to reflect this uncertainty. Future mechanistic work will need experimental designs that dissociate these dimensions rather than infer semantic specificity from naturalistic alignment alone.
 
 Several limitations follow directly from the evidence. Transfer effects are small in absolute RSA units and should be interpreted as representational shifts rather than large gains in neural prediction. External datasets differ in language, acquisition, preprocessing and inferential scale, strengthening independence while preventing simple pooling or direct comparison of raw effects. Positive transfer is accompanied by genuine nulls, demonstrating that the learned constraint is not universally expressed. The MEG conclusion is representation-specific and does not exclude prospectively motivated source-resolved, event-aligned or spectrotemporal alternatives in future work. Finally, secondary transcriptomic analyses do not establish a specific molecular mechanism and should not be used to strengthen the primary representational claim.
 
@@ -136,15 +136,14 @@ AHBA analyses were secondary mechanistic extensions rather than part of the prim
 
 ## Figures
 
-The composite main-figure artwork is still being assembled. The two current locked rendered panels available from the latest RunRelay figure build are inserted below. Missing composite panels are intentionally marked rather than reconstructed from summary statistics.
+All four main-figure composites are now assembled from locked NeuroSem outputs. Figure generation is presentation-only and does not rerun model fitting, neural representation selection or inferential testing.
 
-> *Figure 1 composite artwork pending: conceptual schematic, ChineseEEG reliability/correspondence, sealed BERT comparison and E5 benchmark dissociation.*
+- **Figure 1:** conceptual relational constraint, ChineseEEG target reliability, held-out BERT correspondence, sealed run-07 comparison and generic semantic-benchmark dissociation.
+- **Figure 2:** frozen ChineseEEG-to-ZuCo design, participant-level ZuCo reliability, paired λ=0 versus λ=0.10 RSA and participant transfer deltas.
+- **Figure 3:** prospective SMN4Lang design, model-blind fMRI reliability, frozen causal E5-to-fMRI mapping, paired participant RSA and participant transfer deltas.
+- **Figure 4:** harmonized external-outcome map, SMN4Lang MEG reliability boundary, independence/design matrix and generic semantic-benchmark dissociation.
 
-*Current locked reliability overview | Cross-dataset reading-related neural geometry. This panel summarizes participant-level reliability across the locked reading datasets and is retained here as supporting artwork, not as the final Figure 2 composite. The final Figure 2 will contain the ChineseEEG-to-ZuCo validation schematic, ZuCo reliability and paired λ=0 versus λ=0.10 transfer panels.*
-
-> *Figure 3 composite artwork pending: SMN4Lang design/LanA mask, model-blind reliability gate, causal E5-to-fMRI mapping and paired 12-participant transfer display.*
-
-*Figure 4b | SMN4Lang MEG reliability boundary. The prospectively frozen 32-bin sensor-level RMS representation failed the model-blind cross-participant reliability gate. The separately frozen post-confirmatory 4/8/16-bin temporal-granularity family also failed its familywise reliability criteria. No E5 model evaluation was performed for any MEG representation. The final Figure 4 composite will add the external-outcome map, independence/design matrix and generic semantic-benchmark panel.*
+The author-edited Word submission working copy integrates these four final composites.
 
 ## Full figure legends
 
@@ -182,4 +181,4 @@ The composite main-figure artwork is still being assembled. The two current lock
 
 ## Submission notes
 
-This is a submission-style working manuscript, not a final Nature upload package. The reference metadata above has been audited against authoritative sources. The current Word file contains real Zotero-compatible citation fields and a Zotero bibliography field. Final author list, affiliations, ethics statements and complete composite Figures 1, 3 and 4a/c/d remain to be supplied before submission.
+This is a submission-style working manuscript, not a final Nature upload package. The reference metadata above has been audited against authoritative sources. The Word working copy retains Zotero-compatible citation fields and a Zotero bibliography field. Figures 1–4 are now integrated from locked NeuroSem outputs. Final author list, affiliations, ethics statements and final journal-specific production checks remain to be supplied before submission.
