@@ -2,55 +2,64 @@
 
 This stage turns already-locked NeuroSem outputs into manuscript-facing figures and compact tables. It does not rerun scientific analyses or introduce new hypothesis tests.
 
-## Existing versioned builders
+## Main-figure builders
+
+- `scripts/paper/build_figure1_chineseeeg.py` builds Figure 1 from locked ChineseEEG development/sealed-validation summaries.
+- `scripts/paper/build_figure2_zuco.py` builds Figure 2 from the completed ZuCo reliability and transfer participant tables/summaries.
+- `scripts/paper/build_figure3_smn4lang.py` builds Figure 3 from the completed SMN4Lang fMRI reliability and transfer participant tables/summaries.
+- `scripts/paper/build_figure4_boundaries.py` builds Figure 4 from the locked external-outcome summaries, completed MEG reliability table and generic semantic benchmark values.
+
+## Main-figure architecture
+
+### Figure 1
+- **a** relational neural-constraint concept;
+- **b** reliability-led ChineseEEG target;
+- **c** held-out BERT residual correspondence across runs 01–06;
+- **d** sealed run-07 BERT comparison;
+- **e** multilingual-E5 replication context and generic semantic-benchmark dissociation.
+
+### Figure 2
+- **a** frozen ChineseEEG-to-ZuCo cross-language validation design;
+- **b** participant-level ZuCo primary EEG reliability;
+- **c** paired text-only λ=0 versus neural-guided λ=0.10 participant RSA;
+- **d** participant-level transfer deltas and locked mean confidence interval.
+
+### Figure 3
+- **a** prospective ChineseEEG-to-SMN4Lang design and model-blind reliability gate;
+- **b** participant-level SMN4Lang fMRI reliability;
+- **c** frozen causal word-onset → prefix-E5 → HRF → TR-level mapping;
+- **d** paired participant residual RSA;
+- **e** participant-level neural-guided-minus-text-only deltas and locked mean confidence interval.
+
+### Figure 4
+- **a** harmonized external generalization map without a common raw RSA effect-size axis;
+- **b** SMN4Lang MEG reliability boundary, including prospective 32-bin and separately frozen post-confirmatory 4/8/16-bin results;
+- **c** independence/design matrix;
+- **d** generic semantic-benchmark dissociation and conceptual conclusion.
+
+## Existing v1/v2 supporting outputs
+
+The earlier versioned builders remain available:
 
 - `scripts/paper/build_manuscript_figures_v1.py` builds the reading-reliability overview, AHBA molecular-null panel and normalized source tables.
-- `scripts/paper/build_manuscript_figures_v2.py` retains the v1 outputs and adds the final SMN4Lang MEG reliability-boundary panel.
-- `scripts/paper/build_figure3_smn4lang.py` builds the complete SMN4Lang fMRI main-text Figure 3 from the already-locked reliability and transfer summaries plus participant tables.
+- `scripts/paper/build_manuscript_figures_v2.py` retains those outputs and adds the final standalone SMN4Lang MEG reliability-boundary panel.
 
-## Figure 3 source contract
-
-`build_figure3_smn4lang.py` requires four completed locked artifacts:
-
-1. `outputs/smn4lang_fmri_reliability/latest/participant_results.csv`
-2. `outputs/smn4lang_fmri_reliability/latest/summary.json`
-3. `outputs/smn4lang_fmri_e5_transfer_v1/latest/participant_results.csv`
-4. `outputs/smn4lang_fmri_e5_transfer_v1/latest/summary.json`
-
-The composite contains:
-
-- **a** prospective ChineseEEG-to-SMN4Lang design and the model-blind reliability gate;
-- **b** participant-level SMN4Lang fMRI reliability with the locked participant-bootstrap interval;
-- **c** the frozen causal word-onset → prefix-E5 → HRF → TR-level model-geometry mapping;
-- **d** paired participant residual RSA for text-only `lambda=0` versus neural-guided `lambda=0.10`;
-- **e** participant-level neural-guided-minus-text-only deltas with the locked mean confidence interval.
-
-The builder does not access raw fMRI, reload E5 adapters, recompute RDMs, bootstrap new intervals, or perform a new statistical test. It visualizes only the completed locked outputs.
-
-## Existing v1/v2 outputs
-
-The earlier builders generate:
-
-- `fig2_reading_reliability.png` and `.pdf`: participant-level residual LOO neural-geometry reliability for Little Prince, TMNRED, ZuCo 2.0 and Garnett Dream;
-- `fig4b_smn4lang_meg_reliability_boundary.png` and `.pdf`: the prospectively frozen 32-bin MEG result and the separately frozen post-confirmatory 4/8/16-bin temporal-granularity family;
-- `fig4_ahba_frozen_molecular_nulls.png` and `.pdf`: the frozen AHBA molecular-null summary for Extended Data consideration;
-- normalized reliability, AHBA and MEG tables plus source manifests.
+These supporting outputs are not substitutes for the final Figure 2 or Figure 4 composites.
 
 ## Scientific guardrails
 
-All manuscript builders are presentation-only. They must not select participants, representations, datasets, stories, genes, gene sets or plotting subsets from manuscript outcomes. They must fail if required locked artifacts are absent rather than silently substituting newly calculated values.
+All manuscript builders are presentation-only. They must not select participants, representations, datasets, stories, genes, gene sets or plotting subsets from manuscript outcomes. Required locked artifacts must be supplied explicitly; missing artifacts should cause failure rather than silent substitution with newly calculated results.
 
-For SMN4Lang fMRI, the participant remains the inferential unit. The small absolute `lambda=0.10 - lambda=0` RSA increment must not be presented as a large gain in explained neural variance. The value of Figure 3 is the prospective model-blind gate, absence of SMN4Lang model tuning and 12/12 directional consistency.
+For ZuCo and SMN4Lang fMRI, participant is the inferential unit and plotted confidence intervals are the already-locked participant-bootstrap intervals. No target-dataset model retuning is performed.
+
+For SMN4Lang fMRI, the small absolute λ=0.10 − λ=0 RSA increment is shown as a representational shift, not a large gain in explained neural variance. The main value is prospective independence, model-blind reliability gating and 12/12 directional consistency.
 
 For SMN4Lang MEG, the failed reliability gate is a representation-level reliability boundary, not negative model transfer. No model evaluation was performed.
 
-For AHBA, the frozen primary mechanistic conclusion remains null; the panel is secondary/Extended Data material.
+Raw RSA deltas across EEG and fMRI are not treated as a common cross-modality effect-size scale.
 
-## Remaining main-figure work
+For AHBA, the frozen primary mechanistic conclusion remains null; AHBA is secondary/Extended Data material.
 
-The remaining main manuscript composites are:
+## Submission-production state
 
-1. **Figure 1:** conceptual framework, ChineseEEG target reliability/correspondence, sealed BERT comparison, E5 replication and generic semantic-benchmark dissociation.
-2. **Figure 4a/c/d:** harmonized external-outcome map, independence/design matrix and generic semantic/conceptual conclusion, combined with the already-final Figure 4b MEG reliability boundary.
-
-These should use the same locked-output/source-manifest pattern and should not trigger new scientific analysis.
+All four main-figure composites have now been assembled and visually inspected. The next step is packaging: replace the obsolete figure placeholders/supporting-only artwork in the author-edited Word manuscript with Figures 1–4, preserve Zotero fields and manuscript text, and render the complete DOCX for final visual QA.
