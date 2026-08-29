@@ -50,8 +50,10 @@ def main():
         z = json.loads((zuco_out / 'summary.json').read_text(encoding='utf-8'))['primary_result']
         f = json.loads((fmri_out / 'summary.json').read_text(encoding='utf-8'))
         f_primary = f.get('primary_result', f)
-        f_mean = f_primary.get('mean_delta', f_primary.get('mean_participant_delta'))
-        f_frac = f_primary.get('fraction_subjects_positive', f_primary.get('fraction_participants_positive'))
+        f_mean = f_primary.get('primary_mean_delta', f_primary.get('mean_delta', f_primary.get('mean_participant_delta')))
+        f_frac = f_primary.get('primary_fraction_positive', f_primary.get('fraction_subjects_positive', f_primary.get('fraction_participants_positive')))
+        if f_mean is None or f_frac is None:
+            raise RuntimeError('SMN4Lang fMRI summary missing frozen primary delta/fraction fields')
         all_rows.append({
             'seed': seed,
             'zuco_mean_delta': float(z['mean_delta']),
