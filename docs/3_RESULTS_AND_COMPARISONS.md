@@ -2,66 +2,47 @@
 
 **Last updated:** 2026-08-28
 
-This file is the current numerical results summary for NeuroSem. The evidence hierarchy is scientific rather than chronological: development neural geometry, learnability by neural-guided training, independent neural transfer, cross-modal transfer, boundary conditions, and secondary mechanistic analyses.
+This file is the current numerical results summary for NeuroSem. The evidence hierarchy is scientific rather than chronological: development neural geometry, learnability by neural-guided training, independent neural transfer, prospective cross-modal transfer, transfer and reliability boundaries, and secondary mechanistic analyses.
 
 ## Cross-dataset evidence table
 
 | Dataset / test | Role | Frozen neural reliability | Frozen model-transfer result | Interpretation |
 |---|---|---|---|---|
-| ChineseEEG Little Prince | Development EEG | temporal-mean residual LOO ~**0.121** | BERT run-07 neural-guided > text-only in two seeds | Establishes a reproducible neural target and learnability under held-out evaluation |
-| ZuCo 2.0 Task 1 NR | Independent English reading EEG | `row_mean_all` **0.06742**, 95% CI **[0.05831, 0.07687]**, 17/17 positive | E5 lambda .10 - 0 = **+0.001664**, 17/17 positive, p=`7.63e-06` | Strong cross-dataset, cross-language EEG transfer |
-| SMN4Lang fMRI | Independent Mandarin auditory narratives, different modality | LanA language-network residual LOO **0.65327**, 95% CI **[0.63945, 0.66843]**, 12/12 positive | E5 lambda .10 - 0 = **+0.0008525**, 12/12 positive, 95% CI **[+0.0007897,+0.0009140]**, p=`0.000244` | Strongest prospective external validation; cross-task and cross-modal transfer |
-| TMNRED | Independent Chinese reading EEG | `row_mean_all` **0.00724**, 95% CI **[0.00356, 0.01079]** | E5 lambda .10 - 0 = **+0.000020**, p=.402 | Geometry replicates weakly; transfer null |
-| ChineseEEG Garnett Dream | Same-participant/new-text EEG | `row_mean_all` **0.01863**, 95% CI **[0.01636, 0.02085]**, 10/10 positive | E5 lambda .10 - 0 = **+0.0003266**, p=.1016 | Neural geometry generalizes; model-transfer advantage null/inconclusive |
-| Nature directional | Out-of-task inner speech EEG | not treated as task-matched reading reliability | lambda .10 - 0 ~**-0.001786** | Out-of-task null boundary condition |
-| AHBA transcriptomics | Population postmortem mechanistic extension | N/A | primary molecular tests null | No specific molecular mechanism established |
+| ChineseEEG Little Prince | Development EEG | residual LOO ~**0.121** | sealed BERT run-07 neural-guided > text-only and shuffled-neural in two seeds | Reproducible target and learnability |
+| ZuCo 2.0 Task 1 NR | Independent English reading EEG | **0.06742**, 95% CI **[0.05831,0.07687]**, 17/17 positive | E5 lambda .10 - 0 = **+0.0016637**, 95% CI **[+0.0012294,+0.0021452]**, 17/17 positive, p=`7.63e-06` | Strong cross-language EEG transfer |
+| SMN4Lang fMRI | Independent Mandarin auditory narratives | **0.65327**, 95% CI **[0.63945,0.66843]**, 12/12 positive | E5 lambda .10 - 0 = **+0.00085250**, 95% CI **[+0.00078966,+0.00091398]**, 12/12 positive, p=`0.00024414` | Strongest prospective cross-modal validation |
+| TMNRED | Independent Chinese reading EEG | **0.00724**, 95% CI **[0.00356,0.01079]** | **+0.000020**, p=.402 | Weak geometry replication; transfer null |
+| ChineseEEG Garnett Dream | Same-participant/new-text EEG | **0.01863**, 95% CI **[0.01636,0.02085]**, 10/10 positive | **+0.0003266**, 95% CI crosses zero, 6/10 positive, p=.1016 | Geometry generalizes; transfer null/inconclusive |
+| Directional inner speech | Out-of-task EEG boundary | not treated as task-matched reading reliability | lambda .10 - 0 ~**-0.001786** | Out-of-task null/negative boundary |
+| SMN4Lang MEG | Model-blind reliability boundary | prospective 32-bin mean **0.007713**, 95% CI **[-0.007627,+0.021655]**, p=.16870 | **not evaluated** because gate failed | Reliability boundary, not negative transfer |
+| AHBA transcriptomics | Secondary mechanistic extension | N/A | primary molecular tests null | No specific molecular mechanism established |
 
 ## Evidence map
 
 ```mermaid
 flowchart TD
-    A[ChineseEEG reproducible neural geometry] --> B[Neural-guided BERT / E5 learning]
+    A[ChineseEEG reproducible geometry] --> B[Neural-guided BERT / E5 learning]
     B --> C[External transfer]
-    C -->|Cross-language EEG positive| C1[ZuCo]
-    C -->|Cross-modal fMRI positive| C2[SMN4Lang]
+    C -->|Positive| C1[ZuCo cross-language EEG]
+    C -->|Positive prospective| C2[SMN4Lang fMRI]
     C -->|Null| C3[TMNRED]
-    C -->|Null / inconclusive| C4[Garnett]
-    C -->|Out-of-task null| C5[Nature directional]
-
-    A --> M[Secondary AHBA mechanistic extension]
-    M -->|Null| M1[GABA / serotonin / pathways]
-    M -->|Spatially corrected null| M2[Whole-transcriptome PLS / gradients]
-    M -->|Primary null| M3[Published language-gene panels]
-    M -->|Exploratory| M4[No-mirror hemispheric sensitivity]
+    C -->|Null / inconclusive| C4[Garnett Dream]
+    C -->|Out-of-task boundary| C5[Directional inner speech]
+    C2 --> R[Model-blind target reliability]
+    R -->|Failed frozen representation| M[SMN4Lang MEG: no model test]
+    A --> X[Secondary AHBA mechanistic analyses]
 ```
 
-# 3.1 ChineseEEG neural geometry and BERT correspondence
+## 3.1 ChineseEEG development geometry and neural-guided learning
 
-The selected whole-row temporal-mean EEG representation was chosen on neural reliability before semantic testing.
+The whole-row temporal-mean EEG representation was selected using neural reliability before semantic testing.
 
-Primary reliability:
-
-- raw LOO approximately **0.220**;
+- raw LOO reliability approximately **0.220**;
 - nuisance-residualized LOO approximately **0.121**.
 
-Held-out Little Prince runs 01-06 showed small but consistently positive BERT final-layer residual neural-semantic correspondence:
+Held-out Little Prince runs 01-06 showed final-layer BERT residual neural-model correspondence of 0.0057, 0.0034, 0.0145, 0.0045, 0.0174 and 0.0056. All six effects were positive, mean **0.0085**, exact one-sided run-level sign-flip **p = 0.015625**.
 
-| Run | Mean partial-Spearman |
-|---|---:|
-| 01 | 0.0057 |
-| 02 | 0.0034 |
-| 03 | 0.0145 |
-| 04 | 0.0045 |
-| 05 | 0.0174 |
-| 06 | 0.0056 |
-
-Cross-run summary:
-
-- positive in **6/6** runs;
-- mean run effect **0.0085**;
-- exact one-sided run-level sign-flip **p = 0.015625**.
-
-# 3.2 BERT neural-guided tuning: sealed run-07
+Sealed run-07 BERT residual neural alignment:
 
 | Arm | Seed 1 | Seed 2 |
 |---|---:|---:|
@@ -70,196 +51,136 @@ Cross-run summary:
 | Neural-guided | **0.0371** | **0.0375** |
 | Shuffled-neural | 0.0353 | 0.0338 |
 
-Interpretation: neural-guided training can improve alignment to held-out ChineseEEG neural geometry relative to matched controls.
+Multilingual E5 reproduced the qualitative neural-guided alignment phenomenon. The frozen external contrast carried forward was neural-guided lambda 0.10 versus matched text-only lambda 0.
 
-# 3.3 Generic semantic benchmark
+Generic eight-task semantic benchmarks showed no stable neural-specific advantage, so neural alignment and generic semantic quality are treated as distinct outcomes.
 
-Seed 1 eight-task mean Spearman:
+## 3.2 ZuCo 2.0 cross-language EEG transfer
 
-- base 0.283464;
-- text-only 0.308486;
-- neural-guided 0.308575;
-- shuffled-neural 0.307943.
+Primary all-retained-channel temporal-mean reliability:
 
-Seed 2:
-
-- base 0.283464;
-- text-only 0.305020;
-- neural-guided 0.301607;
-- shuffled-neural 0.305266.
-
-Interpretation: no stable neural-specific generic semantic advantage. Neural alignment and generic semantic benchmark quality are distinct objectives.
-
-# 3.4 Multilingual-E5 replication
-
-Multilingual E5 reproduced the qualitative within-ChineseEEG neural-target alignment phenomenon. Pareto work showed that neural alignment and generic semantic performance can trade off.
-
-The primary external contrast carried forward without outcome-driven retuning was neural-guided lambda 0.10 versus matched text-only lambda 0.
-
-# 3.5 ZuCo 2.0 English reading
-
-## EEG-only reliability
-
-Primary `row_mean_all`:
-
-- mean raw LOO **0.06739**;
 - mean residual LOO **0.06742**;
 - median **0.06559**;
-- 95% CI **[0.05831, 0.07687]**;
-- **17/17** participants positive;
-- one-sided exact sign-flip **p = 7.63e-06**.
+- 95% CI **[0.05831,0.07687]**;
+- **17/17** positive;
+- exact one-sided sign-flip **p = 7.63e-06**.
 
-## Frozen E5 transfer
+Frozen E5 transfer:
 
 - mean participant delta **+0.0016637**;
 - median **+0.0014871**;
 - **17/17** positive;
-- 95% CI **[+0.0012294, +0.0021452]**;
-- one-sided exact sign-flip **p = 7.63e-06**;
-- two-sided **p = 1.53e-05**.
+- 95% CI **[+0.0012294,+0.0021452]**;
+- exact one-sided **p = 7.63e-06**.
 
-Interpretation: positive prospective transfer from ChineseEEG neural guidance to independent English natural-reading EEG.
+Interpretation: positive transfer from ChineseEEG neural guidance to independent English natural-reading EEG without target-dataset model tuning.
 
-# 3.6 SMN4Lang fMRI: prospective cross-modal validation
+## 3.3 SMN4Lang fMRI prospective cross-modal validation
 
-SMN4Lang / OpenNeuro `ds004078` was selected prospectively to test whether the established ChineseEEG neural-guided representation generalizes to independently measured cortical language geometry during naturalistic auditory comprehension.
-
-The fMRI analysis was protected by a model-blind reliability gate before any E5 model was loaded.
-
-## Frozen fMRI reliability
+SMN4Lang/OpenNeuro `ds004078` was designated prospectively for cross-modal validation. The fMRI neural target passed a model-blind reliability gate before E5 model evaluation.
 
 Primary representation:
 
-- 12 participants;
-- 60 stories;
-- 720 participant-story runs;
+- 12 participants, 60 stories, 720 participant-story runs;
 - TR **0.710 s**;
-- independently published LanA language-network mask, probability threshold **0.20**;
+- independently published LanA language-network mask at probability threshold **0.20**;
 - **25,137** retained voxels;
-- correlation-distance RDM across multivoxel patterns;
-- nuisance control for temporal separation, HRF-convolved word-onset density, and HRF-convolved acoustic RMS envelope.
+- correlation-distance story RDMs;
+- nuisance control for temporal separation, HRF-convolved word-onset density and HRF-convolved acoustic RMS envelope.
 
 Reliability:
 
-- mean participant residual LOO **0.65327**;
+- mean residual LOO **0.65327**;
 - median **0.64760**;
 - **12/12** positive;
-- 95% CI **[0.63945, 0.66843]**;
-- exact one-sided sign-flip **p = 0.00024414**.
-
-## Frozen E5 transfer
-
-Semantic mapping used causal within-sentence prefix E5 states at released word onsets, the same fixed canonical HRF, and the same nuisance family. No SMN4Lang training, layer search, lambda search, checkpoint search, ROI search, lag/HRF search, or semantic-unit search occurred.
-
-Mean participant residual RSA:
-
-- lambda 0 text-only: **0.12092396**;
-- lambda 0.10 neural-guided: **0.12177646**.
-
-Primary contrast:
-
-- mean delta **+0.00085250**;
-- median delta **+0.00086365**;
-- **12/12** participants positive;
-- bootstrap 95% CI **[+0.00078966, +0.00091398]**;
-- exact one-sided sign-flip **p = 0.00024414**.
-
-Interpretation: a small but highly consistent cross-modal representational advantage. Neural guidance learned from Chinese reading EEG generalizes prospectively to independently measured language-network fMRI during auditory narratives in different participants.
-
-# 3.7 TMNRED
-
-Primary `row_mean_all` reliability:
-
-- mean residual LOO **0.00724**;
-- 95% CI **[0.00356, 0.01079]**.
+- 95% CI **[0.63945,0.66843]**;
+- exact one-sided **p = 0.00024414**.
 
 Frozen E5 transfer:
 
-- mean delta **+0.000020**;
+- lambda 0 text-only mean RSA **0.12092396**;
+- lambda 0.10 neural-guided mean RSA **0.12177646**;
+- mean delta **+0.00085250**;
+- median **+0.00086365**;
+- **12/12** positive;
+- 95% CI **[+0.00078966,+0.00091398]**;
+- exact one-sided **p = 0.00024414**.
+
+No SMN4Lang training, layer search, lambda search, checkpoint search, ROI search, lag/HRF search or semantic-unit search occurred from the fMRI outcome.
+
+Interpretation: a small but highly consistent prospective cross-modal representational advantage in different participants during naturalistic auditory comprehension.
+
+## 3.4 Transfer boundary conditions
+
+### TMNRED
+
+- residual LOO reliability **0.00724**, 95% CI **[0.00356,0.01079]**;
+- frozen E5 mean delta **+0.000020**;
 - median **+0.000053**;
-- 95% CI **[-0.000128, +0.000176]**;
-- one-sided sign-flip **p = 0.402**.
+- 95% CI **[-0.000128,+0.000176]**;
+- one-sided **p = 0.402**.
 
-Exploratory alternative targets did not rescue transfer.
+Bounded exploratory alternative targets did not recover convincing transfer.
 
-Interpretation: geometry replicates weakly, but neural-guided transfer is null.
+### ChineseEEG Garnett Dream
 
-# 3.8 ChineseEEG Garnett Dream
-
-## EEG-only reliability
-
-Primary `row_mean_all`:
-
-- raw mean LOO **0.03545**;
-- nuisance-residualized mean LOO **0.01863**;
+- residual mean LOO **0.01863**;
 - median **0.01895**;
 - **10/10** positive;
-- 95% CI **[0.01636, 0.02085]**;
-- one-sided exact sign-flip **p = 0.0009766**.
+- 95% CI **[0.01636,0.02085]**;
+- exact one-sided reliability **p = 0.0009766**.
 
-The exact presentation-row to segmented-text mapping was frozen across 18 chapters, totaling **9,047** linguistic items.
+Frozen E5 transfer:
 
-## Frozen E5 transfer
-
-- mean participant delta **+0.0003266**;
+- mean delta **+0.0003266**;
 - median **+0.0003319**;
 - **6/10** positive;
-- 95% CI **[-0.0001218, +0.0007560]**;
-- one-sided exact sign-flip **p = 0.1015625**;
-- two-sided **p = 0.203125**.
+- 95% CI **[-0.0001218,+0.0007560]**;
+- one-sided **p = 0.1015625**.
 
-Interpretation: confirmatory null/inconclusive. Neural geometry generalizes to the new narrative, but the neural-guided model advantage does not generalize convincingly.
+Interpretation: the neural geometry generalizes to the new narrative, but the model-transfer advantage does not generalize convincingly.
 
-# 3.9 Nature directional-word dataset
+### Directional inner speech
 
-Frozen covert/inner-speech lambda .10 - 0 mean difference approximately **-0.001786** with no positive transfer evidence.
+Frozen covert/inner-speech lambda .10 - 0 mean difference is approximately **-0.001786** with no positive transfer evidence. This is an out-of-task boundary, not a task-matched reading refutation.
 
-Interpretation: out-of-task boundary condition, not a task-matched reading refutation.
+## 3.5 SMN4Lang MEG reliability boundary
 
-# 3.10 AHBA mechanistic extension
+The prospective primary representation used released preprocessed 1-40 Hz sensor-level MEG, bad-sample exclusion, all retained magnetometers and planar gradiometers, 32 normalized-time RMS bins per sensor type, separate within-type z-scoring and correlation-distance story RDMs.
 
-The final model-blind AHBA pipeline froze standardized sensor geometry, fsaverage ico-5 source sensitivity, DK68 mapping, `abagen 0.1.3` expression preprocessing, primary left-to-right mirroring, and a no-mirror sensitivity.
+Primary 32-bin reliability:
 
-Primary AHBA expression retained **15,677 genes**; no-mirror retained **15,633**.
+- mean LOO **0.0077130472**;
+- median **0.0113200737**;
+- **7/12** positive;
+- 95% participant-bootstrap CI **[-0.0076270592,+0.0216547942]**;
+- exact one-sided sign-flip **p = 0.168701171875**;
+- gate pass: **false**.
 
-Seven prespecified GABAergic/serotonergic/pathway gene sets were null after the frozen inferential framework. Mean rho values ranged from approximately **-0.050 to +0.056** and all primary BH q values were approximately **0.695**.
+Because the model-blind reliability gate failed, **no model evaluation was performed**.
 
-Exploratory whole-transcriptome PLS1 showed in-sample `r = 0.4574`, `R^2 = 0.2092`, but failed hemisphere-constrained spatial inference (`p = 0.2745`). No transcriptomic gradient survived FDR.
+A separately frozen post-confirmatory temporal-granularity family tested only 4, 8 and 16 bins with the same sensor-level RMS representation family. Familywise pass required positive mean, 98.3333% bootstrap CI above zero and exact one-sided p < 0.0166667.
 
-Two independently frozen published language-gene panels were also primary-null. The no-mirror dyslexia-panel sensitivity was substantially stronger (`rho = -0.4776`, spatial `p = 0.00320`), but cannot revise the primary null. Post-hoc diagnostics localized the difference mainly to a right-hemisphere expression-map shift under sparse AHBA right-hemisphere sampling.
+- 4 bins: mean **0.0153387454**, familywise CI **[-0.0058580491,+0.0383515355]**, p **0.06982421875**, fail.
+- 8 bins: mean **0.0054803606**, familywise CI **[-0.0102620453,+0.0258413310]**, p **0.2890625**, fail.
+- 16 bins: mean **0.0081749608**, familywise CI **[-0.0080561266,+0.0237761472]**, p **0.128662109375**, fail.
 
-Interpretation: no confirmatory molecular mechanism has been established. The AHBA track is a secondary mechanistic constraint and methodological sensitivity, not the core NeuroSem claim.
+No candidate passed and no E5 evaluation was opened. The branch is scientifically closed for the present manuscript. This is a representation-specific **reliability boundary**, not a negative transfer result.
 
-# 3.11 Joint interpretation
+## 3.6 AHBA mechanistic extension
 
-### Claim A: reproducible language-related neural geometry exists
+Primary AHBA expression retained **15,677 genes**; the no-mirror sensitivity retained **15,633**. Seven prespecified GABAergic/serotonergic/pathway sets were null. Exploratory whole-transcriptome PLS1 showed in-sample `r = 0.4574`, `R^2 = 0.2092`, but failed hemisphere-constrained spatial inference (`p = 0.2745`). No transcriptomic gradient survived FDR. Two independently frozen published language-gene panels were primary-null. The stronger no-mirror dyslexia-panel result (`rho = -0.4776`, spatial `p = 0.00320`) remains exploratory and cannot revise the mirrored primary null.
 
-**Supported.** ChineseEEG, TMNRED, ZuCo, Garnett, and SMN4Lang fMRI all show prospectively defined neural reliability at different scales.
+Interpretation: no confirmatory molecular mechanism has been established.
 
-### Claim B: neural-guided training improves held-out development neural alignment
+## 3.7 Joint interpretation
 
-**Supported.** BERT run-07 improvements replicated across two seeds; E5 reproduced the qualitative effect.
+- **Reproducible neural geometry:** supported across multiple EEG datasets and strongly in SMN4Lang fMRI.
+- **Learnability:** supported within ChineseEEG under sealed evaluation.
+- **External transfer:** supported selectively by ZuCo cross-language EEG and SMN4Lang prospective fMRI.
+- **Universality:** not supported; TMNRED, Garnett and directional inner speech are explicit boundaries.
+- **MEG transfer:** not tested because the frozen neural target failed its reliability prerequisite.
+- **Generic semantic improvement:** not supported.
+- **Specific transcriptomic mechanism:** not supported.
 
-### Claim C: the learned neural constraint transfers outside the development dataset
-
-**Supported, selectively.** ZuCo provides strong cross-language EEG transfer and SMN4Lang provides strong prospective cross-modal fMRI transfer. TMNRED and Garnett remain null/inconclusive.
-
-### Claim D: neural-guided training improves generic semantics
-
-**Not supported.** Generic benchmark improvements are unstable and not neural-specific.
-
-### Claim E: the effect is universal across language tasks and datasets
-
-**Not supported.** Null and negative boundary conditions are part of the evidence and should remain visible.
-
-### Claim F: a specific transcriptomic mechanism explains the semantic neural geometry
-
-**Not supported.** Prespecified neurochemical systems, whole-transcriptome spatial discovery, and independent published language panels fail the frozen primary inferential framework.
-
-## Manuscript priority
-
-The main paper should now be centered on **transferable neural relational constraints** rather than a dataset chronology or a molecular mechanism. The strongest evidence chain is:
-
-**ChineseEEG reproducible geometry -> neural-guided learning -> ZuCo cross-language EEG transfer -> SMN4Lang cross-modal fMRI transfer -> explicit null boundary conditions.**
-
-AHBA should be secondary or Extended Data unless an independently validated mechanistic result emerges.
+The main manuscript should remain centered on **transferable neural relational constraints with explicit reliability and transfer boundaries**. Raw RSA values across EEG, fMRI and MEG must not be treated as a common effect-size scale.
