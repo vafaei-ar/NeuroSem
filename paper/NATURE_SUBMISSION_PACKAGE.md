@@ -1,6 +1,6 @@
 # NeuroSem Nature submission package
 
-**Status:** working submission-facing package, 2026-08-28
+**Status:** final evidence-locked submission-facing scaffold, 2026-08-28
 
 This document converts the locked NeuroSem evidence into a concise Nature-facing presentation. It is an editorial scaffold, not a replacement for the detailed methods, frozen protocols, experiment ledger, or full Results.
 
@@ -18,15 +18,15 @@ The preferred title is intentionally claim-limited. It emphasizes the conceptual
 
 ## Nature-style summary paragraph
 
-Language models and human brains both encode relations among linguistic inputs, but it remains unclear whether neural representational structure can serve as a transferable constraint on artificial language representations. We derived a reproducible relational geometry from electroencephalographic responses during natural reading and used this geometry as an auxiliary training target for language-model representations. Here we show that neural-guided training produces a small but reproducible change in model geometry that generalizes beyond the neural data used for training. The frozen neural-guided model showed improved alignment to independent English-reading electroencephalography and, prospectively, to language-network functional magnetic resonance imaging measured in different participants during naturalistic auditory comprehension. These effects were directionally consistent across all participants in the two strongest external validations, whereas other reading and inner-speech datasets produced null or inconclusive transfer and generic semantic benchmarks showed no stable neural-specific benefit. Neural relational supervision therefore does not simply make language representations generally better. Instead, it can impose a portable biological constraint whose expression depends on the neural and task geometry being tested. This provides a framework for testing whether information learned from one form of human neural measurement can shape computational representations that generalize to independent brains and measurement modalities.
+Language models and human brains both encode relations among linguistic inputs, but it remains unclear whether neural representational structure can serve as a transferable constraint on artificial language representations. We derived a reproducible relational geometry from electroencephalographic responses during natural reading and used this geometry as an auxiliary training target for language-model representations. Neural-guided training produced a small but reproducible change in model geometry that generalized beyond the neural data used for training. The frozen neural-guided model showed improved alignment to independent English-reading electroencephalography and, prospectively, to language-network functional magnetic resonance imaging measured in different participants during naturalistic auditory comprehension. These effects were directionally consistent across all participants in the two strongest external validations. Transfer was not universal: other reading and inner-speech datasets produced null or inconclusive effects, and a prospectively specified sensor-level magnetoencephalography target failed its model-blind cross-participant reliability gate before model evaluation. A subsequently frozen exploratory temporal-granularity family likewise yielded no reliable MEG target from 4 to 32 normalized-time bins. Neural relational supervision therefore does not simply make language representations generally better. Instead, it can impose a portable biological constraint whose detectable expression depends on the neural and task geometry being tested and on whether the target neural geometry is itself reproducible.
 
 ## One-sentence editor pitch
 
-A relational target learned from human natural-reading EEG altered a language model in a way that prospectively improved alignment not only to independent cross-language EEG but also to language-network fMRI in different participants during naturalistic auditory comprehension, while frozen null tests defined the limits of that generalization.
+A relational target learned from human natural-reading EEG altered a language model in a way that prospectively improved alignment to independent cross-language EEG and language-network fMRI, while frozen null tests and a prospectively failed MEG reliability gate defined where that generalization could and could not be evaluated.
 
 ## Short editor pitch
 
-Neural data are usually treated as outcomes that models attempt to predict. NeuroSem asks the reverse question: can reliable human neural geometry become a training constraint whose effects remain detectable in independent brains? We derived a relational target from Chinese natural-reading EEG, trained language-model representations against that target, and then carried one frozen neural-guided model into external datasets without target-dataset tuning. The neural-guided representation generalized to independent English-reading EEG and, in the strongest prospective test, to language-network fMRI from different Mandarin-speaking participants listening to naturalistic stories. The fMRI increment is small in absolute RSA units but is positive in all 12 participants under an independently defined language-network mask and a model-blind reliability gate. Transfer is not universal: TMNRED, Garnett Dream, and directional inner-speech tests are null or inconclusive, and generic semantic benchmarks show no stable neural-specific gain. We therefore argue for a selective, portable neural representational constraint rather than a general language-model improvement.
+Neural data are usually treated as outcomes that models attempt to predict. NeuroSem asks the reverse question: can reliable human neural geometry become a training constraint whose effects remain detectable in independent brains? We derived a relational target from Chinese natural-reading EEG, trained language-model representations against that target, and then carried one frozen neural-guided model into external datasets without target-dataset tuning. The neural-guided representation generalized to independent English-reading EEG and, in the strongest prospective test, to language-network fMRI from different Mandarin-speaking participants listening to naturalistic stories. The fMRI increment is small in absolute RSA units but is positive in all 12 participants under an independently defined language-network mask and a model-blind reliability gate. Transfer is not universal: TMNRED, Garnett Dream, and directional inner-speech tests are null or inconclusive. In the same SMN4Lang cohort, a prospectively specified sensor-level MEG representation did not provide a sufficiently reproducible cross-participant story geometry to permit model evaluation, and this reliability limitation persisted across a separately frozen exploratory 4/8/16-bin family together with the original 32-bin representation. We therefore argue for a selective, portable neural representational constraint whose expression requires a reproducible target geometry rather than a general language-model improvement.
 
 ## Cover-letter core argument
 
@@ -38,9 +38,9 @@ The study addresses whether biological representational structure can be used no
 
 The main advance is external portability. A neural-guided multilingual representation learned from Chinese reading EEG improves alignment to independent English-reading EEG in all 17 tested participants. More importantly, the same already-trained model prospectively improves alignment to an independently defined language-network fMRI geometry in all 12 participants of SMN4Lang during naturalistic auditory comprehension. No SMN4Lang model training, participant selection, lambda selection, layer selection, checkpoint selection, ROI search, temporal-lag search, or semantic-unit search was performed from the fMRI outcome.
 
-The effect is small in absolute magnitude, and we make that explicit. Its significance is instead the convergence across independent datasets, languages, participants, and measurement modalities under frozen analysis choices. Equally important, several external tests are null or inconclusive and conventional semantic benchmarks do not show a stable neural-specific advantage. These boundary conditions rule out the stronger but less credible claim that neural guidance simply improves language representations in general.
+The effect is small in absolute magnitude, and we make that explicit. Its significance is instead the convergence across independent datasets, languages, participants, and measurement modalities under frozen analysis choices. Equally important, several external transfer tests are null or inconclusive. A separately prospectively specified sensor-level MEG representation in SMN4Lang failed its model-blind reliability prerequisite before any model evaluation; a subsequently frozen exploratory temporal-granularity family also failed to establish a reliable target. These boundary conditions rule out the stronger but less credible claim that neural guidance simply improves language representations in general, while demonstrating that transfer should only be tested where neural geometry is itself reproducible.
 
-We believe the work will interest readers across cognitive and computational neuroscience, language science, representation learning, and artificial intelligence because it demonstrates that relational information derived from one form of human neural measurement can become a portable constraint whose consequences are detectable in independent brains measured with another modality.
+We believe the work will interest readers across cognitive and computational neuroscience, language science, representation learning, and artificial intelligence because it demonstrates that relational information derived from one form of human neural measurement can become a portable constraint whose consequences are detectable in independent brains measured with another modality, while prospectively defined failures delimit the conditions under which such transfer can be meaningfully evaluated.
 
 Sincerely,
 
@@ -62,11 +62,11 @@ Use ZuCo as the strongest EEG validation. Highlight the prospectively carried re
 
 ### Result 4. The learned constraint transfers across measurement modality
 
-Use SMN4Lang as the capstone. Present the model-blind fMRI reliability gate, independent LanA language-network definition, frozen causal text-to-TR mapping, and sole lambda 0.10 versus lambda 0 contrast. Report both the small absolute increment and the 12/12 directional consistency.
+Use SMN4Lang fMRI as the capstone. Present the model-blind fMRI reliability gate, independent LanA language-network definition, frozen causal text-to-TR mapping, and sole lambda 0.10 versus lambda 0 contrast. Report both the small absolute increment and the 12/12 directional consistency.
 
-### Result 5. Transfer is selective, not universal
+### Result 5. Transfer is selective and requires a reproducible neural target
 
-Integrate TMNRED, Garnett Dream, and directional inner-speech results as boundary conditions. Do not hide them or force them into separate rescue analyses.
+Integrate TMNRED, Garnett Dream, and directional inner-speech results as transfer boundary conditions. Then distinguish the SMN4Lang MEG result conceptually: the prospectively frozen sensor-level MEG representation failed the model-blind cross-participant reliability prerequisite, so no E5 transfer test was performed. Report the post-confirmatory exploratory 4/8/16-bin family only as evidence that simple temporal coarsening did not recover a familywise-reliable target. Do not call the MEG result a negative model-transfer test.
 
 ### Result 6. Neural alignment is distinct from generic semantic quality
 
@@ -105,12 +105,12 @@ Primary message: the already learned constraint is detectable in a different neu
 
 ### Figure 4. Generalization map and boundary conditions
 
-- **A:** Harmonized forest/delta display for ZuCo, SMN4Lang, TMNRED, Garnett Dream, and directional inner speech. Preserve dataset-specific inferential units and do not imply directly comparable raw RSA scales.
-- **B:** Independence matrix: training overlap, participants, language, text, task, modality, target-dataset tuning.
-- **C:** Generic semantic benchmark showing no stable neural-specific advantage.
-- **D:** Conceptual conclusion: portable neural constraint with selective expression, not universal model improvement.
+- **A:** Harmonized outcome display for ZuCo, SMN4Lang fMRI, TMNRED, Garnett Dream, and directional inner speech. Preserve dataset-specific inferential units and do not imply directly comparable raw RSA scales.
+- **B:** SMN4Lang MEG reliability boundary: prospectively frozen 32-bin result plus explicitly post-confirmatory 4/8/16-bin temporal-granularity family. Plot cross-participant reliability with confidence intervals and show that no candidate passed the reliability criterion. Label clearly that no model evaluation was performed.
+- **C:** Independence/design matrix: participant overlap, language, text, task, modality, target-dataset tuning, and whether a reliability gate permitted model evaluation.
+- **D:** Generic semantic benchmark showing no stable neural-specific advantage, followed by the conceptual conclusion: portable neural constraint with selective expression, not universal model improvement.
 
-Primary message: successful transfer is real but bounded, which narrows and strengthens the biological interpretation.
+Primary message: successful transfer is real but bounded, and evaluation itself is conditional on a reproducible neural target.
 
 ## Extended Data priority
 
@@ -118,12 +118,13 @@ Primary message: successful transfer is real but bounded, which narrows and stre
 2. ChineseEEG run-wise/participant-wise neural-model correspondence.
 3. E5 lambda-development history clearly separated from external validation.
 4. ZuCo structural and stimulus-alignment QC.
-5. SMN4Lang metadata/timebase QC and independent LanA atlas provenance.
-6. SMN4Lang story-level transfer distribution, shown descriptively rather than used as the inferential unit.
-7. TMNRED null transfer and post-confirmatory non-rescue analyses.
-8. Garnett reliability plus null/inconclusive transfer.
-9. Directional inner-speech boundary condition.
-10. AHBA mechanistic analyses, if retained with this paper, explicitly labelled confirmatory null / exploratory / post-hoc diagnostic.
+5. SMN4Lang fMRI metadata/timebase QC and independent LanA atlas provenance.
+6. SMN4Lang fMRI story-level transfer distribution, shown descriptively rather than used as the inferential unit.
+7. SMN4Lang MEG prospective protocol, structural probe, primary 32-bin reliability gate, and post-confirmatory 4/8/16-bin exploratory family. Explicitly state that model evaluation was never opened.
+8. TMNRED null transfer and post-confirmatory non-rescue analyses.
+9. Garnett reliability plus null/inconclusive transfer.
+10. Directional inner-speech boundary condition.
+11. AHBA mechanistic analyses, if retained with this paper, explicitly labelled confirmatory null / exploratory / post-hoc diagnostic and kept out of the main Figure 4 unless required editorially.
 
 ## Claims to avoid
 
@@ -133,6 +134,8 @@ Do not write that:
 - the fMRI effect is large;
 - SMN4Lang proves pure semantic coding independent of all other language structure;
 - neural-guided transfer is universal;
+- MEG showed a negative transfer effect, because model evaluation was not permitted after reliability failure;
+- temporal coarsening rescued MEG reliability;
 - the positive results validate a GABAergic, serotonergic, dyslexia-related, or transcriptomic mechanism;
 - null external datasets are failed replications that should be rescued by alternative analysis choices.
 
@@ -143,9 +146,11 @@ Prefer:
 - **neural relational geometry** or **language-related neural geometry** when the construct is broader than pure semantics;
 - **neural-guided representational alignment** rather than generic model improvement;
 - **portable / transferable neural representational constraint** for the central concept;
-- **small but directionally consistent effect** for SMN4Lang;
+- **small but directionally consistent effect** for SMN4Lang fMRI;
 - **prospectively frozen external validation** only where the exact protocol supports that label;
-- **boundary condition** for task/dataset contexts where reliable neural geometry exists but the trained-model advantage does not transfer.
+- **boundary condition** for task/dataset contexts where reliable neural geometry exists but the trained-model advantage does not transfer;
+- **reliability boundary** for SMN4Lang MEG, where the neural target itself was not sufficiently reproducible to permit model evaluation;
+- **post-confirmatory exploratory temporal-granularity analysis** for the 4/8/16-bin MEG family.
 
 ## Editorial test
 
@@ -155,6 +160,6 @@ The paper should be understandable to a scientist outside EEG, fMRI, or language
 2. make a model learn that relational structure;
 3. ask whether the learned change appears in independent brains;
 4. show that it crosses language and then measurement modality;
-5. show where it does not generalize.
+5. show where transfer does not generalize and where the neural target itself is too unreliable to support the test.
 
 If a main-text analysis does not strengthen one of those five steps, it should normally move to Extended Data, Supplementary Information, or a separate paper.
