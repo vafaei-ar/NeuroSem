@@ -1,126 +1,81 @@
 # NeuroSem
 
-**NeuroSem** studies whether human EEG contains reproducible relational structure associated with language meaning, whether that structure generalizes across people, texts, datasets, tasks, and languages, and whether residual neural geometry can provide useful auxiliary supervision for language models.
+**NeuroSem** studies whether reproducible human neural representational geometry can constrain language-model learning in a way that transfers to independent neural measurements.
 
-The project is now in a **consolidation phase**, not an analysis-expansion phase. The core reading-EEG validation chain is complete, Garnett Dream same-participant/new-text transfer is complete, and the AHBA mechanistic extension has completed its frozen, exploratory, and mirroring-sensitivity analyses.
+The project is now in an **evidence-locked manuscript-consolidation phase**. The primary outcome-bearing analyses for the present paper are complete. The current scientific center is the transfer chain from Chinese natural-reading EEG to independent English-reading EEG and prospectively to language-network fMRI, with explicit transfer and reliability boundaries.
 
 ## Read the documentation in this order
 
-1. **[`docs/1_PROJECT_OVERVIEW.md`](docs/1_PROJECT_OVERVIEW.md)**  
-   Scientific question, supported claims, boundary conditions, and publication framing.
+1. [`docs/1_PROJECT_OVERVIEW.md`](docs/1_PROJECT_OVERVIEW.md) — final scientific overview and claim boundaries.
+2. [`docs/2_DATASETS_AND_TASKS.md`](docs/2_DATASETS_AND_TASKS.md) — dataset/task roles.
+3. [`docs/3_RESULTS_AND_COMPARISONS.md`](docs/3_RESULTS_AND_COMPARISONS.md) — final numerical evidence summary, including SMN4Lang fMRI and MEG.
+4. [`docs/4_EXPERIMENT_LEDGER.md`](docs/4_EXPERIMENT_LEDGER.md) — chronological analysis/RunRelay history; older entries reflect the state at the time they were written.
+5. [`docs/5_CURRENT_ROADMAP.md`](docs/5_CURRENT_ROADMAP.md) — final manuscript-consolidation roadmap and stopping rules.
+6. [`paper/README.md`](paper/README.md) — current manuscript workspace and authoritative submission files.
 
-2. **[`docs/2_DATASETS_AND_TASKS.md`](docs/2_DATASETS_AND_TASKS.md)**  
-   Dataset/task roles and why task comparability matters.
-
-3. **[`docs/3_RESULTS_AND_COMPARISONS.md`](docs/3_RESULTS_AND_COMPARISONS.md)**  
-   Numerical results and cross-dataset comparisons.
-
-4. **[`docs/4_EXPERIMENT_LEDGER.md`](docs/4_EXPERIMENT_LEDGER.md)**  
-   Chronological RunRelay and analysis ledger.
-
-5. **[`docs/5_CURRENT_ROADMAP.md`](docs/5_CURRENT_ROADMAP.md)**  
-   Current consolidation and manuscript plan.
-
-6. **[`docs/6_AHBA_CURRENT_STATUS_AND_NEXT_STEPS.md`](docs/6_AHBA_CURRENT_STATUS_AND_NEXT_STEPS.md)**  
-   Completed AHBA preparation, frozen nulls, exploratory transcriptomics, published language-panel validation, mirroring diagnostic, and the forward molecular plan.
-
-For detailed methods and provenance, use `ANALYSIS_PLAN.md`, `DATASETS.md`, `SCIENTIFIC_HYPOTHESES.md`, and the protocol files under `docs/`.
-
-## The major claims remain separate
-
-NeuroSem explicitly separates four questions:
-
-1. **Does reproducible neural language geometry exist?**
-2. **Can neural-guided training move a language model toward the development EEG geometry?**
-3. **Does that change transfer to independent semantic tasks or independent EEG datasets?**
-4. **Can the established semantic neural geometry be linked to specific transcriptomic systems?**
-
-The current evidence supports the first two, gives one positive frozen independent reading-EEG transfer result in ZuCo, gives a null/inconclusive same-participant/new-text Garnett model-transfer result, and does **not** establish a specific AHBA molecular mechanism.
+For detailed methods and provenance, use `ANALYSIS_PLAN.md`, `DATASETS.md`, `SCIENTIFIC_HYPOTHESES.md`, the frozen protocol files under `docs/`, and exact RunRelay job/commit records.
 
 ## Current evidence in one paragraph
 
-ChineseEEG Little Prince silent reading contains reproducible cross-subject EEG geometry after nuisance control, and BERT shows small but consistent residual correspondence with that geometry across six narrative runs. Neural-guided BERT tuning improves sealed run-07 neural alignment relative to matched text-only and shuffled-neural controls in two seeds, and multilingual E5 reproduces the qualitative within-ChineseEEG effect. TMNRED independently replicates the reading EEG geometry but shows null neural-guided E5 transfer. ZuCo 2.0 independently replicates the temporal-mean geometry during English natural reading and yields a positive frozen ChineseEEG-to-ZuCo E5 transfer result. Garnett Dream shows positive same-participant/new-text EEG reliability, but the frozen E5 neural-guided-minus-text-only transfer contrast is null/inconclusive. The AHBA extension is also primarily null: prespecified GABAergic/serotonergic systems, exploratory whole-transcriptome PLS, transcriptomic gradients, and independent published language-gene panels do not survive the frozen inferential framework. A strong no-mirror dyslexia-panel sensitivity remains an exploratory hemispheric-method finding rather than confirmatory molecular evidence.
+ChineseEEG Little Prince natural reading contains reproducible cross-participant EEG geometry after nuisance control, and neural-guided BERT training improves sealed held-out neural alignment relative to matched controls. A frozen multilingual-E5 contrast then transfers positively to independent ZuCo English natural-reading EEG in **17/17** participants and prospectively to independently defined SMN4Lang language-network fMRI during Mandarin auditory narratives in **12/12** participants. Transfer is not universal: TMNRED and Garnett Dream are null/inconclusive and directional inner speech is an out-of-task boundary. In SMN4Lang MEG, the prospectively frozen sensor-level target failed its model-blind reliability gate, and a separately frozen 4/8/16-bin family also failed; therefore no MEG model-transfer test was performed. Generic semantic benchmarks show no stable neural-specific gain. AHBA transcriptomic analyses do not establish a specific molecular mechanism.
 
-## Core dataset and extension roles
+## Major results at a glance
 
-| Dataset / resource | Role | Current status |
+| Dataset / test | Final role | Current result |
 |---|---|---|
-| ChineseEEG Little Prince | Discovery and model development | Reproducible geometry; positive sealed neural-guided alignment |
-| ChineseEEG Garnett Dream | Same-participant/new-text validation | EEG reliability positive; frozen E5 transfer null/inconclusive |
-| TMNRED | Independent Chinese-reading replication | EEG geometry positive; model transfer null |
-| ZuCo 2.0 Task 1 NR | Independent English-reading / cross-language replication | EEG geometry positive; frozen E5 transfer positive |
-| Nature directional-word EEG | Out-of-task inner-speech boundary condition | Transfer null |
-| Allen Human Brain Atlas | Population transcriptomic mechanistic extension | Frozen primary molecular tests null; exploratory mirroring sensitivity documented |
+| ChineseEEG Little Prince | Development target and learnability | residual LOO ~**0.121**; sealed neural-guided BERT strongest in both seeds |
+| ZuCo 2.0 Task 1 NR | Cross-language EEG validation | reliability **0.06742**; E5 delta **+0.0016637**; **17/17** positive |
+| SMN4Lang fMRI | Prospective cross-modal capstone | reliability **0.65327**; E5 delta **+0.00085250**; **12/12** positive |
+| TMNRED | Transfer boundary | weak positive reliability; E5 transfer null, p=.402 |
+| Garnett Dream | Same-participant/new-text boundary | reliability positive; E5 transfer null/inconclusive, p=.1016 |
+| Directional inner speech | Out-of-task boundary | no positive transfer; delta ~**-0.001786** |
+| SMN4Lang MEG | Reliability boundary | 32-bin mean LOO **0.007713**, CI crosses zero, p=.1687; no model evaluation |
+| AHBA | Secondary mechanistic extension | primary molecular tests null; exploratory hemispheric sensitivity only |
 
-AHBA should not be interpreted as participant-specific molecular measurement.
+Raw RSA values across EEG, fMRI and MEG are not directly comparable as a common effect-size scale.
 
-## Main results at a glance
+## Final manuscript claim
 
-### Reading EEG geometry
+> Human neural geometry can provide a transferable relational constraint on language representations, with effects that generalize across independent brains, languages and measurement modalities, but not universally across neural contexts.
 
-- ChineseEEG Little Prince selected temporal-mean representation: residual LOO reliability approximately **0.121**.
-- TMNRED primary `row_mean_all`: **0.00724**, 95% CI **[0.00356, 0.01079]**.
-- ZuCo primary `row_mean_all`: **0.06742**, 95% CI **[0.05831, 0.07687]**, **17/17** positive.
-- Garnett Dream primary `row_mean_all`: **0.01863**, 95% CI **[0.01636, 0.02085]**, **10/10** positive.
+This should **not** be expanded into claims that brain supervision generally improves language models, that SMN4Lang isolates pure semantics, that MEG showed negative transfer, or that a specific transcriptomic mechanism has been identified.
 
-### Model transfer
+## Manuscript workspace
 
-- TMNRED E5 lambda .10 minus 0: mean **+0.000020**, 95% CI crossing zero, p=.402, null.
-- ZuCo E5 lambda .10 minus 0: mean **+0.001664**, 95% CI **[+0.001229, +0.002145]**, **17/17** positive, one-sided p=`7.63e-06`.
-- Garnett Dream E5 lambda .10 minus 0: mean **+0.0003266**, 95% CI **[-0.0001218, +0.0007560]**, **6/10** positive, one-sided exact sign-flip p=`0.1016`. This is confirmatory null/inconclusive.
+Current submission-facing sources are under `paper/`:
 
-### AHBA mechanistic extension
+- `NATURE_SUBMISSION_PACKAGE.md`
+- `NATURE_MANUSCRIPT_DRAFT_V2.md`
+- `REFERENCE_SOURCE_AUDIT.md`
 
-Primary frozen GABAergic/serotonergic/pathway tests are null. Exploratory whole-transcriptome PLS showed moderate in-sample alignment (`r = 0.4574`) but failed the spatial null (`p = 0.2745`). No transcriptomic gradient survived FDR.
-
-Two exact published Wong et al. language-related panels were then frozen independently. The 6-gene connectivity panel was null. The 14-gene dyslexia panel was suggestive in the mirrored primary analysis (`rho = -0.2733`, spatial p=`0.0516`) but failed both multiple-comparison and co-expression-aware criteria.
-
-The no-mirror dyslexia-panel sensitivity was much stronger (`rho = -0.4776`, spatial p=`0.0032`, co-expression-profile p=`0.0010`). A post-hoc diagnostic showed that this difference is driven mainly by the **right hemisphere**, not by parcel missingness: mirrored right-hemisphere `rho = +0.0038` versus no-mirror `rho = -0.4310`. This remains exploratory because native AHBA right-hemisphere sampling is sparse and the primary mirrored test was null.
-
-See [`docs/6_AHBA_CURRENT_STATUS_AND_NEXT_STEPS.md`](docs/6_AHBA_CURRENT_STATUS_AND_NEXT_STEPS.md) for the full mechanistic record.
-
-## Current next priorities
-
-1. **Stop expanding the AHBA significance search.** Preserve the frozen nulls and treat the mirroring result as a methodological sensitivity finding.
-2. **Selectively reconcile final analysis code and documentation from execution branches into canonical `main`.** Do not merge reduced-manifest execution branches wholesale.
-3. **Build manuscript-ready figures and tables** across ChineseEEG, TMNRED, ZuCo, Garnett, Nature, and AHBA.
-4. **Draft Results and Methods from the frozen evidence chain**, including nulls and failed confirmatory tests.
-5. **Use future molecular work only for independent validation**, preferably a resource with stronger bilateral transcriptomic coverage or a prospectively frozen hemispheric analysis.
-6. **Choose the final journal framing after manuscript consolidation**, rather than adding analyses to fit a target journal.
-
-## Scientific interpretation
-
-The current defensible statement is:
-
-> Reading-related EEG contains a small but reproducible relational geometry across independent datasets and languages. Neural-guided training can improve alignment to the development EEG target and, in a frozen confirmatory test, produces a small but highly consistent improvement in alignment to independent English natural-reading EEG. This model-transfer benefit is not universal: TMNRED and Garnett transfer are null/inconclusive, generic semantic benchmarks are not stably improved, and the out-of-task Nature directional test is null. Transcriptomic extension analyses do not establish a specific molecular mechanism, although a post-hoc AHBA mirroring diagnostic identifies a reproducible hemispheric preprocessing sensitivity that warrants independent future validation.
-
-Do not summarize the project as “brain supervision improves semantic representations” or as evidence for a specific GABAergic/serotonergic molecular mechanism. The data do not support either broad claim.
+The remaining substantive manuscript task is figure completion and integration, not new outcome-bearing analysis. See `docs/5_CURRENT_ROADMAP.md` for the exact stopping rules.
 
 ## Repository organization
 
-- `docs/1_PROJECT_OVERVIEW.md`: current scientific overview
-- `docs/2_DATASETS_AND_TASKS.md`: dataset/task roles
-- `docs/3_RESULTS_AND_COMPARISONS.md`: numerical results
-- `docs/4_EXPERIMENT_LEDGER.md`: chronological experiment and RunRelay ledger
-- `docs/5_CURRENT_ROADMAP.md`: current operational roadmap
-- `docs/6_AHBA_CURRENT_STATUS_AND_NEXT_STEPS.md`: completed AHBA findings and forward plan
-- `docs/abbas_ahba_transcriptomic_extension.md`: original AHBA mechanistic plan and current outcome update
-- `SCIENTIFIC_HYPOTHESES.md`: hypotheses and falsification criteria
-- `ANALYSIS_PLAN.md`: preregistration-style plan and implemented-decision notes
-- `scripts/`: executable workflows
-- `outputs/`: local/RunRelay derived outputs; raw sensitive data must not be committed
-- `paper/`: manuscript development
+- `docs/`: scientific protocols, final results summaries, experiment ledger and roadmap
+- `scripts/`: executable analysis/audit/figure workflows
+- `paper/`: manuscript source and submission-facing documentation
+- `outputs/`: local/RunRelay derived outputs; raw sensitive data and large outputs must not be committed
+- `.runrelay/project.yaml`: authoritative RunRelay named-task manifest
+- `AGENTS.md`: repository-specific execution and safety rules
 
 ## Reproducible execution
 
-NeuroSem uses RunRelay for workstation execution. The authoritative task manifest is `.runrelay/project.yaml` and repository-specific execution rules are in `AGENTS.md`.
+NeuroSem uses RunRelay for workstation execution with exact commits and fixed machine binding.
 
-Bound machine: `pshjl4vf24`.
+- project id: `neurosem`
+- bound machine: `pshjl4vf24`
+- approval default: manual
+- arbitrary commands: disabled
 
-All RunRelay jobs must use exact NeuroSem commits, explicit `requested_machine_id: "pshjl4vf24"`, manual approval where configured, and safe derived artifacts only.
+Raw neural datasets, restricted data, model checkpoints, credentials and `.env` files must not be committed. Safe derived artifacts only should be transported through RunRelay/Google Drive.
 
-## Collaboration
+## Current stopping rules
 
-Project leads: Alireza Vafaei Sadr and Abbas Khanbeigy.
-
-Raw neural datasets, restricted data, large derived arrays, credentials, and model checkpoints should not be committed to GitHub. Analyses should preserve protocol provenance and clearly distinguish confirmatory, exploratory, and post-hoc diagnostic work.
+- No new dataset search for positive transfer.
+- No reopening of ZuCo or SMN4Lang fMRI model/representation choices.
+- No rescue search for TMNRED or Garnett.
+- No E5 evaluation on failed SMN4Lang MEG targets.
+- No further MEG bands, sensor subsets, source models, latencies or temporal alternatives for this paper.
+- No additional AHBA significance search or molecular-panel screening.
+- Preserve all nulls and failed reliability gates in the manuscript record.
