@@ -98,33 +98,44 @@ def figure_meg_boundary(rows: list[dict], out: Path) -> None:
     lows = np.asarray([r["ci_low"] for r in rows], dtype=float)
     highs = np.asarray([r["ci_high"] for r in rows], dtype=float)
 
-    fig, ax = plt.subplots(figsize=(7.2, 4.8))
+    fig, ax = plt.subplots(figsize=(7.6, 5.1))
     x = np.arange(len(rows))
     yerr = np.vstack([means - lows, highs - means])
     ax.errorbar(x, means, yerr=yerr, fmt="o", capsize=4, linewidth=1.6, markersize=6)
     ax.axhline(0, linewidth=0.9)
     ax.set_xticks(x, [str(v) for v in bins])
+    ax.set_xlim(-0.42, len(rows) - 0.58)
     ax.set_xlabel("Normalized-time RMS bins per MEG channel type")
     ax.set_ylabel("Cross-participant story-geometry reliability\n(LOO Spearman rho)")
-    ax.set_title("SMN4Lang MEG did not yield a reliable cross-participant target")
+    ax.set_title("SMN4Lang MEG did not yield a reliable cross-participant target", pad=10)
 
     for i, row in enumerate(rows):
         label = "prospective primary" if row["n_bins"] == 32 else "exploratory"
-        ax.text(i, highs[i] + 0.0025, f"{row['n_positive']}/12 positive\n{label}", ha="center", va="bottom", fontsize=7.5)
+        ha = "left" if i == 0 else ("right" if i == len(rows) - 1 else "center")
+        dx = 5 if i == 0 else (-5 if i == len(rows) - 1 else 0)
+        ax.annotate(
+            f"{row['n_positive']}/12 positive\n{label}",
+            xy=(i, highs[i]),
+            xytext=(dx, 12),
+            textcoords="offset points",
+            ha=ha,
+            va="bottom",
+            fontsize=7.5,
+            annotation_clip=False,
+        )
 
-    ax.text(
-        0.01,
-        0.01,
+    margin = max(0.01, float((highs.max() - lows.min()) * 0.15))
+    ax.set_ylim(float(min(lows.min(), 0.0) - margin), float(highs.max() + margin * 2.8))
+    fig.text(
+        0.12,
+        0.025,
         "Points: participant-mean LOO reliability; bars: locked 95% participant-bootstrap CIs. "
         "No representation passed its reliability criterion; no model evaluation was performed.",
-        transform=ax.transAxes,
         fontsize=8,
+        ha="left",
         va="bottom",
-        wrap=True,
     )
-    margin = max(0.01, float((highs.max() - lows.min()) * 0.15))
-    ax.set_ylim(float(min(lows.min(), 0.0) - margin), float(highs.max() + margin * 2.5))
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.085, 1, 1))
     fig.savefig(out / "fig4b_smn4lang_meg_reliability_boundary.png", dpi=300, bbox_inches="tight")
     fig.savefig(out / "fig4b_smn4lang_meg_reliability_boundary.pdf", bbox_inches="tight")
     plt.close(fig)
