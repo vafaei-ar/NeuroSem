@@ -5,7 +5,7 @@ This directory contains the submission-facing NeuroSem manuscript sources. The s
 ## Authoritative current files
 
 - `NATURE_SUBMISSION_PACKAGE.md` — final Nature-facing editorial scaffold, figure architecture, claim limits and cover-letter core argument.
-- `NATURE_MANUSCRIPT_DRAFT_V2.md` — current main manuscript source. This supersedes v1 and the older `outline.md`, `results.md` and `methods.md` scaffolds for substantive wording.
+- `NATURE_MANUSCRIPT_DRAFT_V3.md` — current main manuscript source. This version was synchronized from the author-edited Word working copy `NeuroSem_Nature_Manuscript_v0.1.docx` (SHA256 `1f4185dd5266a03d5de04e7e8f2991e3c9796997c146a8ce965bb7634ec5b7b7`) and supersedes v2 for substantive wording, citation placement and submission-facing figure notes.
 - `REFERENCE_SOURCE_AUDIT.md` — verified literature/source audit and the distinction between external provenance references and NeuroSem-generated statistics.
 - `FIGURE_GENERATION.md` — figure-build provenance and workflow notes.
 - `FIGURE_TABLE_PLAN.md` — historical/working figure-table planning; where it conflicts with `NATURE_SUBMISSION_PACKAGE.md`, the submission package is authoritative.
@@ -15,12 +15,13 @@ This directory contains the submission-facing NeuroSem manuscript sources. The s
 The following files are intentionally retained for provenance but are not the current manuscript source of truth:
 
 - `NATURE_MANUSCRIPT_DRAFT_V1.md`
+- `NATURE_MANUSCRIPT_DRAFT_V2.md`
 - `outline.md`
 - `results.md`
 - `methods.md`
 - `NATURE_POSITIONING.md`
 
-Do not silently merge older wording or claims back into v2.
+Do not silently merge older wording or claims back into v3.
 
 ## Final evidence architecture
 
@@ -56,9 +57,11 @@ The versioned locked-output figure build currently provides:
 
 The remaining manuscript artwork task is to complete the composite **Figure 1**, **Figure 3**, and **Figure 4a/c/d** from already locked outputs and then integrate them into the submission document. This is figure assembly, not new scientific inference.
 
-## Reference workflow
+## Reference and Word workflow
 
-The reference audit is stored in `REFERENCE_SOURCE_AUDIT.md`. Literature citations support dataset, model, atlas and methodological provenance. They do not replace NeuroSem-generated numerical evidence. The current Word working copy and RIS export are packaging artifacts derived from the Markdown source; until a binary-manuscript policy is adopted, the repository source of truth remains `NATURE_MANUSCRIPT_DRAFT_V2.md` plus the reference audit.
+The reference audit is stored in `REFERENCE_SOURCE_AUDIT.md`. Literature citations support dataset, model, atlas and methodological provenance. They do not replace NeuroSem-generated numerical evidence.
+
+The author-edited Word file is now explicitly synchronized into `NATURE_MANUSCRIPT_DRAFT_V3.md`. The repository Markdown remains the scientific manuscript source of truth; the Word manuscript is the submission-packaging master for Zotero fields, page layout and final figure placement. Any future substantive Word edit should be back-ported into the Markdown source before the next submission build.
 
 ## Supporting documentation
 
