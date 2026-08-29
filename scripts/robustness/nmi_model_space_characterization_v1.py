@@ -3,11 +3,16 @@ from __future__ import annotations
 
 import csv
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from scipy.stats import pearsonr, spearmanr
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.analysis.run_zuco2_nr_primary_representation_reliability import EXPECTED, load_material_rows
 from scripts.tuning.evaluate_tmnred_e5_transfer_v1 import TEXT_ONLY_ADAPTER, LAMBDA_010_ROOT, latest_completed_adapter, load_adapter, encode_texts
