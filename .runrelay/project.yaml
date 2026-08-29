@@ -765,3 +765,28 @@ tasks:
       - outputs/smn4lang_meg_exploratory_granularity/latest/subject_metrics.csv
       - outputs/smn4lang_meg_exploratory_granularity/latest/run_inventory.csv
       - outputs/smn4lang_meg_exploratory_granularity/latest/derived_run_features.npz
+
+  build_manuscript_figures_v2:
+    description: Build versioned manuscript figures strictly from already-locked derived outputs, including the SMN4Lang MEG reliability-boundary panel, with no new scientific inference.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_manuscript_figures_v2.py
+      - --outputs-root
+      - outputs
+      - --output-dir
+      - outputs/manuscript_figures_v2/latest
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/manuscript_figures_v2/latest/fig2_reading_reliability.png
+      - outputs/manuscript_figures_v2/latest/fig2_reading_reliability.pdf
+      - outputs/manuscript_figures_v2/latest/fig4b_smn4lang_meg_reliability_boundary.png
+      - outputs/manuscript_figures_v2/latest/fig4b_smn4lang_meg_reliability_boundary.pdf
+      - outputs/manuscript_figures_v2/latest/fig4_ahba_frozen_molecular_nulls.png
+      - outputs/manuscript_figures_v2/latest/fig4_ahba_frozen_molecular_nulls.pdf
+      - outputs/manuscript_figures_v2/latest/table2_reliability_summary.csv
+      - outputs/manuscript_figures_v2/latest/table3_ahba_gene_sets.csv
+      - outputs/manuscript_figures_v2/latest/table4_smn4lang_meg_reliability_boundary.csv
+      - outputs/manuscript_figures_v2/latest/source_manifest.json
