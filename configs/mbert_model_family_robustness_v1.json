@@ -1,0 +1,31 @@
+{
+  "protocol": "docs/16_NMI_SECOND_MODEL_FAMILY_MBBERT_PROTOCOL_V1.md",
+  "analysis_stage": "post-confirmatory second-model-family robustness",
+  "model_id": "google-bert/bert-base-multilingual-cased",
+  "model_revision": "c298d193a40f7d74951e9b8de1e278db2723f10b",
+  "train_runs": [1, 2, 3, 4, 5],
+  "validation_run": 6,
+  "final_holdout_run": 7,
+  "seed": 20260829,
+  "prespecified_seeds": [20260829, 20260830, 20260831],
+  "max_length": 64,
+  "mlm_probability": 0.15,
+  "batch_size": 32,
+  "epochs": 5,
+  "learning_rate": 0.0002,
+  "weight_decay": 0.01,
+  "neural_loss_weight": 0.10,
+  "lora": {
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.05,
+    "target_modules": ["query", "value"]
+  },
+  "arms": ["text_only", "neural"],
+  "primary_embedding": "final hidden layer mean over non-special non-padding tokens, L2-normalized for external evaluation",
+  "model_rdm": "cosine distance",
+  "neural_target": "existing frozen ChineseEEG run-level residual neural targets",
+  "neural_loss": "1 - Pearson correlation between standardized model pairwise cosine distances and fixed run-level residual neural target",
+  "lambda_policy": "strict portability: lambda=0.10 only; no alternative lambda after external outcomes",
+  "selection_policy": "fixed epochs; no early stopping; no checkpoint selection; run-07 excluded; all three seeds reported"
+}
