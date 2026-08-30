@@ -94,3 +94,22 @@ tasks:
       - outputs/nmi_bidirectional_fmri_eeg_dose_response_v1/latest/summary.json
       - outputs/nmi_bidirectional_fmri_eeg_dose_response_v1/latest/zuco_subject_dose_results.csv
       - outputs/nmi_bidirectional_fmri_eeg_dose_response_v1/latest/chineseeeg_subject_dose_results.csv
+
+  run_nmi_fmri_to_chineseeeg_multiseed_dose_v1:
+    description: >-
+      Retrain the frozen SMN4Lang-fMRI multilingual-E5 lambda grid under three
+      prespecified additional optimization seeds and evaluate every arm on the fixed
+      ChineseEEG run-07 pipeline to characterize optimization-seed robustness without
+      new lambda search or target-side selection.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_nmi_fmri_to_chineseeeg_multiseed_dose_v1.py
+    approval: manual
+    timeout_minutes: 1440
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/nmi_fmri_to_chineseeeg_multiseed_dose_v1/latest/summary.json
+      - outputs/nmi_fmri_to_chineseeeg_multiseed_dose_v1/latest/seed_subject_lambda_results.csv
+      - outputs/nmi_fmri_to_chineseeeg_multiseed_dose_v1/latest/seed_*/calibration/summary.json
+      - outputs/nmi_fmri_to_chineseeeg_multiseed_dose_v1/latest/seed_*/chineseeeg/chineseeeg_subject_dose_results.csv
