@@ -58,15 +58,24 @@ def summarize_pair(dataset: str, out_dir: Path) -> dict:
     rows = read_csv(csv_path)
     vals = [float(r[key]) for r in rows]
     summary = json.loads((out_dir / 'summary.json').read_text(encoding='utf-8'))
-    if dataset == 'zuco':
+
+    if 'primary_result' in summary:
         primary = summary['primary_result']
         mean_delta = float(primary['mean_delta'])
-        one_sided = float(primary['exact_one_sided_signflip_p'])
-        ci = primary['bootstrap_95_ci_mean_delta']
+        ci = primary.get('bootstrap_95_ci_mean_delta', primary.get('bootstrap_95ci'))
+        if ci is None:
+            raise RuntimeError(f'missing bootstrap CI in {out_dir / "summary.json"}')
+        one_sided_raw = primary.get('exact_one_sided_signflip_p')
+        if one_sided_raw is None:
+            one_sided_raw = primary.get('exact_signflip', {}).get('one_sided_greater_p')
+        if one_sided_raw is None:
+            raise RuntimeError(f'missing one-sided sign-flip p-value in {out_dir / "summary.json"}')
+        one_sided = float(one_sided_raw)
     else:
         mean_delta = float(summary['primary_mean_delta'])
         one_sided = float(summary['primary_exact_one_sided_signflip_p'])
         ci = summary['primary_bootstrap_95_ci_mean_delta']
+
     return {
         'n_participants': len(vals),
         'mean_delta': mean_delta,
@@ -166,7 +175,6 @@ def main() -> int:
             }
         seed_results.append(row)
 
-    # Re-run already frozen reviewer-requested sensitivity analyses.
     run(['.venv/bin/python', 'scripts/robustness/nmi_hierarchical_bootstrap_v1.py'])
     run(['.venv/bin/python', 'scripts/robustness/nmi_model_space_characterization_v1.py'])
 
