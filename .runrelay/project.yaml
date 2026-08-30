@@ -41,3 +41,22 @@ tasks:
     artifacts:
       - outputs/nmi_bidirectional_fmri_calibration_v1/latest/summary.json
       - outputs/nmi_bidirectional_fmri_calibration_v1/latest/lambda_*/summary.json
+
+  run_nmi_bidirectional_fmri_to_zuco_v1:
+    description: >-
+      Evaluate the frozen fMRI-guided multilingual-E5 lambda-0.01 candidate against
+      the independent ZuCo EEG target, using the matched lambda-0 control and no
+      target-side selection or ChineseEEG access.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/evaluate_nmi_bidirectional_fmri_to_zuco_v1.py
+      - --device
+      - auto
+    approval: manual
+    timeout_minutes: 240
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/nmi_bidirectional_fmri_to_zuco_v1/latest/summary.json
+      - outputs/nmi_bidirectional_fmri_to_zuco_v1/latest/subject_results.csv
+      - outputs/nmi_bidirectional_fmri_to_zuco_v1/latest/session_results.csv
