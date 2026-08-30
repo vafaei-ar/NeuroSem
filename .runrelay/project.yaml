@@ -138,3 +138,30 @@ tasks:
       - outputs/nmi_bidirectional_model_family_panel_v1/latest/summary.json
       - outputs/nmi_bidirectional_model_family_panel_v1/latest/resolved_models.json
       - outputs/nmi_bidirectional_model_family_panel_v1/latest/model_seed_direction_results.csv
+
+  build_nmi_main_figures_v3:
+    description: >-
+      Rebuild all four main Nature Machine Intelligence figures from frozen derived
+      outputs using the publication-width v3 visual system, exporting editable vector
+      files, 600-dpi PNGs and a SHA-256 source manifest without any new analysis.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_nmi_main_figures_v3.py
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/nmi_main_figures_v3/latest/figure1.pdf
+      - outputs/nmi_main_figures_v3/latest/figure1.svg
+      - outputs/nmi_main_figures_v3/latest/figure1.png
+      - outputs/nmi_main_figures_v3/latest/figure2.pdf
+      - outputs/nmi_main_figures_v3/latest/figure2.svg
+      - outputs/nmi_main_figures_v3/latest/figure2.png
+      - outputs/nmi_main_figures_v3/latest/figure3.pdf
+      - outputs/nmi_main_figures_v3/latest/figure3.svg
+      - outputs/nmi_main_figures_v3/latest/figure3.png
+      - outputs/nmi_main_figures_v3/latest/figure4.pdf
+      - outputs/nmi_main_figures_v3/latest/figure4.svg
+      - outputs/nmi_main_figures_v3/latest/figure4.png
+      - outputs/nmi_main_figures_v3/latest/source_manifest.json
