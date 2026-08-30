@@ -146,9 +146,9 @@ tasks:
       files, 600-dpi PNGs and a SHA-256 source manifest without any new analysis.
     command:
       - .venv/bin/python
-      - scripts/paper/build_nmi_main_figures_v3.py
+      - scripts/paper/build_nmi_main_figures_v3_1.py
     approval: manual
-    timeout_minutes: 120
+    timeout_minutes: 30
     requires_gpu: false
     working_directory: .
     artifacts:
