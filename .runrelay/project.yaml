@@ -142,11 +142,11 @@ tasks:
   build_nmi_main_figures_v3:
     description: >-
       Rebuild all four main Nature Machine Intelligence figures from frozen participant-level
-      derived outputs using the publication-width v3 visual system, exporting editable vector
-      files, 600-dpi PNGs and a SHA-256 source manifest without any new analysis.
+      derived outputs using the visually refined v3.3 publication system, exporting editable
+      vector files, 600-dpi PNGs and a SHA-256 source manifest without any new analysis.
     command:
       - .venv/bin/python
-      - scripts/paper/build_nmi_main_figures_v3_2.py
+      - scripts/paper/build_nmi_main_figures_v3_3.py
     approval: manual
     timeout_minutes: 15
     requires_gpu: false
