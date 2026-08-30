@@ -103,7 +103,8 @@ tasks:
       new lambda search or target-side selection.
     command:
       - .venv/bin/python
-      - scripts/robustness/run_nmi_fmri_to_chineseeeg_multiseed_dose_v1.py
+      - -m
+      - scripts.robustness.run_nmi_fmri_to_chineseeeg_multiseed_dose_v1
     approval: manual
     timeout_minutes: 1440
     requires_gpu: true
