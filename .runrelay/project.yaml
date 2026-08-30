@@ -26,18 +26,18 @@ monitoring:
   tmux_default: false
 
 tasks:
-  build_nmi_bidirectional_fmri_source_v1:
+  run_nmi_bidirectional_fmri_source_calibration_v1:
     description: >-
-      Build and freeze the model-blind SMN4Lang fMRI group relational targets and
-      deterministic train/validation split for the post-confirmatory bidirectional
-      cross-modal transfer experiment. No language model or external EEG target is read.
+      Run the frozen source-only multilingual-E5 lambda calibration against the
+      previously frozen SMN4Lang fMRI relational targets. This stage must not read
+      ZuCo or ChineseEEG and stops at a source-learning gate before external testing.
     command:
       - .venv/bin/python
-      - scripts/robustness/build_nmi_bidirectional_fmri_source_v1.py
+      - scripts/robustness/run_nmi_bidirectional_fmri_source_calibration_v1.py
     approval: manual
-    timeout_minutes: 360
-    requires_gpu: false
+    timeout_minutes: 1440
+    requires_gpu: true
     working_directory: .
     artifacts:
-      - outputs/nmi_bidirectional_fmri_source_v1/latest/summary.json
-      - outputs/nmi_bidirectional_fmri_source_v1/latest/split.json
+      - outputs/nmi_bidirectional_fmri_calibration_v1/latest/summary.json
+      - outputs/nmi_bidirectional_fmri_calibration_v1/latest/lambda_*/summary.json
