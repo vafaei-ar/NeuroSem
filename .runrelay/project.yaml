@@ -114,3 +114,27 @@ tasks:
       - outputs/nmi_fmri_to_chineseeeg_multiseed_dose_v1/latest/seed_subject_lambda_results.csv
       - outputs/nmi_fmri_to_chineseeeg_multiseed_dose_v1/latest/seed_*/calibration/summary.json
       - outputs/nmi_fmri_to_chineseeeg_multiseed_dose_v1/latest/seed_*/chineseeeg/chineseeeg_subject_dose_results.csv
+
+  run_nmi_bidirectional_model_family_panel_v1:
+    description: >-
+      Run the frozen six-model, three-seed explanatory multilingual model-family
+      panel in both ChineseEEG-to-fMRI and fMRI-to-ZuCo directions under one common
+      lambda-0.10 relational adaptation protocol, using two GPUs in parallel and no
+      model-specific rescue tuning.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_nmi_bidirectional_model_family_panel_v1.py
+    approval: manual
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 12
+      min_ram_gb: 48
+      gpu_count: 2
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/nmi_bidirectional_model_family_panel_v1/latest/summary.json
+      - outputs/nmi_bidirectional_model_family_panel_v1/latest/resolved_models.json
+      - outputs/nmi_bidirectional_model_family_panel_v1/latest/model_seed_direction_results.csv
