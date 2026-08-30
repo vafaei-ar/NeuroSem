@@ -76,3 +76,21 @@ tasks:
     artifacts:
       - outputs/nmi_bidirectional_fmri_to_chineseeeg_run07_v1/latest/summary.json
       - outputs/nmi_bidirectional_fmri_to_chineseeeg_run07_v1/latest/subject_results.csv
+
+  run_nmi_bidirectional_fmri_eeg_dose_response_v1:
+    description: >-
+      Characterize the post-confirmatory dose-response of all already-trained
+      fMRI-guided multilingual-E5 lambda adapters on both ZuCo EEG and ChineseEEG
+      run-07 in one job, with no retraining, no new lambda values and no target-side
+      selection.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/evaluate_nmi_bidirectional_fmri_eeg_dose_response_v1.py
+    approval: manual
+    timeout_minutes: 480
+    requires_gpu: true
+    working_directory: .
+    artifacts:
+      - outputs/nmi_bidirectional_fmri_eeg_dose_response_v1/latest/summary.json
+      - outputs/nmi_bidirectional_fmri_eeg_dose_response_v1/latest/zuco_subject_dose_results.csv
+      - outputs/nmi_bidirectional_fmri_eeg_dose_response_v1/latest/chineseeeg_subject_dose_results.csv
