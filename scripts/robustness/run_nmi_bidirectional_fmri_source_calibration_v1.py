@@ -22,6 +22,7 @@ SEED = 20260823
 TRAIN_STORIES = [56,15,48,55,27,3,23,6,21,58,36,40,12,30,9,35,20,5,49,28]
 VAL_STORIES = [2,7,11,16,22,26,34,37,38,41,45,50]
 EPOCH_SCHEDULE = [TRAIN_STORIES[i:i+4] for i in range(0,20,4)]
+ENCODE_BATCH_SIZE = 8
 
 
 def report_progress(current, total, phase):
@@ -43,7 +44,7 @@ def masked_mean(h,m):
     m=m.to(h.dtype).unsqueeze(-1); return (h*m).sum(1)/m.sum(1).clamp_min(1.)
 
 
-def encode(model,tok,texts,device,max_length=64,batch_size=24):
+def encode(model,tok,texts,device,max_length=64,batch_size=ENCODE_BATCH_SIZE):
     import torch
     xs=[]
     for i in range(0,len(texts),batch_size):
@@ -127,7 +128,11 @@ def main():
         set_seed(SEED)
         tok=AutoTokenizer.from_pretrained(MODEL_ID,revision=MODEL_REVISION)
         base=AutoModel.from_pretrained(MODEL_ID,revision=MODEL_REVISION)
-        model=get_peft_model(base,LoraConfig(r=8,lora_alpha=16,lora_dropout=.05,target_modules=["query","value"],bias="none")); model.to(device)
+        model=get_peft_model(base,LoraConfig(r=8,lora_alpha=16,lora_dropout=.05,target_modules=["query","value"],bias="none"))
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+        if hasattr(model, "enable_input_require_grads"):
+            model.enable_input_require_grads()
+        model.to(device)
         opt=AdamW([p for p in model.parameters() if p.requires_grad],lr=2e-4,weight_decay=.01)
         train_hist=[]
         for epoch,stories in enumerate(EPOCH_SCHEDULE,1):
@@ -135,8 +140,20 @@ def main():
             for s in stories:
                 opt.zero_grad(set_to_none=True)
                 tl=text_loss(model,tok,contexts[s]["prefixes"],device)
-                nl,c=neural_loss(model,tok,contexts[s],targets[s],device,hrf)
-                loss=tl+lam*nl; loss.backward(); opt.step(); vals.append(float(c.detach().cpu()))
+                tl.backward()
+                del tl
+                if lam > 0:
+                    nl,c=neural_loss(model,tok,contexts[s],targets[s],device,hrf)
+                    (lam*nl).backward()
+                    vals.append(float(c.detach().cpu()))
+                    del nl,c
+                else:
+                    with torch.no_grad():
+                        _,c=neural_loss(model,tok,contexts[s],targets[s],device,hrf)
+                        vals.append(float(c.detach().cpu()))
+                    del c
+                opt.step()
+                torch.cuda.empty_cache()
             train_hist.append({"epoch":epoch,"stories":stories,"mean_train_fmri_corr":float(np.mean(vals))})
         model.eval(); vc=[]
         with torch.no_grad():
@@ -145,14 +162,14 @@ def main():
         mean=float(np.mean(vc)); se=float(np.std(vc,ddof=1)/np.sqrt(len(vc)))
         d=out/f"lambda_{str(lam).replace('.','p')}"; d.mkdir(exist_ok=True)
         model.save_pretrained(d/"adapter"); tok.save_pretrained(d/"adapter")
-        rec={"lambda":lam,"validation_story_corrs":vc,"validation_mean":mean,"validation_se":se,"train_history":train_hist,"adapter":str((d/"adapter").resolve())}
+        rec={"lambda":lam,"validation_story_corrs":vc,"validation_mean":mean,"validation_se":se,"train_history":train_hist,"adapter":str((d/"adapter").resolve()),"memory_implementation":{"encode_batch_size":ENCODE_BATCH_SIZE,"gradient_checkpointing":True,"separate_text_and_neural_backward":True,"lambda0_neural_gradient_skipped":True}}
         (d/"summary.json").write_text(json.dumps(rec,indent=2)+"\n"); rows.append(rec)
         del model,base; torch.cuda.empty_cache(); report_progress(li,len(LAMBDAS),f"Source-only lambda calibration {li}/{len(LAMBDAS)}")
     positive=[r for r in rows if r["lambda"]>0]; best=max(positive,key=lambda r:r["validation_mean"]); threshold=best["validation_mean"]-best["validation_se"]
     eligible=[r for r in positive if r["validation_mean"]>=threshold]; selected=min(eligible,key=lambda r:r["lambda"])
     zero=next(r for r in rows if r["lambda"]==0)
     gate=selected["validation_mean"]>zero["validation_mean"]
-    summary={"schema_version":1,"analysis_stage":"post-confirmatory fMRI-source-only E5 calibration","protocol":"docs/18_NMI_BIDIRECTIONAL_FMRI_SOURCE_CALIBRATION_V1.md","model_id":MODEL_ID,"model_revision":MODEL_REVISION,"seed":SEED,"lambda_grid":LAMBDAS,"training_stories":TRAIN_STORIES,"validation_stories":VAL_STORIES,"results":rows,"selection_rule":"smallest positive lambda within 1 SE of best positive validation mean; proceed only if selected mean > lambda0 mean","best_positive_lambda":best["lambda"],"best_positive_mean":best["validation_mean"],"best_positive_se":best["validation_se"],"selected_lambda":selected["lambda"],"selected_validation_mean":selected["validation_mean"],"lambda0_validation_mean":zero["validation_mean"],"source_gate_pass":bool(gate),"external_eeg_read":False}
+    summary={"schema_version":1,"analysis_stage":"post-confirmatory fMRI-source-only E5 calibration","protocol":"docs/18_NMI_BIDIRECTIONAL_FMRI_SOURCE_CALIBRATION_V1.md","model_id":MODEL_ID,"model_revision":MODEL_REVISION,"seed":SEED,"lambda_grid":LAMBDAS,"training_stories":TRAIN_STORIES,"validation_stories":VAL_STORIES,"results":rows,"selection_rule":"smallest positive lambda within 1 SE of best positive validation mean; proceed only if selected mean > lambda0 mean","best_positive_lambda":best["lambda"],"best_positive_mean":best["validation_mean"],"best_positive_se":best["validation_se"],"selected_lambda":selected["lambda"],"selected_validation_mean":selected["validation_mean"],"lambda0_validation_mean":zero["validation_mean"],"source_gate_pass":bool(gate),"external_eeg_read":False,"memory_implementation":{"encode_batch_size":ENCODE_BATCH_SIZE,"gradient_checkpointing":True,"separate_text_and_neural_backward":True,"lambda0_neural_gradient_skipped":True,"scientific_design_changed":False}}
     (out/"summary.json").write_text(json.dumps(summary,indent=2)+"\n")
     print(json.dumps({k:summary[k] for k in ["selected_lambda","selected_validation_mean","lambda0_validation_mean","source_gate_pass"]},indent=2))
 
