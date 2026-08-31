@@ -180,3 +180,18 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/nmi_reviewer_response_diagnostic_v1/latest/diagnostic.json
+
+  consolidate_nmi_reviewer_response_completed_v1:
+    description: >-
+      Consolidate already completed three-seed specificity evaluations, hierarchical
+      bootstrap results and the existing frozen model-space characterization into one
+      reviewer-response summary without retraining or new model evaluation.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/consolidate_nmi_reviewer_response_completed_v1.py
+    approval: manual
+    timeout_minutes: 5
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/nmi_reviewer_response_consolidated_v1/latest/summary.json
