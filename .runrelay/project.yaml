@@ -166,3 +166,17 @@ tasks:
       - outputs/nmi_reviewer_response_scientific_v1/latest/seed_*/smn4lang_fmri/*/participant_results.csv
       - outputs/nmi_hierarchical_robustness_v1/latest/summary.json
       - outputs/nmi_model_space_characterization_v1/latest/summary.json
+
+  diagnose_nmi_reviewer_response_state_v1:
+    description: >-
+      Read only existing reviewer-response outputs and adapter metadata to determine
+      the last completed seed, target and evaluation stage after a cancelled suite.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/diagnose_nmi_reviewer_response_state_v1.py
+    approval: manual
+    timeout_minutes: 5
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/nmi_reviewer_response_diagnostic_v1/latest/diagnostic.json
