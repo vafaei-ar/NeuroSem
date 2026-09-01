@@ -194,3 +194,46 @@ tasks:
       - outputs/nmi_bidirectional_model_family_panel_v1/latest/summary.json
       - outputs/nmi_bidirectional_model_family_panel_v1/latest/resolved_models.json
       - outputs/nmi_bidirectional_model_family_panel_v1/latest/model_seed_direction_results.csv
+
+  run_nmi_reviewer_response_scientific_suite_v1:
+    description: >-
+      Run the frozen post-confirmatory neural-specificity control across three E5
+      seeds and both external targets, then rerun the existing participant-by-stimulus
+      robustness and model-space perturbation characterization without target-side
+      tuning or rescue searches.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_nmi_reviewer_response_scientific_suite_v1.py
+    approval: manual
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 10
+      min_ram_gb: 40
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/nmi_reviewer_response_scientific_v1/latest/summary.json
+      - outputs/nmi_reviewer_response_scientific_v1/latest/seed_*/zuco/*/summary.json
+      - outputs/nmi_reviewer_response_scientific_v1/latest/seed_*/zuco/*/subject_results.csv
+      - outputs/nmi_reviewer_response_scientific_v1/latest/seed_*/smn4lang_fmri/*/summary.json
+      - outputs/nmi_reviewer_response_scientific_v1/latest/seed_*/smn4lang_fmri/*/participant_results.csv
+      - outputs/nmi_hierarchical_robustness_v1/latest/summary.json
+      - outputs/nmi_model_space_characterization_v1/latest/summary.json
+
+  consolidate_nmi_reviewer_response_completed_v1:
+    description: >-
+      Consolidate the completed three-seed specificity evaluations, hierarchical
+      bootstrap results and frozen model-space characterization into one summary
+      without retraining or new model evaluation.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/consolidate_nmi_reviewer_response_completed_v1.py
+    approval: manual
+    timeout_minutes: 5
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/nmi_reviewer_response_consolidated_v1/latest/summary.json
