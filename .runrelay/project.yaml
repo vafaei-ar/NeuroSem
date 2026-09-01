@@ -58,6 +58,30 @@ tasks:
       - outputs/runrelay_repo_health/latest/health.json
       - outputs/runrelay_repo_health/latest/health.txt
 
+  run_manuscript_figures_v2:
+    description: >-
+      Regenerate the locked manuscript figure/table package from already-completed
+      safe derived NeuroSem outputs only, with no model fitting, feature selection,
+      representation search, or new hypothesis testing.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_manuscript_figures_v2.py
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/manuscript_figures_v2/latest/fig2_reading_reliability.png
+      - outputs/manuscript_figures_v2/latest/fig2_reading_reliability.pdf
+      - outputs/manuscript_figures_v2/latest/fig4b_smn4lang_meg_reliability_boundary.png
+      - outputs/manuscript_figures_v2/latest/fig4b_smn4lang_meg_reliability_boundary.pdf
+      - outputs/manuscript_figures_v2/latest/fig4_ahba_frozen_molecular_nulls.png
+      - outputs/manuscript_figures_v2/latest/fig4_ahba_frozen_molecular_nulls.pdf
+      - outputs/manuscript_figures_v2/latest/table2_reliability_summary.csv
+      - outputs/manuscript_figures_v2/latest/table3_ahba_gene_sets.csv
+      - outputs/manuscript_figures_v2/latest/table4_smn4lang_meg_reliability_boundary.csv
+      - outputs/manuscript_figures_v2/latest/source_manifest.json
+
   run_nmi_bidirectional_fmri_source_calibration_v1:
     description: >-
       Run the frozen source-only multilingual-E5 lambda calibration against the
