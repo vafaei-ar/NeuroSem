@@ -42,6 +42,22 @@ tasks:
       - outputs/runrelay_artifact_acceptance/latest/acceptance.json
       - outputs/runrelay_artifact_acceptance/latest/acceptance.txt
 
+  run_runrelay_repo_health_v1:
+    description: >-
+      Build a safe derived health report from the actual NeuroSem RunRelay manifest
+      and repository instructions, including registered-task inventory and checks
+      that referenced Python task scripts exist in the exact project commit.
+    command:
+      - .venv/bin/python
+      - scripts/runrelay_repo_health_report.py
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/runrelay_repo_health/latest/health.json
+      - outputs/runrelay_repo_health/latest/health.txt
+
   run_nmi_bidirectional_fmri_source_calibration_v1:
     description: >-
       Run the frozen source-only multilingual-E5 lambda calibration against the
