@@ -26,6 +26,22 @@ monitoring:
   tmux_default: false
 
 tasks:
+  run_runrelay_artifact_acceptance_v1:
+    description: >-
+      Create two tiny synthetic, non-sensitive artifacts to validate the full
+      RunRelay workstation execution, artifact collection, R2 temporary sharing,
+      and Telegram delivery path without running scientific analysis.
+    command:
+      - .venv/bin/python
+      - scripts/runrelay_artifact_acceptance_test.py
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/runrelay_artifact_acceptance/latest/acceptance.json
+      - outputs/runrelay_artifact_acceptance/latest/acceptance.txt
+
   run_nmi_bidirectional_fmri_source_calibration_v1:
     description: >-
       Run the frozen source-only multilingual-E5 lambda calibration against the
