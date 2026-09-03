@@ -58,6 +58,29 @@ tasks:
       - outputs/runrelay_repo_health/latest/health.json
       - outputs/runrelay_repo_health/latest/health.txt
 
+  run_smn4lang_regional_atlas_preflight_v1:
+    description: >-
+      Materialize and audit the frozen public EvLab language parcels and volumetric
+      Desikan-Killiany atlas, compare only atlas grids and a representative SMN4Lang
+      NIfTI header, and verify DK metadata against the frozen AHBA expression bundle.
+      This task must not load BOLD values, model embeddings or scientific outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/audit/preflight_smn4lang_regional_atlases_v1.py
+    approval: manual
+    timeout_minutes: 15
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 30
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_regional_atlas_preflight_v1/latest/summary.json
+      - outputs/smn4lang_regional_atlas_preflight_v1/latest/language_parcels.csv
+      - outputs/smn4lang_regional_atlas_preflight_v1/latest/dk68_parcels.csv
+      - outputs/smn4lang_regional_atlas_preflight_v1/latest/evlab_roi_index_audit.csv
+
   run_manuscript_figures_v2:
     description: >-
       Regenerate the locked manuscript figure/table package from already-completed
