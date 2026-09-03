@@ -105,6 +105,36 @@ tasks:
       - outputs/smn4lang_regional_fmri_reliability_v1/latest/participant_results.csv
       - outputs/smn4lang_regional_fmri_reliability_v1/latest/story_results.csv
 
+  run_smn4lang_regional_fmri_e5_transfer_v1:
+    description: >-
+      Run the frozen Stage-2 regional SMN4Lang model-brain analysis using only the
+      established ChineseEEG-trained multilingual-E5 lambda-0 and lambda-0.10 arms,
+      reporting all six language parcels and the complete DK68 spatial phenotype
+      after the completed model-blind regional reliability stage.
+    command:
+      - .venv/bin/python
+      - -m
+      - scripts.tuning.evaluate_smn4lang_regional_fmri_e5_transfer_v1
+      - --device
+      - auto
+    approval: manual
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 24
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_regional_fmri_e5_transfer_v1/latest/summary.json
+      - outputs/smn4lang_regional_fmri_e5_transfer_v1/latest/region_summary.csv
+      - outputs/smn4lang_regional_fmri_e5_transfer_v1/latest/participant_results.csv
+      - outputs/smn4lang_regional_fmri_e5_transfer_v1/latest/story_results.csv
+      - outputs/smn4lang_regional_fmri_e5_transfer_v1/latest/language_twofactor_bootstrap.csv
+      - outputs/smn4lang_regional_fmri_e5_transfer_v1/latest/dk68_participant_delta_matrix.csv
+
   run_manuscript_figures_v2:
     description: >-
       Regenerate the locked manuscript figure/table package from already-completed
