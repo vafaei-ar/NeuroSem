@@ -81,6 +81,30 @@ tasks:
       - outputs/smn4lang_regional_atlas_preflight_v1/latest/dk68_parcels.csv
       - outputs/smn4lang_regional_atlas_preflight_v1/latest/evlab_roi_index_audit.csv
 
+  run_smn4lang_regional_fmri_reliability_v1:
+    description: >-
+      Run the frozen Stage-1 model-blind regional neural reliability analysis for
+      all six EvLab language parcels and all 68 Desikan-Killiany cortical parcels,
+      using the successful atlas preflight, the unchanged SMN4Lang nuisance model,
+      the fixed 100-nonconstant-voxel rule, and no language-model representations.
+    command:
+      - .venv/bin/python
+      - -m
+      - scripts.analysis.run_smn4lang_regional_fmri_reliability_v1
+    approval: manual
+    timeout_minutes: 1440
+    requires_gpu: false
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 24
+      wait_minutes: 240
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_regional_fmri_reliability_v1/latest/summary.json
+      - outputs/smn4lang_regional_fmri_reliability_v1/latest/region_summary.csv
+      - outputs/smn4lang_regional_fmri_reliability_v1/latest/participant_results.csv
+      - outputs/smn4lang_regional_fmri_reliability_v1/latest/story_results.csv
+
   run_manuscript_figures_v2:
     description: >-
       Regenerate the locked manuscript figure/table package from already-completed
