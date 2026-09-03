@@ -1,8 +1,8 @@
 # 5. Current Roadmap
 
-**Last updated:** 2026-08-30
+**Last updated:** 2026-09-03
 
-NeuroSem is in an **evidence-locked manuscript-consolidation phase** for the primary paper. The prospective evidential chain is complete and must remain historically unchanged. The planned post-confirmatory robustness/generalization analyses have now also been executed and should be integrated as secondary explanatory evidence rather than used to redefine the original confirmation status.
+NeuroSem is in an **evidence-locked manuscript-consolidation phase** for the primary paper. The prospective evidential chain is complete and must remain historically unchanged. The planned post-confirmatory robustness/generalization analyses have also been executed. A separately frozen post-confirmatory regional SMN4Lang extension has now completed its atlas, model-blind reliability, and regional E5-transfer stages; its prespecified AHBA molecular interpretation remains pending.
 
 ## Primary scientific position
 
@@ -67,6 +67,32 @@ The defensible secondary architecture conclusion is:
 
 Do not claim that E5 is uniquely capable among all possible language models. The panel used one common adaptation protocol and fixed lambda=.10, intentionally avoiding model-specific rescue tuning.
 
+### 5. Regional SMN4Lang fMRI characterization
+
+The frozen regional extension is documented in `26_NMI_REGIONAL_FMRI_AHBA_EXTENSION_V1.md` and the completed neural/model result in `29_NMI_REGIONAL_FMRI_TRANSFER_RESULT_V1.md`.
+
+The final atlas gate passed after two pre-outcome technical amendments, both made before regional model outcomes. Model-blind regional reliability then passed for all **6/6** language parcels and all **68/68** DK cortical parcels.
+
+The regional E5 contrast used only the already-established ChineseEEG-trained lambda=.10 genuine-neural and lambda=0 text-only arms. Across the six frozen left-hemisphere language parcels:
+
+- every region had positive delta-RSA in **12/12** participants;
+- every region had a participant-bootstrap CI above zero;
+- every region had exact two-sided sign-flip `p = 0.000488`;
+- every region survived the prespecified six-region max-stat FWER correction.
+
+The largest language-parcel effects were:
+
+- posterior temporal cortex: **+0.000852**, FWER `p = 0.000488`;
+- anterior temporal cortex: **+0.000751**, FWER `p = 0.000977`.
+
+The correct frozen interpretation is:
+
+> The neural-guided representational improvement is distributed across the independently defined language network, with a graded concentration in temporal language cortex.
+
+The complete DK68 map is retained as an unthresholded spatial phenotype. All 68 parcels had positive mean delta-RSA and 12/12 positive participants, but the DK map is not a 68-region significance screen and no parcel is selected from these outcomes for the molecular stage.
+
+The participant x story bootstrap was also positive in 100% of 10,000 replicates for every language parcel. This is a sensitivity over the 12 analyzed participants and 60 analyzed stories, not unrestricted stimulus-population inference.
+
 ## Relationship to the earlier mBERT experiment
 
 The earlier strict-portability mBERT experiment and the new common-protocol panel used different training contexts and different frozen revisions. The earlier experiment used an MLM-based text objective and produced heterogeneous external effects. The new panel used the same InfoNCE-based sentence-geometry training objective for all six models. Under that protocol, mBERT shows small positive EEG -> fMRI transfer but strongly negative fMRI -> EEG transfer.
@@ -75,17 +101,27 @@ The correct synthesis is not “BERT does not work.” It is:
 
 > Generic MLM encoders have not shown the stable bidirectional portability observed for E5, and transfer behavior depends on both architecture and training context.
 
+## Current active analysis
+
+The only currently authorized outcome-bearing extension is the already-frozen molecular continuation of the regional SMN4Lang analysis.
+
+Stage 3 must use the complete participant-level DK delta-RSA phenotype without significance-based parcel filtering. The primary molecular domain remains left DK34, using the previously frozen AHBA expression preparation, seven GABA/serotonin/pathway sets, seven cell-type specificity controls, 5,000 spatial rotations, 5,000 size-matched random gene sets, donor leave-one-out robustness, and the mandatory mirroring sensitivities. Stage 4 remains the prespecified exploratory PLS1 analysis.
+
+This new phenotype is distinct from the previous EEG-derived AHBA phenotype. A positive or null result cannot revise or rescue the already-completed AHBA primary conclusions.
+
 ## Manuscript integration priority
 
-The next work should be manuscript/figure integration, not additional model fishing.
+The next work should remain disciplined and evidence-locked.
 
 1. Preserve the original prospective result as the main evidential chain.
 2. Add bidirectional E5 transfer as a secondary/post-confirmatory strengthening analysis.
 3. Add the six-model panel as explanatory model-scope evidence, preferably Extended Data or a compact main-text robustness paragraph plus Extended Data figure/table.
-4. Preserve all heterogeneous and negative model-family outcomes.
-5. Keep the ChineseEEG multi-seed dose result secondary and nuanced.
-6. Update figure legends, Methods and limitations to distinguish prospective, source-selected post-confirmatory, and exploratory/post-confirmatory analyses.
-7. Recheck all exact RunRelay job/commit/artifact provenance before final submission.
+4. Integrate the regional fMRI result as post-confirmatory spatial characterization, clearly distinct from the prospective whole-network SMN4Lang result.
+5. Preserve all heterogeneous and negative model-family outcomes.
+6. Keep the ChineseEEG multi-seed dose result secondary and nuanced.
+7. Complete only the already-frozen regional AHBA Stage 3/4 analysis; do not use it to generate new within-dataset molecular hypotheses.
+8. Update figure legends, Methods and limitations to distinguish prospective, source-selected post-confirmatory, regional post-confirmatory, and exploratory analyses.
+9. Recheck all exact RunRelay job/commit/artifact provenance before final submission.
 
 ## Suggested manuscript language
 
@@ -105,6 +141,10 @@ Dose statement:
 
 > Post-confirmatory dose-response characterization showed progressively larger fMRI-guidance effects on independent ZuCo EEG, whereas the corresponding ChineseEEG pattern was less stable across optimization seeds and remained secondary.
 
+Regional statement:
+
+> In a separately frozen post-confirmatory regional analysis, the neural-guided improvement was positive throughout the independently defined language network and survived family-wise correction in all six parcels, with the largest effects in posterior and anterior temporal language cortex.
+
 ## Current stopping rules
 
 - Do not reopen the original ZuCo or SMN4Lang target-side model/representation choices.
@@ -114,7 +154,10 @@ Dose statement:
 - No new dataset search for positive transfer for the current paper.
 - No rescue search for TMNRED or Garnett.
 - No E5 evaluation on failed MEG targets and no further MEG representation expansion.
-- No additional AHBA significance search.
+- Do not change the six regional language parcels, DK atlas, lambda, layer, HRF, nuisance family, story set, model, or voxel threshold from regional outcomes.
+- Do not select or rank-filter DK parcels before AHBA.
+- For the new regional AHBA phenotype, use only the already-frozen molecular families and sensitivity analyses. Do not add gene sets, pathways, parcel subsets, or transcriptomic follow-ups from observed outcomes.
+- Preserve the previous AHBA nulls regardless of the regional extension.
 - Preserve all nulls, negative effects, heterogeneous seeds and reliability failures.
 
 ## Key completed protocol/result documents
@@ -127,3 +170,7 @@ Dose statement:
 - `22_NMI_BIDIRECTIONAL_MODEL_FAMILY_PANEL_V1.md`
 - `23_NMI_BIDIRECTIONAL_MODEL_FAMILY_PANEL_RESULT.md`
 - `24_NMI_FMRI_TO_CHINESEEEG_MULTISEED_DOSE_RESULT.md`
+- `26_NMI_REGIONAL_FMRI_AHBA_EXTENSION_V1.md`
+- `27_NMI_REGIONAL_FMRI_ATLAS_PREFLIGHT_AMENDMENT_V1.md`
+- `28_NMI_REGIONAL_FMRI_DK_RESAMPLING_AMENDMENT_V1.md`
+- `29_NMI_REGIONAL_FMRI_TRANSFER_RESULT_V1.md`
