@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Model-blind atlas preflight for the frozen SMN4Lang regional/AHBA extension.
+"""Outcome-blind atlas preflight for the frozen SMN4Lang regional/AHBA extension.
 
-This stage reads only public atlas resources, frozen AHBA metadata, and an
-SMN4Lang NIfTI header. It does not read BOLD values, model embeddings, regional
-reliability/RSA outcomes, or AHBA association outcomes.
+This stage reads public atlas resources, frozen AHBA metadata, and only the header
+of one representative SMN4Lang NIfTI. It does not read BOLD values, model
+embeddings, regional reliability/RSA outcomes, or AHBA association outcomes.
 """
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from pathlib import Path
 
 import nibabel as nib
 import numpy as np
+from nibabel.processing import resample_from_to
 
 OPENNEURO_BASE = "https://s3.amazonaws.com/openneuro.org/ds004078"
 EVLAB_PAGE_URL = "https://www.evlab.mit.edu/resources-all/download-parcels"
@@ -25,9 +26,6 @@ EVLAB_LANGUAGE_NII_URL = "https://evlab.squarespace.com/s/allParcels-language-SN
 REP_BOLD_REL = "derivatives/preprocessed_data/sub-01/MNI/sub-01_task-RDR_run-1_bold.nii.gz"
 MIN_REGION_VOXELS = 100
 
-# Frozen before any regional neural/model outcome. Mapping independently documented
-# in the code accompanying Ryskina et al., COLM 2025, commit
-# c3c331432887fbbae28c250f4852407cd678ccdf.
 LEFT_LABEL_TO_NAME = {
     1: "IFGorb",
     2: "IFG",
@@ -62,7 +60,7 @@ def fetch_fresh(url: str, dest: Path, timeout: int = 600) -> str:
         resolved = str(r.geturl())
         shutil.copyfileobj(r, f, length=1024 * 1024)
     tmp.replace(dest)
-    if dest.stat().st_size <= 0:
+    if not dest.exists() or dest.stat().st_size <= 0:
         raise RuntimeError(f"empty download from {url}")
     return resolved
 
@@ -91,6 +89,16 @@ def affine_equal(a: np.ndarray, b: np.ndarray) -> bool:
 def read_csv_rows(path: Path) -> list[dict]:
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         return list(csv.DictReader(f))
+
+
+def write_csv(path: Path, rows: list[dict]) -> None:
+    if not rows:
+        raise RuntimeError(f"no rows for {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
 
 
 def norm_hemi(x: str) -> str:
@@ -122,26 +130,20 @@ def integer_label_image(img: nib.spatialimages.SpatialImage, name: str) -> np.nd
 def label_geometry(label_img: np.ndarray, affine: np.ndarray, label: int) -> dict:
     ijk = np.argwhere(label_img == int(label))
     if ijk.size == 0:
-        return {"label": int(label), "voxel_count": 0, "centroid_x_mm": None, "centroid_y_mm": None, "centroid_z_mm": None}
+        return {
+            "voxel_count": 0,
+            "centroid_x_mm": None,
+            "centroid_y_mm": None,
+            "centroid_z_mm": None,
+        }
     xyz = nib.affines.apply_affine(np.asarray(affine, float), ijk)
     c = np.mean(xyz, axis=0)
     return {
-        "label": int(label),
         "voxel_count": int(len(ijk)),
         "centroid_x_mm": float(c[0]),
         "centroid_y_mm": float(c[1]),
         "centroid_z_mm": float(c[2]),
     }
-
-
-def write_csv(path: Path, rows: list[dict]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if not rows:
-        raise RuntimeError(f"no rows for {path}")
-    with path.open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0]))
-        w.writeheader()
-        w.writerows(rows)
 
 
 def main() -> int:
@@ -155,16 +157,12 @@ def main() -> int:
     expression_root = args.expression_root.resolve()
     out = args.output_dir.resolve()
     out.mkdir(parents=True, exist_ok=True)
-
     blockers: list[str] = []
 
-    # Public source-page provenance and fresh parcel bytes.
     page_resolved, page_sha = fetch_page(EVLAB_PAGE_URL)
     evlab_dir = root / "external/evlab_language_parcels_sn220"
     parcel_path = evlab_dir / "allParcels-language-SN220.nii"
     parcel_resolved = fetch_fresh(EVLAB_LANGUAGE_NII_URL, parcel_path)
-    parcel_hash = sha256(parcel_path)
-
     parcel_img = nib.load(str(parcel_path))
     parcel_int = integer_label_image(parcel_img, "EvLab language parcel image")
     positive_labels = sorted(int(x) for x in np.unique(parcel_int) if int(x) > 0)
@@ -175,33 +173,31 @@ def main() -> int:
         g = label_geometry(parcel_int, parcel_img.affine, label)
         geometry_by_label[label] = g
         if 1 <= label <= 6:
-            frozen_name = LEFT_LABEL_TO_NAME[label]
+            name = LEFT_LABEL_TO_NAME[label]
             expected_hemi = "L"
         elif 7 <= label <= 12:
-            frozen_name = LEFT_LABEL_TO_NAME[label - 6]
+            name = LEFT_LABEL_TO_NAME[label - 6]
             expected_hemi = "R"
         else:
-            frozen_name = ""
+            name = ""
             expected_hemi = ""
         x = g["centroid_x_mm"]
-        hemi_from_centroid = "L" if x is not None and x < 0 else ("R" if x is not None and x > 0 else "MIDLINE")
+        centroid_hemi = "L" if x is not None and x < 0 else ("R" if x is not None and x > 0 else "MIDLINE")
         mapping_rows.append({
             "label": label,
-            "frozen_region_name": frozen_name,
+            "frozen_region_name": name,
             "expected_hemisphere": expected_hemi,
-            "centroid_hemisphere": hemi_from_centroid,
-            "voxel_count": g["voxel_count"],
-            "centroid_x_mm": g["centroid_x_mm"],
-            "centroid_y_mm": g["centroid_y_mm"],
-            "centroid_z_mm": g["centroid_z_mm"],
+            "centroid_hemisphere": centroid_hemi,
+            **g,
         })
 
     missing_left = [label for label in range(1, 7) if label not in geometry_by_label]
     if missing_left:
         blockers.append(f"EvLab parcel image is missing frozen left-language labels: {missing_left}")
-
     left_centroids_ok = all(
-        label in geometry_by_label and geometry_by_label[label]["centroid_x_mm"] is not None and geometry_by_label[label]["centroid_x_mm"] < 0
+        label in geometry_by_label
+        and geometry_by_label[label]["centroid_x_mm"] is not None
+        and geometry_by_label[label]["centroid_x_mm"] < 0
         for label in range(1, 7)
     )
     if not left_centroids_ok:
@@ -210,32 +206,29 @@ def main() -> int:
     right_labels_present = all(label in geometry_by_label for label in range(7, 13))
     right_centroids_ok = None
     if right_labels_present:
-        right_centroids_ok = all(
-            geometry_by_label[label]["centroid_x_mm"] is not None and geometry_by_label[label]["centroid_x_mm"] > 0
-            for label in range(7, 13)
-        )
+        right_centroids_ok = all(geometry_by_label[label]["centroid_x_mm"] > 0 for label in range(7, 13))
         if not right_centroids_ok:
             blockers.append("labels 7-12 are present but one or more do not have a right-hemisphere centroid")
 
     language_rows: list[dict] = []
     for name in EXPECTED_LANGUAGE:
         label = NAME_TO_LEFT_LABEL[name]
-        g = geometry_by_label.get(label, {"voxel_count": 0, "centroid_x_mm": None})
+        g = geometry_by_label.get(label, {"voxel_count": 0, "centroid_x_mm": None, "centroid_y_mm": None, "centroid_z_mm": None})
         n = int(g["voxel_count"])
         language_rows.append({
             "region": name,
             "label": label,
             "mask_voxels": n,
             "centroid_x_mm": g["centroid_x_mm"],
+            "centroid_y_mm": g["centroid_y_mm"],
+            "centroid_z_mm": g["centroid_z_mm"],
             "left_centroid_pass": bool(g["centroid_x_mm"] is not None and g["centroid_x_mm"] < 0),
             "mask_voxels_ge_100": n >= MIN_REGION_VOXELS,
         })
-
     language_possible = all(bool(r["mask_voxels_ge_100"]) for r in language_rows)
     if not language_possible:
         blockers.append("one or more frozen language parcels contain fewer than 100 atlas voxels")
 
-    # Representative SMN4Lang header only. nib.load is lazy and get_fdata is never called.
     rep_path = root / REP_BOLD_REL
     fetch_if_missing(f"{OPENNEURO_BASE}/{REP_BOLD_REL}", rep_path, timeout=1200)
     rep_img = nib.load(str(rep_path))
@@ -246,7 +239,6 @@ def main() -> int:
     if not lang_grid_match:
         blockers.append("EvLab language parcel grid does not exactly match SMN4Lang")
 
-    # Standard volumetric DK atlas from the already-pinned abagen environment.
     import abagen
 
     atlas = abagen.fetch_desikan_killiany(surface=False)
@@ -255,10 +247,22 @@ def main() -> int:
     dk_path = Path(atlas["image"]).resolve()
     dk_info_path = Path(atlas["info"]).resolve()
     dk_img = nib.load(str(dk_path))
-    dk_int = integer_label_image(dk_img, "Desikan-Killiany atlas")
-    dk_grid_match = tuple(dk_img.shape[:3]) == rep_shape and affine_equal(dk_img.affine, rep_affine)
-    if not dk_grid_match:
-        blockers.append("volumetric DK grid does not exactly match SMN4Lang")
+    dk_source_int = integer_label_image(dk_img, "Desikan-Killiany source atlas")
+    dk_source_grid_match = tuple(dk_img.shape[:3]) == rep_shape and affine_equal(dk_img.affine, rep_affine)
+
+    dk_resampled_img = resample_from_to(
+        dk_img,
+        (rep_shape, rep_affine),
+        order=0,
+        mode="constant",
+        cval=0.0,
+    )
+    dk_resampled_path = out / "dk68_resampled_to_smn4lang.nii.gz"
+    nib.save(dk_resampled_img, str(dk_resampled_path))
+    dk_int = integer_label_image(dk_resampled_img, "Desikan-Killiany resampled atlas")
+    dk_target_grid_match = tuple(dk_resampled_img.shape[:3]) == rep_shape and affine_equal(dk_resampled_img.affine, rep_affine)
+    if not dk_target_grid_match:
+        blockers.append("resampled DK grid does not exactly match SMN4Lang")
 
     dk_info_all = read_csv_rows(dk_info_path)
     cortical = [r for r in dk_info_all if str(r.get("structure", "")).strip().lower() == "cortex"]
@@ -282,7 +286,7 @@ def main() -> int:
 
     dk_id_match = len(expr_ids) == 68 and set(expr_ids) == set(dk_by_id) and set(expr_by_id) == set(dk_by_id)
     if not dk_id_match:
-        blockers.append("volumetric DK IDs do not exactly match frozen AHBA expression IDs")
+        blockers.append("DK IDs do not exactly match frozen AHBA expression IDs")
 
     metadata_mismatches: list[dict] = []
     for pid in sorted(set(expr_by_id).intersection(dk_by_id)):
@@ -299,39 +303,51 @@ def main() -> int:
     if metadata_mismatches:
         blockers.append(f"DK metadata mismatch against frozen AHBA expression bundle ({len(metadata_mismatches)} parcels)")
 
+    resampled_present = {int(x) for x in np.unique(dk_int) if int(x) > 0}
+    missing_cortical_after_resampling = sorted(set(expr_ids) - resampled_present)
+    if missing_cortical_after_resampling:
+        blockers.append(f"resampled DK image is missing cortical IDs: {missing_cortical_after_resampling}")
+
     dk_rows: list[dict] = []
     for pid in expr_ids:
         r = dk_by_id.get(pid, expr_by_id.get(pid, {}))
         hemi = norm_hemi(r.get("hemisphere", ""))
-        g = label_geometry(dk_int, dk_img.affine, pid)
-        n = int(g["voxel_count"])
+        src = label_geometry(dk_source_int, dk_img.affine, pid)
+        dst = label_geometry(dk_int, dk_resampled_img.affine, pid)
+        n = int(dst["voxel_count"])
         dk_rows.append({
             "parcel_id": pid,
             "parcel_name": r.get("label", ""),
             "hemisphere": hemi,
-            "mask_voxels": n,
-            "centroid_x_mm": g["centroid_x_mm"],
+            "source_voxels": src["voxel_count"],
+            "resampled_voxels": n,
+            "source_centroid_x_mm": src["centroid_x_mm"],
+            "source_centroid_y_mm": src["centroid_y_mm"],
+            "source_centroid_z_mm": src["centroid_z_mm"],
+            "resampled_centroid_x_mm": dst["centroid_x_mm"],
+            "resampled_centroid_y_mm": dst["centroid_y_mm"],
+            "resampled_centroid_z_mm": dst["centroid_z_mm"],
             "mask_voxels_ge_100": n >= MIN_REGION_VOXELS,
         })
 
     lh34_possible = all(bool(r["mask_voxels_ge_100"]) for r in dk_rows if r["hemisphere"] == "L")
     dk68_possible = all(bool(r["mask_voxels_ge_100"]) for r in dk_rows)
     if not lh34_possible:
-        blockers.append("one or more left-hemisphere DK parcels contain fewer than 100 atlas voxels")
+        blockers.append("one or more left-hemisphere DK parcels contain fewer than 100 voxels after frozen resampling")
 
     ready = len(blockers) == 0
-
     write_csv(out / "language_parcels.csv", language_rows)
     write_csv(out / "dk68_parcels.csv", dk_rows)
-    # Historical artifact name retained for the RunRelay manifest. Its content now
-    # audits the independently frozen label mapping and atlas-derived centroids.
     write_csv(out / "evlab_roi_index_audit.csv", mapping_rows)
 
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "analysis": "model-blind SMN4Lang regional atlas preflight v1",
         "protocol": "docs/26_NMI_REGIONAL_FMRI_AHBA_EXTENSION_V1.md",
-        "pre_outcome_amendment": "docs/27_NMI_REGIONAL_FMRI_ATLAS_PREFLIGHT_AMENDMENT_V1.md",
+        "pre_outcome_amendments": [
+            "docs/27_NMI_REGIONAL_FMRI_ATLAS_PREFLIGHT_AMENDMENT_V1.md",
+            "docs/28_NMI_REGIONAL_FMRI_DK_RESAMPLING_AMENDMENT_V1.md",
+        ],
         "loads_bold_values": False,
         "loads_model_embeddings": False,
         "computes_regional_reliability": False,
@@ -349,7 +365,7 @@ def main() -> int:
             "nifti_requested": EVLAB_LANGUAGE_NII_URL,
             "nifti_resolved": parcel_resolved,
             "nifti_local_path": str(parcel_path),
-            "nifti_sha256": parcel_hash,
+            "nifti_sha256": sha256(parcel_path),
             "shape_xyz": list(parcel_img.shape[:3]),
             "affine": np.asarray(parcel_img.affine, float).tolist(),
             "positive_integer_labels": positive_labels,
@@ -358,7 +374,6 @@ def main() -> int:
                 "repository": MAPPING_SOURCE_REPO,
                 "commit": MAPPING_SOURCE_COMMIT,
                 "file": MAPPING_SOURCE_FILE,
-                "publication": "Ryskina et al., Language models align with brain regions that represent concepts across modalities, COLM 2025",
             },
             "left_labels_1_to_6_centroid_check": left_centroids_ok,
             "right_labels_7_to_12_all_present": right_labels_present,
@@ -369,19 +384,31 @@ def main() -> int:
         },
         "desikan_killiany": {
             "abagen_version": getattr(abagen, "__version__", None),
-            "nifti_local_path": str(dk_path),
-            "nifti_sha256": sha256(dk_path),
+            "source_nifti_local_path": str(dk_path),
+            "source_nifti_sha256": sha256(dk_path),
+            "source_shape_xyz": list(dk_img.shape[:3]),
+            "source_affine": np.asarray(dk_img.affine, float).tolist(),
+            "source_grid_exact_match_to_smn4lang": dk_source_grid_match,
+            "resampling_rule": {
+                "implementation": "nibabel.processing.resample_from_to",
+                "order": 0,
+                "mode": "constant",
+                "cval": 0.0,
+                "target": "representative SMN4Lang MNI shape+affine",
+            },
+            "resampled_nifti_local_path": str(dk_resampled_path),
+            "resampled_nifti_sha256": sha256(dk_resampled_path),
+            "resampled_shape_xyz": list(dk_resampled_img.shape[:3]),
+            "resampled_affine": np.asarray(dk_resampled_img.affine, float).tolist(),
+            "resampled_grid_exact_match_to_smn4lang": dk_target_grid_match,
             "info_local_path": str(dk_info_path),
             "info_sha256": sha256(dk_info_path),
-            "shape_xyz": list(dk_img.shape[:3]),
-            "affine": np.asarray(dk_img.affine, float).tolist(),
-            "grid_exact_match_to_smn4lang": dk_grid_match,
             "n_cortical": 68,
             "n_left": n_left,
             "n_right": n_right,
             "expression_id_match": dk_id_match,
             "expression_metadata_mismatch_count": len(metadata_mismatches),
-            "expression_metadata_mismatches": metadata_mismatches,
+            "missing_cortical_ids_after_resampling": missing_cortical_after_resampling,
             "region_rows": dk_rows,
         },
         "minimum_region_voxels": MIN_REGION_VOXELS,
@@ -391,27 +418,27 @@ def main() -> int:
         "ready_for_frozen_regional_reliability": ready,
         "blockers": blockers,
         "guardrails": [
-            "This preflight reads only public atlas data, frozen AHBA metadata, and an SMN4Lang NIfTI header; it never loads BOLD values.",
-            "The label mapping was frozen from an independent published-analysis codebase before regional NeuroSem outcomes.",
-            "No atlas resampling, ROI redefinition, intersection, dilation, erosion or threshold adjustment is performed.",
-            "A blocked atlas gate is a valid completed preflight and must stop subsequent neural analysis until a pre-outcome protocol decision is frozen.",
+            "No regional BOLD values, model representations or regional outcomes are read in this preflight.",
+            "EvLab language parcels are not resampled because they already match the SMN4Lang grid.",
+            "The DK label image is resampled only by the pre-outcome frozen nearest-neighbor rule in amendment 28.",
+            "No atlas, interpolation order, threshold or mask is optimized using regional neural outcomes.",
+            "A blocked atlas gate is a valid completed preflight and stops subsequent regional neural analysis.",
         ],
     }
     (out / "summary.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({
         "status": "ready" if ready else "blocked",
         "language_grid_match": lang_grid_match,
-        "dk_grid_match": dk_grid_match,
+        "dk_source_grid_match": dk_source_grid_match,
+        "dk_resampled_grid_match": dk_target_grid_match,
         "language_left_centroids_ok": left_centroids_ok,
         "language_primary_structurally_possible": language_possible,
+        "dk68_cortical_ids_retained": len(missing_cortical_after_resampling) == 0,
         "dk34_left_primary_molecular_structurally_possible": lh34_possible,
         "dk68_bilateral_structurally_possible": dk68_possible,
         "blockers": blockers,
     }, indent=2), flush=True)
 
-    # A scientifically blocked preflight is a successfully completed audit. Nonzero
-    # exit codes are reserved for operational/integrity failures that prevented the
-    # audit from being written.
     return 0
 
 
