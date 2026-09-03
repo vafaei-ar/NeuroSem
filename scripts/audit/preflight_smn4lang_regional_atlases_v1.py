@@ -15,11 +15,16 @@ import hashlib
 import json
 import re
 import shutil
+import sys
 import urllib.request
 from pathlib import Path
 
 import nibabel as nib
 import numpy as np
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.analysis.run_smn4lang_fmri_reliability import OPENNEURO_BASE, download
 
@@ -117,7 +122,6 @@ def parse_roi_indices(path: Path) -> tuple[dict[str, int], list[dict]]:
 def read_csv_rows(path: Path) -> list[dict]:
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         return list(csv.DictReader(f))
-
 
 def norm_hemi(x: str) -> str:
     s = str(x).strip().upper()
