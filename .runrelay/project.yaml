@@ -186,6 +186,31 @@ tasks:
       - outputs/nmi_main_figures_v3/latest/figure4.png
       - outputs/nmi_main_figures_v3/latest/source_manifest.json
 
+  build_publication_figures_tables_v1:
+    description: >-
+      Rebuild and verify the current publication figure/table system in one presentation-only
+      pass: final NMI main figures, existing supplementary manuscript figures/tables, and the
+      frozen regional SMN4Lang figure/tables, with consolidated SHA-256 provenance and no new analysis.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_publication_figures_tables_v1.py
+    approval: manual
+    timeout_minutes: 45
+    requires_gpu: false
+    working_directory: .
+    artifacts:
+      - outputs/publication_figures_tables_v1/latest/reproducibility_manifest.json
+      - outputs/publication_figures_tables_v1/latest/reproducibility_report.txt
+      - outputs/regional_fmri_figures_tables_v1/latest/figure_regional_fmri_transfer.pdf
+      - outputs/regional_fmri_figures_tables_v1/latest/figure_regional_fmri_transfer.svg
+      - outputs/regional_fmri_figures_tables_v1/latest/figure_regional_fmri_transfer.png
+      - outputs/regional_fmri_figures_tables_v1/latest/table_regional_language_parcels.csv
+      - outputs/regional_fmri_figures_tables_v1/latest/table_supplementary_dk68_phenotype.csv
+      - outputs/regional_fmri_figures_tables_v1/latest/figure_regional_fmri_transfer_caption.txt
+      - outputs/regional_fmri_figures_tables_v1/latest/source_manifest.json
+      - outputs/nmi_main_figures_v3/latest/source_manifest.json
+      - outputs/manuscript_figures_v2/latest/source_manifest.json
+
   run_nmi_bidirectional_fmri_source_calibration_v1:
     description: >-
       Run the frozen source-only multilingual-E5 lambda calibration against the
