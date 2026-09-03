@@ -9,11 +9,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT / "outputs" / "publication_figures_tables_v1" / "latest"
+REPORTING_VALUES = ROOT / "outputs" / "manuscript_reporting_values_v1" / "latest" / "reporting_values.json"
 
 BUILDERS = [
     ROOT / "scripts" / "paper" / "build_nmi_main_figures_v3_4.py",
     ROOT / "scripts" / "paper" / "build_manuscript_figures_v2.py",
     ROOT / "scripts" / "paper" / "build_regional_fmri_figures_tables_v1.py",
+    ROOT / "scripts" / "paper" / "export_manuscript_reporting_values_v1.py",
 ]
 
 EXPECTED = [
@@ -36,6 +38,7 @@ EXPECTED = [
     ROOT / "outputs" / "regional_fmri_figures_tables_v1" / "latest" / "table_supplementary_dk68_phenotype.csv",
     ROOT / "outputs" / "regional_fmri_figures_tables_v1" / "latest" / "figure_regional_fmri_transfer_caption.txt",
     ROOT / "outputs" / "regional_fmri_figures_tables_v1" / "latest" / "source_manifest.json",
+    REPORTING_VALUES,
 ]
 
 
@@ -63,18 +66,21 @@ def main() -> int:
     if missing:
         raise RuntimeError("Expected publication outputs missing after rebuild: " + ", ".join(missing))
 
+    reporting_values = json.loads(REPORTING_VALUES.read_text(encoding="utf-8"))
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     report = {
         "schema_version": 1,
         "status": "ok",
-        "purpose": "single-command reproducibility audit for current NeuroSem publication figures and tables",
+        "purpose": "single-command reproducibility audit for current NeuroSem publication figures, tables, and manuscript reporting values",
         "builders": [str(p.relative_to(ROOT)) for p in BUILDERS],
         "builder_sha256": {str(p.relative_to(ROOT)): sha256(p) for p in BUILDERS},
         "outputs_verified": {str(p.relative_to(ROOT)): sha256(p) for p in EXPECTED},
         "n_outputs_verified": len(EXPECTED),
+        "manuscript_reporting_values": reporting_values,
         "guardrails": {
             "presentation_only": True,
             "no_model_training": True,
+            "no_new_model_evaluation": True,
             "no_new_neural_analysis": True,
             "no_new_hypothesis_testing": True,
             "uses_completed_derived_outputs": True,
@@ -88,6 +94,7 @@ def main() -> int:
         "Status: ok\n"
         f"Builders executed: {len(BUILDERS)}\n"
         f"Outputs verified: {len(EXPECTED)}\n"
+        "Manuscript reporting values: embedded in reproducibility_manifest.json\n"
         "New analyses performed: 0\n",
         encoding="utf-8",
     )
