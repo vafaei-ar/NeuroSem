@@ -391,3 +391,28 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/nmi_reviewer_response_consolidated_v1/latest/summary.json
+
+  run_nmi_forward_external_dose_characterization_v1:
+    description: >-
+      Evaluate the frozen already-trained ChineseEEG multilingual-E5 dose grid on
+      the unchanged ZuCo and SMN4Lang primary pipelines, reusing the prospective
+      lambda=.10 result and reporting the complete post-confirmatory external curves
+      with the already-observed matched STS axis and no target-side dose selection.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_nmi_forward_external_dose_characterization_v1.py
+    approval: manual
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 24
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/nmi_forward_external_dose_characterization_v1/latest/summary.json
+      - outputs/nmi_forward_external_dose_characterization_v1/latest/participant_dose_results.csv
+      - outputs/nmi_forward_external_dose_characterization_v1/latest/dose_summary.csv
+      - outputs/nmi_forward_external_dose_characterization_v1/latest/tradeoff_points.csv
