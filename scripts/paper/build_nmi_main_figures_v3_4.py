@@ -16,9 +16,32 @@ CANONICAL_OUT = ROOT / "outputs/nmi_main_figures_v3/latest"
 def main() -> int:
     if not BUILDER.exists():
         raise FileNotFoundError(BUILDER)
-    completed = subprocess.run([sys.executable, str(BUILDER)], cwd=ROOT, check=False)
+    completed = subprocess.run(
+        [sys.executable, str(BUILDER)],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
     if completed.returncode != 0:
-        raise RuntimeError(f"NMI v4 main-figure build failed with exit {completed.returncode}")
+        CANONICAL_OUT.mkdir(parents=True, exist_ok=True)
+        diagnostic = {
+            "schema_version": 1,
+            "analysis": "NMI v4 figure-build diagnostic",
+            "status": "failed",
+            "returncode": completed.returncode,
+            "builder": str(BUILDER.relative_to(ROOT)),
+            "stdout": completed.stdout[-12000:],
+            "stderr": completed.stderr[-12000:],
+            "guardrails": [
+                "Diagnostic capture only; no scientific analysis or input changes.",
+                "Failure output is written to the already-declared source_manifest.json artifact for direct retrieval."
+            ],
+        }
+        (CANONICAL_OUT / "source_manifest.json").write_text(json.dumps(diagnostic, indent=2) + "\n", encoding="utf-8")
+        sys.stdout.write(completed.stdout)
+        sys.stderr.write(completed.stderr)
+        return completed.returncode
 
     CANONICAL_OUT.mkdir(parents=True, exist_ok=True)
     for stem in ("figure1", "figure2", "figure3", "figure4"):
