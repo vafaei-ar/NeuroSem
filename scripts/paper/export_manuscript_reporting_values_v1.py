@@ -47,6 +47,13 @@ def primary_zuco() -> dict:
     }
 
 
+def first_present(keys: set[str], candidates: list[str], label: str) -> str:
+    for key in candidates:
+        if key in keys:
+            return key
+    raise KeyError(f"missing {label}; available columns: {sorted(keys)}")
+
+
 def primary_fmri() -> dict:
     candidates = [
         ROOT / "outputs" / "smn4lang_fmri_e5_transfer_v1" / "latest" / "participant_results.csv",
@@ -57,9 +64,17 @@ def primary_fmri() -> dict:
         return {"available": False}
     rows = read_csv(p)
     keys = set(rows[0])
-    a0_key = next(k for k in ["lambda_0_resid_rsa", "text_only_resid_rsa", "lambda_0_rsa"] if k in keys)
-    a1_key = next(k for k in ["lambda_0p10_resid_rsa", "neural_guided_resid_rsa", "lambda_0p10_rsa"] if k in keys)
-    delta_key = next(k for k in ["delta_0p10_minus_0", "delta_rsa", "delta"] if k in keys)
+    a0_key = first_present(
+        keys,
+        ["lambda_0_residual_rsa", "lambda_0_resid_rsa", "text_only_resid_rsa", "lambda_0_rsa"],
+        "fMRI lambda=0 RSA column",
+    )
+    a1_key = first_present(
+        keys,
+        ["lambda_0p10_residual_rsa", "lambda_0p10_resid_rsa", "neural_guided_resid_rsa", "lambda_0p10_rsa"],
+        "fMRI lambda=0.10 RSA column",
+    )
+    delta_key = first_present(keys, ["delta_0p10_minus_0", "delta_rsa", "delta"], "fMRI delta column")
     a0, a1, delta = mean_col(rows, a0_key), mean_col(rows, a1_key), mean_col(rows, delta_key)
     return {
         "available": True,
@@ -126,7 +141,7 @@ def reverse_lambda001_multiseed() -> dict:
     s = json.loads(p.read_text(encoding="utf-8"))
     return {
         "source": str(p.relative_to(ROOT)),
-        "new_seeds": s.get("new_seeds"),
+        "seeds": s.get("seeds"),
         "seed_results": s.get("seed_results"),
         "aggregate": s.get("aggregate"),
     }
