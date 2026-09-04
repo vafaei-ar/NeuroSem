@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Shared Nature-Portfolio-compliant style for NeuroSem manuscript figures.
-
-Import and call `apply()` at the top of every build script. Nothing else in a
-build script should touch rcParams, fonts, colours or spines.
-"""
+"""Shared Nature-Portfolio-compliant style for NeuroSem manuscript figures."""
 from __future__ import annotations
 
 import matplotlib
@@ -154,7 +150,7 @@ def schematic(ax) -> None:
     ax.axis("off")
 
 
-def save(fig, out_prefix, png: bool = True) -> dict:
+def save(fig, out_prefix, png: bool = True, svg: bool = True) -> dict:
     from pathlib import Path
     out_prefix = Path(out_prefix)
     out_prefix.parent.mkdir(parents=True, exist_ok=True)
@@ -162,6 +158,10 @@ def save(fig, out_prefix, png: bool = True) -> dict:
     pdf = str(out_prefix) + ".pdf"
     fig.savefig(pdf)
     written["pdf"] = pdf
+    if svg:
+        s = str(out_prefix) + ".svg"
+        fig.savefig(s)
+        written["svg"] = s
     if png:
         p = str(out_prefix) + ".png"
         fig.savefig(p, dpi=600)
