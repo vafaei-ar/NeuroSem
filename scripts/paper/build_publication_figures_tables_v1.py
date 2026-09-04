@@ -56,6 +56,13 @@ def run_builder(path: Path) -> None:
         raise RuntimeError(f"Publication builder failed: {path.relative_to(ROOT)} (exit {completed.returncode})")
 
 
+def fmt_seed_values(target: dict) -> str:
+    return ", ".join(
+        f"{int(rec['seed'])}:{float(rec['genuine_minus_text_mean_delta']):.10g}"
+        for rec in target["seed_values"]
+    )
+
+
 def main() -> int:
     for builder in BUILDERS:
         if not builder.exists():
@@ -89,15 +96,36 @@ def main() -> int:
     json_path = OUT_DIR / "reproducibility_manifest.json"
     txt_path = OUT_DIR / "reproducibility_report.txt"
     json_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    txt_path.write_text(
-        "NeuroSem publication figure/table reproducibility report\n"
-        "Status: ok\n"
-        f"Builders executed: {len(BUILDERS)}\n"
-        f"Outputs verified: {len(EXPECTED)}\n"
-        "Manuscript reporting values: embedded in reproducibility_manifest.json\n"
-        "New analyses performed: 0\n",
-        encoding="utf-8",
-    )
+
+    z = reporting_values["primary_zuco"]
+    f = reporting_values["primary_fmri"]
+    fw = reporting_values["forward_multiseed"]["targets"]
+    rv = reporting_values["reverse_lambda001_multiseed"]
+    lines = [
+        "NeuroSem publication figure/table reproducibility report",
+        "Status: ok",
+        f"Builders executed: {len(BUILDERS)}",
+        f"Outputs verified: {len(EXPECTED)}",
+        f"ZuCo lambda0 mean RSA: {float(z['lambda_0_mean_rsa']):.10g}",
+        f"ZuCo lambda0.10 mean RSA: {float(z['lambda_0p10_mean_rsa']):.10g}",
+        f"ZuCo mean delta: {float(z['mean_delta']):.10g}",
+        f"ZuCo relative delta percent of text-only mean: {float(z['relative_delta_percent_of_text_only_mean']):.8g}",
+    ]
+    if f.get("available"):
+        lines.extend([
+            f"fMRI lambda0 mean RSA: {float(f['lambda_0_mean_rsa']):.10g}",
+            f"fMRI lambda0.10 mean RSA: {float(f['lambda_0p10_mean_rsa']):.10g}",
+            f"fMRI mean delta: {float(f['mean_delta']):.10g}",
+            f"fMRI relative delta percent of text-only mean: {float(f['relative_delta_percent_of_text_only_mean']):.8g}",
+        ])
+    lines.extend([
+        "Forward multiseed ZuCo genuine-minus-text: " + fmt_seed_values(fw["zuco"]),
+        "Forward multiseed fMRI genuine-minus-text: " + fmt_seed_values(fw["smn4lang_fmri"]),
+        f"Reverse lambda0.01 multiseed seeds: {rv.get('new_seeds') or rv.get('seeds')}",
+        "Manuscript reporting values: embedded in reproducibility_manifest.json",
+        "New analyses performed: 0",
+    ])
+    txt_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(json.dumps({"status": "ok", "builders": len(BUILDERS), "outputs_verified": len(EXPECTED)}, indent=2))
     return 0
 
