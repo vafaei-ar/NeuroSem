@@ -416,3 +416,25 @@ tasks:
       - outputs/nmi_forward_external_dose_characterization_v1/latest/participant_dose_results.csv
       - outputs/nmi_forward_external_dose_characterization_v1/latest/dose_summary.csv
       - outputs/nmi_forward_external_dose_characterization_v1/latest/tradeoff_points.csv
+
+  run_nmi_model_space_characterization_lambda1_v1:
+    description: >-
+      Compute the frozen descriptive lambda=1 versus lambda=0 E5 model-space
+      characterization on the same 349 ZuCo items and with the same metric family
+      as the existing lambda=.10 characterization, without neural or STS outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/nmi_model_space_characterization_lambda1_v1.py
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: true
+    resources:
+      cpu_cores: 4
+      min_ram_gb: 12
+      gpu_count: 1
+      min_vram_gb: 8
+      wait_minutes: 240
+    working_directory: .
+    artifacts:
+      - outputs/nmi_model_space_characterization_lambda1_v1/latest/summary.json
+      - outputs/nmi_model_space_characterization_lambda1_v1/latest/item_metrics.csv
