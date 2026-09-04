@@ -112,17 +112,20 @@ def main():
 
     outputs = [OUT / f"{stem}.{ext}" for stem in ["figure1", "figure2", "figure3", "figure4"] for ext in ["pdf", "svg", "png"]]
     aux_outputs = [AUX_OUT / f"extdata_regional.{ext}" for ext in ["pdf", "svg", "png"]]
+    svg_paths = [OUT / f"figure{i}.svg" for i in range(1, 5)] + [AUX_OUT / "extdata_regional.svg"]
     manifest = {
-        "schema_version": 2,
+        "schema_version": 3,
         "analysis": "NMI visualization v4 presentation-only rebuild",
         "guardrails": [
             "Uses already-completed frozen derived outputs only.",
             "Primary participant-level figure inputs are pinned to canonical validated files; no recursive discovery is used.",
             "No fitting, tuning, target selection, inference, or new hypothesis test is performed.",
             "Synthetic/demo paths are not used by this orchestrator.",
+            "SVG text is embedded only to permit downstream visual QA when binary R2 transport is unavailable."
         ],
         "inputs": {str(p.relative_to(REPO)): sha256(p) for p in inputs},
         "outputs": {str(p.relative_to(REPO)): sha256(p) for p in outputs + aux_outputs},
+        "svg_text": {str(p.relative_to(REPO)): p.read_text(encoding="utf-8") for p in svg_paths},
     }
     (OUT / "source_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"status": "ok", "output_dir": str(OUT), "n_outputs": len(outputs), "aux_outputs": len(aux_outputs)}, indent=2))
