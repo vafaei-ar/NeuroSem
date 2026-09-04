@@ -15,27 +15,6 @@ def read_csv(path):
         return list(csv.DictReader(f))
 
 
-def headers(path):
-    with open(path, newline="", encoding="utf-8") as f:
-        return set(next(csv.reader(f)))
-
-
-def discover_csv(required, prefer):
-    matches = []
-    for p in (REPO / "outputs").rglob("*.csv"):
-        try:
-            if required.issubset(headers(p)):
-                matches.append((int(prefer.lower() in str(p).lower()), p.stat().st_mtime, p))
-        except Exception:
-            pass
-    if not matches:
-        raise FileNotFoundError(f"No CSV with fields {sorted(required)}")
-    matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
-    if matches[0][0] != 1:
-        raise FileNotFoundError(f"No preferred CSV containing {prefer!r}")
-    return matches[0][2]
-
-
 def sha256(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -58,7 +37,7 @@ def prepare_dose_json(path, reliability_csv, out):
     cis = lambda ds: [[float(by[(ds, x)]["bootstrap_95ci_low"]), float(by[(ds, x)]["bootstrap_95ci_high"])] for x in lam]
     rr = [r for r in read_csv(reliability_csv) if r.get("candidate") == "row_mean_all"]
     if len(rr) != 17:
-        raise RuntimeError(f"Expected 17 ZuCo reliability rows, found {len(rr)}")
+        raise RuntimeError(f"Expected 17 ZuCo reliability rows in canonical subject file, found {len(rr)}: {reliability_csv}")
     payload = {
         "lambda": lam,
         "zuco_delta": vals("zuco", "mean_delta_rsa"),
@@ -97,14 +76,19 @@ def prepare_model_json(path, out):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     AUX_OUT.mkdir(parents=True, exist_ok=True)
-    zuco_rel = discover_csv({"candidate", "resid_loo"}, "zuco2_nr_primary_representation_reliability")
-    zuco_transfer = discover_csv({"lambda_0_resid_rsa", "lambda_0p10_resid_rsa", "delta_0p10_minus_0"}, "zuco2_nr_e5_transfer_v1")
-    fmri_rel = discover_csv({"primary_residual_reliability"}, "smn4lang_fmri_reliability")
-    fmri_transfer = discover_csv({"lambda_0_residual_rsa", "lambda_0p10_residual_rsa", "delta_0p10_minus_0"}, "smn4lang_fmri_e5_transfer_v1")
+
+    # Pin all primary figure inputs to the exact canonical participant-level files
+    # used by the previously validated publication build. Avoid recursive discovery,
+    # because several later robustness outputs intentionally share column names.
+    zuco_rel = REPO / "outputs/zuco2_nr_primary_representation_reliability/latest/subject_metrics.csv"
+    zuco_transfer = REPO / "outputs/zuco2_nr_e5_transfer_v1/latest/subject_results.csv"
+    fmri_rel = REPO / "outputs/smn4lang_fmri_reliability/latest/participant_results.csv"
+    fmri_transfer = REPO / "outputs/smn4lang_fmri_e5_transfer_v1/latest/participant_results.csv"
     dose_csv = REPO / "outputs/nmi_forward_external_dose_characterization_v1/latest/dose_summary.csv"
     model_csv = REPO / "outputs/nmi_bidirectional_model_family_panel_v1/latest/model_seed_direction_results.csv"
     regional_csv = REPO / "outputs/smn4lang_regional_fmri_e5_transfer_v1/latest/region_summary.csv"
     dev_json = REPO / "paper/figure_data/chineseeeg_development_v1.json"
+
     inputs = [
         zuco_rel, zuco_rel.parent / "summary.json", zuco_transfer, zuco_transfer.parent / "summary.json",
         fmri_rel, fmri_rel.parent / "summary.json", fmri_transfer, fmri_transfer.parent / "summary.json",
@@ -113,6 +97,7 @@ def main():
     for p in inputs:
         if not p.exists():
             raise FileNotFoundError(p)
+
     with tempfile.TemporaryDirectory(prefix="neurosem_nmi_v4_") as td:
         td = Path(td)
         dose_json = td / "dose.json"
@@ -124,6 +109,7 @@ def main():
         run("build_figure3_smn4lang.py", "--reliability-participants", str(fmri_rel), "--reliability-summary", str(fmri_rel.parent / "summary.json"), "--transfer-participants", str(fmri_transfer), "--transfer-summary", str(fmri_transfer.parent / "summary.json"), "--out-prefix", str(OUT / "figure3"))
         run("build_figure4_dose_models.py", "--dose-summary", str(dose_json), "--model-panel", str(model_json), "--out-prefix", str(OUT / "figure4"))
         run("build_extdata_regional.py", "--region-summary", str(regional_csv), "--out-prefix", str(AUX_OUT / "extdata_regional"))
+
     outputs = [OUT / f"{stem}.{ext}" for stem in ["figure1", "figure2", "figure3", "figure4"] for ext in ["pdf", "svg", "png"]]
     aux_outputs = [AUX_OUT / f"extdata_regional.{ext}" for ext in ["pdf", "svg", "png"]]
     manifest = {
@@ -131,6 +117,7 @@ def main():
         "analysis": "NMI visualization v4 presentation-only rebuild",
         "guardrails": [
             "Uses already-completed frozen derived outputs only.",
+            "Primary participant-level figure inputs are pinned to canonical validated files; no recursive discovery is used.",
             "No fitting, tuning, target selection, inference, or new hypothesis test is performed.",
             "Synthetic/demo paths are not used by this orchestrator.",
         ],
