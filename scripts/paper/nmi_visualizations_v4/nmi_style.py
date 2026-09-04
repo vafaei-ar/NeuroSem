@@ -86,8 +86,10 @@ def apply() -> None:
 
 
 def figure(width_mm: float, height_mm: float, **gridspec):
-    fig = plt.figure(figsize=(width_mm * MM, height_mm * MM), layout="constrained")
-    fig.get_layout_engine().set(w_pad=0.02, h_pad=0.02, wspace=0.06, hspace=0.06)
+    # Use the long-supported constrained_layout flag rather than the newer
+    # LayoutEngine.set API so the production workstation's Matplotlib version
+    # does not affect figure generation.
+    fig = plt.figure(figsize=(width_mm * MM, height_mm * MM), constrained_layout=True)
     if gridspec:
         axes = fig.subplots(**gridspec)
         return fig, axes
