@@ -9,6 +9,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "outputs" / "manuscript_reporting_values_v1" / "latest"
+SEEDS = [20260829, 20260830, 20260831]
 
 
 def read_csv(path: Path) -> list[dict]:
@@ -20,14 +21,24 @@ def mean_col(rows: list[dict], name: str) -> float:
     return float(np.mean([float(r[name]) for r in rows]))
 
 
+def summarize_delta_csv(path: Path) -> dict:
+    rows = read_csv(path)
+    vals = [float(r["delta_0p10_minus_0"]) for r in rows]
+    return {
+        "source": str(path.relative_to(ROOT)),
+        "n_participants": len(vals),
+        "mean_delta": float(np.mean(vals)),
+    }
+
+
 def primary_zuco() -> dict:
-    root = ROOT / "outputs" / "zuco2_nr_e5_transfer_v1" / "latest"
-    rows = read_csv(root / "subject_results.csv")
+    p = ROOT / "outputs" / "zuco2_nr_e5_transfer_v1" / "latest" / "subject_results.csv"
+    rows = read_csv(p)
     a0 = mean_col(rows, "lambda_0_resid_rsa")
     a1 = mean_col(rows, "lambda_0p10_resid_rsa")
     delta = mean_col(rows, "delta_0p10_minus_0")
     return {
-        "source": str((root / "subject_results.csv").relative_to(ROOT)),
+        "source": str(p.relative_to(ROOT)),
         "n_participants": len(rows),
         "lambda_0_mean_rsa": a0,
         "lambda_0p10_mean_rsa": a1,
@@ -61,9 +72,8 @@ def primary_fmri() -> dict:
     }
 
 
-def specificity_forward_seed_means() -> dict:
-    p = ROOT / "outputs" / "nmi_reviewer_response_consolidated_v1" / "latest" / "summary.json"
-    s = json.loads(p.read_text(encoding="utf-8"))
+def specificity_from_consolidated(path: Path) -> dict:
+    s = json.loads(path.read_text(encoding="utf-8"))
     seed_results = s["specificity_control"]["seed_results"]
     out = {}
     for dataset in ["zuco", "smn4lang_fmri"]:
@@ -77,7 +87,38 @@ def specificity_forward_seed_means() -> dict:
             "mean_of_seed_means": float(np.mean([v["genuine_minus_text_mean_delta"] for v in vals])),
             "n_seed_means_positive": int(sum(v["genuine_minus_text_mean_delta"] > 0 for v in vals)),
         }
-    return {"source": str(p.relative_to(ROOT)), "targets": out}
+    return {"source": str(path.relative_to(ROOT)), "targets": out}
+
+
+def specificity_from_scientific_outputs(root: Path) -> dict:
+    out = {}
+    sources = []
+    for dataset in ["zuco", "smn4lang_fmri"]:
+        vals = []
+        csv_name = "subject_results.csv" if dataset == "zuco" else "participant_results.csv"
+        for seed in SEEDS:
+            base = root / f"seed_{seed}" / dataset
+            smt_path = base / "shuffled_minus_text" / csv_name
+            gms_path = base / "genuine_minus_shuffled" / csv_name
+            smt = summarize_delta_csv(smt_path)
+            gms = summarize_delta_csv(gms_path)
+            sources.extend([smt["source"], gms["source"]])
+            genuine_text = float(smt["mean_delta"]) + float(gms["mean_delta"])
+            vals.append({"seed": seed, "genuine_minus_text_mean_delta": genuine_text})
+        out[dataset] = {
+            "seed_values": vals,
+            "mean_of_seed_means": float(np.mean([v["genuine_minus_text_mean_delta"] for v in vals])),
+            "n_seed_means_positive": int(sum(v["genuine_minus_text_mean_delta"] > 0 for v in vals)),
+        }
+    return {"source": sources, "targets": out}
+
+
+def specificity_forward_seed_means() -> dict:
+    consolidated = ROOT / "outputs" / "nmi_reviewer_response_consolidated_v1" / "latest" / "summary.json"
+    if consolidated.exists():
+        return specificity_from_consolidated(consolidated)
+    scientific = ROOT / "outputs" / "nmi_reviewer_response_scientific_v1" / "latest"
+    return specificity_from_scientific_outputs(scientific)
 
 
 def reverse_lambda001_multiseed() -> dict:
