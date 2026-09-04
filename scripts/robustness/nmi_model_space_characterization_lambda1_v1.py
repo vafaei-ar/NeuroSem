@@ -3,7 +3,13 @@ from __future__ import annotations
 
 import csv
 import json
+import sys
 from pathlib import Path
+
+# Support direct-script execution from the repository root under RunRelay.
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
