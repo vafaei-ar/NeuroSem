@@ -2,6 +2,13 @@
 """Compatibility wrapper for the NMI v1.13 table export."""
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import scripts.paper.build_nmi_submission_tables_v1 as base
 
 
