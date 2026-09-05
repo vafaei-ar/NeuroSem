@@ -1,112 +1,111 @@
 # 1. NeuroSem Project Overview
 
-**Last updated:** 2026-08-30
+**Last updated:** 2026-09-04
 
 NeuroSem asks whether reproducible human neural representational geometry can constrain language-model learning in a way that transfers to independent neural measurements.
 
 ## Current scientific conclusion
 
-The strongest defensible primary conclusion remains:
+The strongest defensible conclusion is now:
 
-> Human language-related neural geometry can provide a transferable relational constraint on language representations. A constraint learned from Chinese natural-reading EEG improves alignment to independent English-reading EEG and prospectively to language-network fMRI in different participants during naturalistic auditory comprehension, but transfer is selective rather than universal and should only be evaluated when the target neural geometry is itself reproducible.
+> Brain-derived relational supervision can transfer to independent neural representational systems, but source fit does not guarantee a target-independent transfer magnitude or sign. Under the tested protocols, transfer depends on relational-loss dose, external target and model backbone.
 
-Post-confirmatory work now adds two important qualifications:
+The historical primary chain remains unchanged:
 
-1. **Source-modality bidirectionality:** an fMRI-derived relational constraint can transfer back to independent ZuCo EEG within multilingual E5.
-2. **Model-family scope:** stable bidirectional transfer is reproduced across multilingual E5-large and E5-base under a common adaptation protocol, but is not universal across MPNet, MiniLM, XLM-R or mBERT.
+1. ChineseEEG Little Prince establishes a reproducible development neural geometry and model learnability.
+2. The frozen multilingual-E5-large `lambda=0.10` versus `lambda=0` contrast transfers positively to independent ZuCo English-reading EEG in **17/17** participants.
+3. The same frozen contrast transfers prospectively to SMN4Lang fMRI in **12/12** participants after a model-blind reliability gate.
 
-Thus, the current model-level interpretation is:
-
-> Neural relational supervision is architecture- and direction-dependent. Bidirectional external neural transfer is reproducible within the tested multilingual E5 family, while other multilingual encoders show direction-specific, seed-dependent or negative reverse-transfer effects.
-
-These architecture analyses are post-confirmatory and do not alter the historical status of the original prospective chain.
+Later analyses are post-confirmatory and define specificity, dose behavior, directionality, model-family scope, stimulus robustness, representational perturbation and regional distribution. They do not revise the primary evidential status.
 
 ## Empirical stages
 
-The project separates four empirical questions that must not be conflated:
+The project separates five questions that must not be conflated:
 
-1. **Target reliability:** does a reproducible neural geometry exist?
-2. **Learnability:** can model training move representations toward that geometry?
-3. **External transfer:** does the learned perturbation remain detectable in independent neural contexts?
-4. **Scope:** across which source modalities, targets and model families does that transfer remain stable?
+1. **Target reliability:** is the designated neural geometry reproducible?
+2. **Learnability:** can training move the model toward the source geometry?
+3. **Primary external transfer:** does a frozen learned change survive in independent neural targets?
+4. **Scope:** how does transfer vary with dose, target, direction and model backbone?
+5. **Mechanistic interpretation:** do regional or transcriptomic analyses identify a more specific biological mechanism?
 
-A separate transcriptomic mechanism question remains unsupported.
+The first four are supported to different degrees. A specific transcriptomic mechanism is not established.
 
-## Primary locked positive evidence
+## Primary locked evidence
 
-- **ChineseEEG Little Prince:** nuisance-residualized cross-participant reliability approximately **0.121** and sealed neural-guided learnability.
-- **ZuCo 2.0 normal reading:** reliability **0.06742**, 95% CI **[0.05831,0.07687]**, **17/17** positive. Frozen E5 lambda=.10 minus lambda=0 transfer **+0.0016637**, 95% CI **[+0.0012294,+0.0021452]**, **17/17** positive, one-sided exact sign-flip **p = 7.63e-06**.
-- **SMN4Lang fMRI:** model-blind language-network reliability **0.65327**, 95% CI **[0.63945,0.66843]**, **12/12** positive. Frozen E5 transfer **+0.00085250**, 95% CI **[+0.00078966,+0.00091398]**, **12/12** positive, exact one-sided sign-flip **p = 0.00024414**.
+- **ChineseEEG Little Prince:** raw LOO reliability approximately **0.220**, nuisance-residualized LOO approximately **0.121**, plus sealed run-07 neural-guided learnability.
+- **ZuCo 2.0 normal reading:** target reliability **0.06742**, 95% CI **[0.05831,0.07687]**, **17/17** positive. Frozen E5 transfer `lambda=0.10 - lambda=0` = **+0.0016637**, 95% CI **[+0.0012294,+0.0021452]**, **17/17** positive, exact one-sided sign-flip **p = 7.63e-06**.
+- **SMN4Lang fMRI:** target reliability **0.65327**, 95% CI **[0.63945,0.66843]**, **12/12** positive. Frozen E5 transfer = **+0.00085250**, 95% CI **[+0.00078966,+0.00091398]**, **12/12** positive, exact one-sided sign-flip **p = 0.00024414**.
 
-## Primary boundaries
+## Post-confirmatory specificity and robustness
 
-- **TMNRED:** weakly reproducible geometry but frozen E5 transfer null, p=.402.
-- **Garnett Dream:** reliable same-participant/new-text geometry but transfer null/inconclusive, p=.1016.
-- **Directional inner speech:** out-of-task negative/null boundary, delta approximately -0.001786.
-- **SMN4Lang MEG:** frozen sensor-level target failed model-blind reliability; no model evaluation was performed.
-- **Generic semantic benchmarks:** no stable neural-specific improvement.
-- **AHBA:** no confirmatory molecular mechanism.
+Across three fixed E5 seeds, the genuine-neural minus shuffled-neural contrast was positive on both external targets. ZuCo seed-level mean deltas were approximately **+0.001291**, **+0.001897** and **+0.000677**; SMN4Lang fMRI values were approximately **+0.000676**, **+0.000871** and **+0.000410**. The control supports specificity to preserved neural item correspondence relative to the matched destroyed-correspondence target, not uniqueness relative to every possible structured non-neural objective.
 
-## Post-confirmatory reverse-direction evidence
+A participant x stimulus bootstrap remained positive in all 10,000 replicates for both primary external targets. This is a sensitivity over the observed participants and stimulus units, not unrestricted random-effects inference to arbitrary linguistic stimuli.
 
-The frozen SMN4Lang fMRI-source calibration selected lambda=.01 using source-only validation before any EEG target was read. On independent ZuCo EEG:
+## Dose and target dependence
 
-- mean delta RSA **+0.00001671**;
-- **14/17** positive;
-- bootstrap 95% CI approximately **[+0.00001108,+0.00002200]**;
-- exact one-sided **p = 0.0001068**.
+The complete already-trained ChineseEEG E5 grid was evaluated after the primary external tests under a frozen post-confirmatory protocol.
 
-This supports source-modality bidirectionality within E5. The secondary ChineseEEG run-07 lambda=.01 check was directionally positive but inconclusive.
+- **ZuCo delta-RSA:** `+0.000211`, `+0.000477`, `+0.001664`, `+0.008739`, `+0.027599` for `lambda=0.01,0.03,0.10,0.30,1.0`.
+- **SMN4Lang fMRI delta-RSA:** `+0.000107`, `+0.000283`, `+0.000852`, `+0.003038`, `-0.000991` over the same doses.
 
-A post-confirmatory dose-response characterization on ZuCo showed progressively larger effects from lambda=.01 through lambda=1.0. A three-seed ChineseEEG robustness analysis showed that low/intermediate doses are not stable across optimization trajectories; lambda=1.0 alone had positive seed-level mean delta in all three new seeds. See `24_NMI_FMRI_TO_CHINESEEEG_MULTISEED_DOSE_RESULT.md`.
+Thus both targets rise through `lambda=0.30`, but at `lambda=1.0` ZuCo continues to improve while fMRI reverses. The matched generic STS decrement also grows with dose, reaching approximately **-0.03453** at `lambda=1.0`.
 
-## Post-confirmatory model-family evidence
+At `lambda=0.10`, the E5 perturbation remains small: cosine **0.99839**, RDM Pearson **0.99792**, RDM Spearman **0.99745**, CKA **0.99932**, k=10 Jaccard **0.9276**. At `lambda=1.0`, restructuring is materially larger: cosine **0.94221**, RDM Pearson **0.79653**, RDM Spearman **0.77887**, CKA **0.93766**, k=10 Jaccard **0.5794**.
 
-A common-protocol panel evaluated six multilingual encoders, three seeds and both neural-source directions. All 36 units completed.
+## Reverse-direction evidence
 
-### EEG -> fMRI
+The frozen fMRI-source calibration selected `lambda=0.01` before external EEG evaluation. The primary reverse ZuCo test was positive but small: mean delta-RSA approximately **+0.00001671**, **14/17** participants positive, exact one-sided **p = 0.0001068**. Three additional prespecified seeds reproduced positive means. Larger reverse doses are subsequent characterization and do not replace the source-selected primary reverse test.
 
-E5-large, E5-base, multilingual MPNet and multilingual MiniLM were positive in all three seed-level means. mBERT was also positive in all three but smaller. XLM-R was heterogeneous.
+## Model-family scope
 
-### fMRI -> EEG
+The six-model x three-seed x two-direction panel completed all **36/36** planned units under one common `lambda=0.10` protocol.
 
-Only E5-large and E5-base were positive in all three seed-level means. MPNet was approximately null/mixed, MiniLM negative in all three, XLM-R heterogeneous and mBERT negative in all three.
+- **E5-large:** 3/3 positive in both directions.
+- **E5-base:** 3/3 positive in both directions.
+- **multilingual MPNet:** 3/3 positive EEG -> fMRI; mixed/approximately null reverse.
+- **multilingual MiniLM:** 3/3 positive EEG -> fMRI; 3/3 negative reverse.
+- **XLM-R base:** heterogeneous in both directions.
+- **mBERT:** 3/3 positive EEG -> fMRI; 3/3 negative reverse.
 
-This supports a narrower claim than “sentence embedding models work”:
+The result establishes model- and direction-dependent portability under the common protocol. It does not isolate an architecture mechanism and does not establish E5 uniqueness.
 
-> Robust bidirectional portability is reproducible across the two tested multilingual E5 variants, whereas other tested multilingual encoders do not reproduce the same bidirectional pattern under the common protocol.
+## Regional fMRI interpretation
 
-Full exact revisions, seed-level effects, participant counts, confidence intervals and p-values are in `23_NMI_BIDIRECTIONAL_MODEL_FAMILY_PANEL_RESULT.md`.
+All six predefined left-hemisphere language parcels passed the model-blind reliability gate and showed positive neural-guided minus text-only effects in **12/12** participants, surviving the frozen six-region max-stat FWER correction.
+
+However, the complete bilateral DK68 phenotype also had positive mean delta-RSA in **all 68 parcels**, with **12/12** positive participants in every parcel. Therefore the regional result is cortex-wide in direction and **must not be described as language-network specificity**. Superior temporal regions are among the larger descriptive effects, but no temporal-versus-nontemporal or language-versus-control contrast was prespecified.
+
+## Boundaries and mechanistic nulls
+
+- **TMNRED:** weakly reproducible target; transfer null.
+- **Garnett Dream:** modest reliability; transfer inconclusive.
+- **Directional inner speech:** out-of-task negative boundary.
+- **SMN4Lang MEG:** frozen target failed model-blind reliability; no model evaluation was performed.
+- **Generic semantic benchmark:** no stable neural-specific advantage.
+- **AHBA:** prespecified molecular gene/pathway analyses are null; exploratory transcriptomic sensitivities do not establish a mechanism.
 
 ## Publication state
 
-The primary paper is now best treated as **evidence-locked with completed post-confirmatory scope analyses**. The next work should be manuscript integration, figure/legend updates, provenance checks and submission readiness, not outcome-driven model or dataset search.
+The project is **evidence-locked and in final publication production**. The current author-review Word master is `NeuroSem_Nature_Manuscript_v1.11_NMI_native_vector_figures.docx`, with `NeuroSem_NMI_Supplementary_Technical_Tables_v1.11_NMI_native_vector_figures.docx` as Supplementary Information. Exact fingerprints are recorded in `paper/CURRENT_MANUSCRIPT.md`.
 
-Recommended scientific presentation:
-
-1. ChineseEEG reproducible geometry and learnability.
-2. ZuCo independent cross-language EEG transfer.
-3. SMN4Lang prospective cross-modal fMRI transfer as the primary capstone.
-4. Post-confirmatory E5 source-modality bidirectionality.
-5. Post-confirmatory six-model architecture/scope panel.
-6. Explicit transfer and reliability boundaries.
-7. Generic semantic dissociation and AHBA mechanistic nulls.
+No additional outcome-bearing analysis is required for the current manuscript unless a reviewer/editor asks a clearly specified question.
 
 ## Stopping rules
 
 - Preserve the original prospective chain unchanged.
-- Do not promote target-observed lambda choices to prospective status.
-- Do not rescue non-E5 architectures with model-specific lambda/layer/pooling searches after the common-protocol panel.
-- Do not reopen ZuCo or SMN4Lang fMRI target-side representation/model choices.
+- Do not promote target-observed doses to prospective status.
+- Do not rescue non-E5 models with post-outcome lambda/layer/pooling searches.
+- Do not reopen ZuCo or SMN4Lang target-side choices.
 - Do not rescue TMNRED or Garnett.
 - Do not evaluate models on failed SMN4Lang MEG representations.
-- Do not expand MEG or AHBA searches for significance.
+- Do not interpret the regional result as language-network specificity.
+- Do not expand AHBA searches for significance or add post-outcome gene sets/pathways.
 - Preserve all nulls, negative effects, heterogeneous seeds and failed reliability gates.
 
 ## Read next
 
 - [`3_RESULTS_AND_COMPARISONS.md`](3_RESULTS_AND_COMPARISONS.md)
 - [`5_CURRENT_ROADMAP.md`](5_CURRENT_ROADMAP.md)
-- [`23_NMI_BIDIRECTIONAL_MODEL_FAMILY_PANEL_RESULT.md`](23_NMI_BIDIRECTIONAL_MODEL_FAMILY_PANEL_RESULT.md)
-- [`24_NMI_FMRI_TO_CHINESEEEG_MULTISEED_DOSE_RESULT.md`](24_NMI_FMRI_TO_CHINESEEEG_MULTISEED_DOSE_RESULT.md)
 - [`4_EXPERIMENT_LEDGER.md`](4_EXPERIMENT_LEDGER.md)
+- [`../paper/CURRENT_MANUSCRIPT.md`](../paper/CURRENT_MANUSCRIPT.md)

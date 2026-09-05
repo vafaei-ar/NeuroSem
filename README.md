@@ -2,53 +2,62 @@
 
 NeuroSem tests whether reproducible human neural representational geometry can provide a relational training signal that changes language-model representations in a way that transfers to independent neural measurements.
 
-The repository is in an **evidence-locked publication phase**. The primary prospective evidence chain is complete. Reviewer-motivated post-confirmatory robustness analyses are complete, and the separately frozen regional SMN4Lang extension has now completed its atlas, model-blind reliability, and regional E5-transfer stages. Its prespecified AHBA molecular interpretation remains pending.
+The repository is now in an **evidence-locked publication phase**. The primary prospective chain and the planned post-confirmatory specificity, robustness, dose, model-family, regional and transcriptomic analyses are complete. No outcome-bearing analysis is currently authorized for the main paper.
 
 ## Current scientific result
 
-ChineseEEG natural reading provides a reproducible development neural geometry and a learnable relational target. A frozen multilingual-E5 contrast then transfers positively to independent ZuCo English-reading EEG in **17/17** participants and prospectively to SMN4Lang language-network fMRI in **12/12** participants. Post-confirmatory specificity controls show that genuine ChineseEEG item-relational structure outperforms a matched shuffled-neural objective on both external targets across three fixed optimization seeds. Reverse fMRI-to-ZuCo transfer is detectable within E5, while a six-model panel shows that stable bidirectional transfer is reproduced by E5-large and E5-base but is not universal across the tested multilingual encoders. TMNRED, Garnett Dream, directional inner speech and the prospectively gated SMN4Lang MEG analysis define explicit boundaries.
+ChineseEEG natural reading provides a reproducible development neural geometry and a learnable relational target. A frozen multilingual-E5-large contrast then transfers positively to independent ZuCo English-reading EEG in **17/17** participants and prospectively to SMN4Lang fMRI in **12/12** participants.
 
-A post-confirmatory regional SMN4Lang analysis now adds spatial characterization without altering the original prospective result. All six independently frozen left-hemisphere language parcels passed the model-blind reliability gate and showed positive neural-guided minus text-only E5 delta-RSA in **12/12** participants. All six survived exact dependence-aware max-stat FWER correction. The largest language-parcel effects were posterior temporal cortex (**+0.000852**) and anterior temporal cortex (**+0.000751**), supporting a network-distributed effect with graded temporal concentration. The complete DK68 map is retained as an unthresholded phenotype for the frozen AHBA stage; no parcel was selected from its transfer outcome.
+Subsequent analyses define the limits of that transfer rather than revise the primary tests:
 
-The primary claim is therefore bounded:
+- preserved neural item correspondence outperforms a matched shuffled-neural objective on both external targets across three fixed E5 seeds;
+- forward E5 dose characterization is positive on both targets through `lambda=0.30`, but at `lambda=1.0` ZuCo transfer continues to increase while SMN4Lang fMRI reverses and the generic STS cost becomes much larger;
+- stable bidirectional transfer under the common protocol is reproduced in E5-large and E5-base, but not uniformly across MPNet, MiniLM, XLM-R or mBERT;
+- regional SMN4Lang characterization shows positive displacement in all six predefined language parcels **and all 68 DK cortical parcels**, so the result does **not** establish language-network specificity;
+- TMNRED, Garnett Dream, directional inner speech and the prospectively gated SMN4Lang MEG analysis remain explicit boundaries;
+- prespecified AHBA molecular analyses remain null, and exploratory transcriptomic sensitivities do not revise those nulls.
 
-> Human neural geometry can provide a transferable relational constraint on language representations, detectable in independent brains, languages and measurement modalities, but not universally across neural contexts or tested models.
+The current bounded conclusion is:
+
+> Brain-derived relational supervision can transfer to independent neural representational systems, but source fit does not guarantee a target-independent transfer magnitude or sign. Transfer depends on relational-loss dose, external target and model backbone under the tested protocols.
+
+## Current manuscript master
+
+The current author-review master is **`NeuroSem_Nature_Manuscript_v1.11_NMI_native_vector_figures.docx`**, with **`NeuroSem_NMI_Supplementary_Technical_Tables_v1.11_NMI_native_vector_figures.docx`** as the companion Supplementary Information. The Word masters are intentionally kept outside the Git working tree during final review. Their exact filenames and SHA-256 fingerprints are recorded in [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md).
 
 ## Where to start
 
-1. [`docs/1_PROJECT_OVERVIEW.md`](docs/1_PROJECT_OVERVIEW.md) — scientific overview and claim boundaries.
-2. [`docs/3_RESULTS_AND_COMPARISONS.md`](docs/3_RESULTS_AND_COMPARISONS.md) — numerical evidence summary.
-3. [`docs/4_EXPERIMENT_LEDGER.md`](docs/4_EXPERIMENT_LEDGER.md) — chronological provenance.
-4. [`docs/5_CURRENT_ROADMAP.md`](docs/5_CURRENT_ROADMAP.md) — current stopping rules and publication state.
-5. [`docs/26_NMI_REGIONAL_FMRI_AHBA_EXTENSION_V1.md`](docs/26_NMI_REGIONAL_FMRI_AHBA_EXTENSION_V1.md) — frozen regional fMRI/AHBA protocol.
-6. [`docs/29_NMI_REGIONAL_FMRI_TRANSFER_RESULT_V1.md`](docs/29_NMI_REGIONAL_FMRI_TRANSFER_RESULT_V1.md) — completed regional reliability and E5-transfer results.
-7. [`docs/25_NMI_REVIEWER_SPECIFICITY_AND_ROBUSTNESS_V1.md`](docs/25_NMI_REVIEWER_SPECIFICITY_AND_ROBUSTNESS_V1.md) — frozen post-confirmatory neural-specificity protocol.
-8. [`paper/README.md`](paper/README.md) — current manuscript workspace and submission status.
+1. [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md) — authoritative publication-master identity and fingerprints.
+2. [`paper/README.md`](paper/README.md) — submission workspace and writing guardrails.
+3. [`docs/1_PROJECT_OVERVIEW.md`](docs/1_PROJECT_OVERVIEW.md) — scientific overview and claim boundaries.
+4. [`docs/3_RESULTS_AND_COMPARISONS.md`](docs/3_RESULTS_AND_COMPARISONS.md) — numerical evidence summary.
+5. [`docs/4_EXPERIMENT_LEDGER.md`](docs/4_EXPERIMENT_LEDGER.md) — chronological provenance.
+6. [`docs/5_CURRENT_ROADMAP.md`](docs/5_CURRENT_ROADMAP.md) — current stopping rules and publication state.
+7. [`paper/FIGURE_GENERATION.md`](paper/FIGURE_GENERATION.md) — canonical figure-build workflow.
 
-Frozen protocol and result documents under `docs/` remain the source of truth for analysis status. Exact execution provenance is retained in repository history and the experiment ledger rather than duplicated in publication-facing prose.
+Frozen protocol and result documents under `docs/` remain the source of truth for analysis chronology. Exact execution provenance is retained in repository history and RunRelay records rather than duplicated in publication-facing prose.
 
 ## Repository organization
 
-- `docs/` — frozen protocols, result summaries, experiment ledger and current scientific roadmap.
+- `docs/` — frozen protocols, result summaries, experiment ledger and publication-state roadmap.
 - `scripts/` — analysis, robustness and figure-generation code.
 - `configs/` — frozen model and dataset configuration.
-- `paper/` — current submission-facing documentation and figure workflow.
+- `paper/` — submission-facing documentation and figure workflow.
 - `.runrelay/project.yaml` — authoritative RunRelay task manifest.
 - `AGENTS.md` — repository-specific execution and safety rules.
 
-Raw neural datasets, restricted data, model checkpoints, credentials and `.env` files must not be committed. Safe derived outputs remain outside Git history unless deliberately declared as publication artifacts.
+Raw neural datasets, restricted data, model checkpoints, credentials, `.env` files and final Word manuscript binaries must not be committed. Safe derived outputs remain outside Git history unless deliberately declared as publication artifacts.
 
 ## Evidence hierarchy and stopping rules
 
-- Preserve the original ChineseEEG → ZuCo → SMN4Lang prospective chain unchanged.
-- Treat reverse-direction, dose-response, model-family, specificity, participant-by-stimulus, model-space, and regional fMRI/AHBA analyses as post-confirmatory.
-- Preserve all null, inconclusive and failed-reliability outcomes.
-- Do not retune models or neural targets from external outcomes.
+- Preserve the original ChineseEEG -> ZuCo -> SMN4Lang prospective chain unchanged.
+- Treat forward/reverse dose, reverse-direction, model-family, specificity, participant-by-stimulus, model-space, regional fMRI and AHBA analyses as post-confirmatory or secondary exactly as frozen.
+- Preserve all null, inconclusive, negative and failed-reliability outcomes.
+- Do not retune models, targets, layers, ROIs, checkpoints or doses from external outcomes.
 - Do not reopen failed MEG targets for model evaluation.
-- For the regional extension, proceed only with the already-frozen AHBA Stage 3/4 analyses. Do not add new gene sets, parcel filters, model choices, pathway searches, or other outcome-driven molecular tests.
-- Preserve the previous AHBA primary nulls regardless of the new fMRI-derived phenotype.
-- Do not infer that E5 is uniquely capable, that transfer is universal, that regional concentration identifies a unique causal locus, or that raw RSA values across modalities share a common effect-size scale.
+- Do not infer E5 uniqueness, a universal neural-semantic axis, language-network specificity, or a specific transcriptomic mechanism.
+- No new outcome-bearing analysis is planned for the current manuscript unless an editor/reviewer asks a clearly specified question that requires it.
 
 ## Reproducible execution
 
-NeuroSem uses RunRelay with exact commits, a fixed project-specific runner and manual approval for public-repository execution. The canonical task definitions are in `.runrelay/project.yaml`; arbitrary commands and environment inheritance are disabled.
+NeuroSem uses RunRelay with exact commits, a fixed project-specific runner and manual approval for public-repository execution. Canonical task definitions are in `.runrelay/project.yaml`; arbitrary commands and environment inheritance are disabled.
