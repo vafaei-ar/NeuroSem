@@ -438,3 +438,28 @@ tasks:
     artifacts:
       - outputs/nmi_model_space_characterization_lambda1_v1/latest/summary.json
       - outputs/nmi_model_space_characterization_lambda1_v1/latest/item_metrics.csv
+
+  run_smn4lang_fmri_language_specificity_v1:
+    description: >-
+      Compute the frozen post-confirmatory language-versus-control regional contrasts
+      from the already-completed SMN4Lang participant-level regional outputs, including
+      sensorimotor/visual controls, reliability-only matching, same-atlas replication,
+      and reliability-adjusted sensitivity without new model or fMRI evaluation.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_smn4lang_fmri_language_specificity_v1.py
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 30
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_fmri_language_specificity_v1/latest/summary.json
+      - outputs/smn4lang_fmri_language_specificity_v1/latest/report.txt
+      - outputs/smn4lang_fmri_language_specificity_v1/latest/participant_contrasts.csv
+      - outputs/smn4lang_fmri_language_specificity_v1/latest/region_groups_and_reliability.csv
+      - outputs/smn4lang_fmri_language_specificity_v1/latest/figure_language_specificity.png
+      - outputs/smn4lang_fmri_language_specificity_v1/latest/figure_language_specificity.pdf
