@@ -463,3 +463,28 @@ tasks:
       - outputs/smn4lang_fmri_language_specificity_v1/latest/region_groups_and_reliability.csv
       - outputs/smn4lang_fmri_language_specificity_v1/latest/figure_language_specificity.png
       - outputs/smn4lang_fmri_language_specificity_v1/latest/figure_language_specificity.pdf
+
+  run_smn4lang_fmri_spatial_extensions_v1:
+    description: >-
+      Run the frozen post-confirmatory spatial extension suite from the already-completed
+      SMN4Lang regional outputs: full-cortex reliability adjustment, left-right homologous
+      language comparison, language-versus-other-association-versus-primary contrasts, and
+      functional temporal-versus-frontal organization, with one five-test max-stat family.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_smn4lang_fmri_spatial_extensions_v1.py
+    approval: manual
+    timeout_minutes: 10
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 30
+    working_directory: .
+    artifacts:
+      - outputs/smn4lang_fmri_spatial_extensions_v1/latest/summary.json
+      - outputs/smn4lang_fmri_spatial_extensions_v1/latest/report.txt
+      - outputs/smn4lang_fmri_spatial_extensions_v1/latest/participant_spatial_extensions.csv
+      - outputs/smn4lang_fmri_spatial_extensions_v1/latest/left_dk_region_summary.csv
+      - outputs/smn4lang_fmri_spatial_extensions_v1/latest/figure_spatial_extensions.png
+      - outputs/smn4lang_fmri_spatial_extensions_v1/latest/figure_spatial_extensions.pdf
