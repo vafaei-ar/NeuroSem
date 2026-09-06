@@ -38,8 +38,8 @@ EXPECTED = [
 ]
 
 # Canonical hashes from successful RunRelay job W7M2K8R5. These assertions make
-# the stdout visual-QA transport fail closed if a supposedly presentation-only
-# rebuild changes any of the three final spatial-validation figures.
+# the visual-QA transport fail closed if a supposedly presentation-only rebuild
+# changes any of the three final spatial-validation figures.
 W7_CANONICAL = {
     "figure5_spatial_validation.svg": "e903dc5040fc35b888d2030aa6e6425f9f44d574b3e6d25a60ad32b190a07f18",
     "figure5_spatial_validation.png": "e68b8fc47d716d7d991de2ffc5f971dc608a5b71b119f4b0bc225bbfae64a404",
@@ -64,7 +64,7 @@ def run(path: Path) -> None:
         raise RuntimeError(f"Publication builder failed: {path.relative_to(ROOT)} (exit {proc.returncode})")
 
 
-def emit_visual_qa_payload() -> None:
+def visual_qa_payload() -> str:
     observed = {}
     for name, expected_hash in W7_CANONICAL.items():
         path = SPATIAL_OUT / name
@@ -75,7 +75,7 @@ def emit_visual_qa_payload() -> None:
                 f"Visual-QA canonical hash mismatch for {name}: expected {expected_hash}, observed {digest}"
             )
 
-    print("RUNRELAY_VISUAL_QA_HASHES " + json.dumps(observed, sort_keys=True))
+    lines = ["RUNRELAY_VISUAL_QA_HASHES " + json.dumps(observed, sort_keys=True)]
     for name in [
         "figure5_spatial_validation.svg",
         "extended_data_figure2_story_robustness.svg",
@@ -83,7 +83,8 @@ def emit_visual_qa_payload() -> None:
     ]:
         raw = (SPATIAL_OUT / name).read_bytes()
         payload = base64.b64encode(gzip.compress(raw, compresslevel=9, mtime=0)).decode("ascii")
-        print(f"RUNRELAY_VISUAL_QA_SVG_GZIP_BASE64 {name} {W7_CANONICAL[name]} {payload}")
+        lines.append(f"RUNRELAY_VISUAL_QA_SVG_GZIP_BASE64 {name} {W7_CANONICAL[name]} {payload}")
+    return "\n".join(lines) + "\n"
 
 
 def main() -> int:
@@ -132,7 +133,11 @@ def main() -> int:
         "New scientific analyses performed by this build: 0\n",
         encoding="utf-8",
     )
-    emit_visual_qa_payload()
+    qa_payload = visual_qa_payload()
+    with txt.open("a", encoding="utf-8") as f:
+        f.write("\nVisual QA transport payload (gzip+base64 SVG; canonical W7M2K8R5 hashes verified):\n")
+        f.write(qa_payload)
+    print(qa_payload, end="")
     print(json.dumps({"status": "ok", "outputs_verified": len(EXPECTED), "manifest": str(manifest)}, indent=2))
     return 0
 
