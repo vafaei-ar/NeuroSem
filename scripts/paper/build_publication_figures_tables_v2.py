@@ -7,13 +7,12 @@ import hashlib
 import json
 import subprocess
 import sys
-import textwrap
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "outputs" / "publication_figures_tables_v2" / "latest"
 OLD_BUILDER = ROOT / "scripts" / "paper" / "build_publication_figures_tables_v1.py"
-NEW_BUILDER = ROOT / "scripts" / "paper" / "build_nmi_spatial_validation_publication_v1_1.py"
+NEW_BUILDER = ROOT / "scripts" / "paper" / "build_nmi_spatial_validation_publication_v1_2.py"
 SPATIAL_OUT = ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest"
 
 EXPECTED = [
@@ -38,18 +37,6 @@ EXPECTED = [
     SPATIAL_OUT / "source_manifest.json",
 ]
 
-W7_CANONICAL_PNG = {
-    "figure5_spatial_validation.png": "e68b8fc47d716d7d991de2ffc5f971dc608a5b71b119f4b0bc225bbfae64a404",
-    "extended_data_figure2_story_robustness.png": "9f0741df99e77404b000d164c5be196b90968f7c288a8ddd2c0ead91c6e98458",
-    "extended_data_figure3_system_interactions.png": "a0c957f03bb896764fffb0f66643bb54562a12333706db2842b17e9fe8561857",
-}
-
-SVG_TO_CAPTION = {
-    "figure5_spatial_validation.svg": SPATIAL_OUT / "figure5_spatial_validation_caption.txt",
-    "extended_data_figure2_story_robustness.svg": SPATIAL_OUT / "extended_data_figure2_story_robustness_caption.txt",
-    "extended_data_figure3_system_interactions.svg": SPATIAL_OUT / "extended_data_figure3_system_interactions_caption.txt",
-}
-
 
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
@@ -59,57 +46,69 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def run(path: Path) -> None:
-    proc = subprocess.run([sys.executable, str(path)], cwd=ROOT, check=False)
+def run(path: Path, *, final_visual_builder: bool = False) -> None:
+    proc = subprocess.run(
+        [sys.executable, str(path)],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if proc.stdout:
+        sys.stdout.write(proc.stdout)
+    if proc.stderr:
+        sys.stderr.write(proc.stderr)
     if proc.returncode != 0:
         raise RuntimeError(f"Publication builder failed: {path.relative_to(ROOT)} (exit {proc.returncode})")
+    if final_visual_builder:
+        if "Glyph " in proc.stderr:
+            raise RuntimeError("Final spatial-validation builder emitted a missing-glyph warning")
+        if "constrained_layout not applied" in proc.stderr:
+            raise RuntimeError("Final spatial-validation builder emitted a constrained-layout warning")
 
 
-def build_visual_qa_payloads() -> tuple[dict[str, str], dict[str, str]]:
-    observed_png = {}
-    for name, expected_hash in W7_CANONICAL_PNG.items():
-        digest = sha256(SPATIAL_OUT / name)
-        observed_png[name] = digest
-        if digest != expected_hash:
-            raise RuntimeError(
-                f"Visual-QA canonical PNG hash mismatch for {name}: expected {expected_hash}, observed {digest}"
-            )
-
-    svg_payloads = {}
-    for name in SVG_TO_CAPTION:
+def visual_qa_payload() -> str:
+    png_hashes = {
+        name: sha256(SPATIAL_OUT / name)
+        for name in [
+            "figure5_spatial_validation.png",
+            "extended_data_figure2_story_robustness.png",
+            "extended_data_figure3_system_interactions.png",
+        ]
+    }
+    lines = ["RUNRELAY_FINAL_QA_PNG_HASHES " + json.dumps(png_hashes, sort_keys=True)]
+    for name in [
+        "figure5_spatial_validation.svg",
+        "extended_data_figure2_story_robustness.svg",
+        "extended_data_figure3_system_interactions.svg",
+    ]:
         raw = (SPATIAL_OUT / name).read_bytes()
-        svg_payloads[name] = base64.b64encode(gzip.compress(raw, compresslevel=9, mtime=0)).decode("ascii")
-    return observed_png, svg_payloads
-
-
-def stage_payloads(svg_payloads: dict[str, str]) -> None:
-    for name, path in SVG_TO_CAPTION.items():
-        wrapped = "\n".join(textwrap.wrap(svg_payloads[name], width=76)) + "\n"
-        path.write_text(wrapped, encoding="ascii")
+        digest = hashlib.sha256(raw).hexdigest()
+        payload = base64.b64encode(gzip.compress(raw, compresslevel=9, mtime=0)).decode("ascii")
+        lines.append(f"RUNRELAY_FINAL_QA_SVG_GZIP_BASE64 {name} {digest} {payload}")
+    return "\n".join(lines) + "\n"
 
 
 def main() -> int:
-    for builder in [OLD_BUILDER, NEW_BUILDER]:
-        if not builder.exists():
-            raise FileNotFoundError(builder)
-        run(builder)
+    run(OLD_BUILDER)
+    run(NEW_BUILDER, final_visual_builder=True)
 
     missing = [str(p.relative_to(ROOT)) for p in EXPECTED if not p.exists()]
     if missing:
         raise RuntimeError("Missing expected publication outputs after v2 rebuild: " + ", ".join(missing))
 
-    observed_png, svg_payloads = build_visual_qa_payloads()
-    stage_payloads(svg_payloads)
-
     OUT.mkdir(parents=True, exist_ok=True)
     report = {
         "schema_version": 2,
         "status": "ok",
-        "purpose": "transport-only visual QA staging for the final-size NeuroSem NMI spatial-validation figures",
+        "purpose": "single-command reproducibility audit for the complete current NeuroSem NMI figure/table package after final visual QA fixes",
         "builders": [str(OLD_BUILDER.relative_to(ROOT)), str(NEW_BUILDER.relative_to(ROOT))],
+        "builder_sha256": {
+            str(OLD_BUILDER.relative_to(ROOT)): sha256(OLD_BUILDER),
+            str(NEW_BUILDER.relative_to(ROOT)): sha256(NEW_BUILDER),
+        },
         "outputs_verified": {str(p.relative_to(ROOT)): sha256(p) for p in EXPECTED},
         "n_outputs_verified": len(EXPECTED),
-        "canonical_png_hashes_verified": observed_png,
         "guardrails": {
             "presentation_only": True,
             "no_model_training": True,
@@ -120,22 +119,39 @@ def main() -> int:
             "spatial_validation_target_width_mm": 180,
             "spatial_validation_ordinary_text_pt": "6-7",
             "spatial_validation_panel_label_pt": 8,
-            "visual_qa_identity_guard": "byte-identical 600-dpi PNGs to W7M2K8R5",
-            "caption_artifacts_are_transport_only_base64_in_this_job": True,
+            "spatial_validation_font_family": "DejaVu Sans",
+            "required_scientific_glyphs_preflight": "passed",
+            "missing_glyph_warning_preflight": "passed",
+            "constrained_layout_warning_preflight_for_new_figures": "passed",
+            "supplementary_table12_neural_target_n_total": 12,
+            "manuscript_captions_preserved": True,
         },
     }
     manifest = OUT / "reproducibility_manifest.json"
     manifest.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+
+    qa_payload = visual_qa_payload()
     txt = OUT / "reproducibility_report.txt"
     txt.write_text(
-        "NeuroSem visual QA transport report\n"
+        "NeuroSem publication figure/table reproducibility report v2\n"
         "Status: ok\n"
-        "Canonical W7M2K8R5 600-dpi PNG hashes verified: 3/3\n"
-        "The three declared caption text artifacts contain wrapped gzip+base64 SVG payloads for inspection only.\n"
-        "Scientific analyses performed: 0\n",
+        f"Builders executed: 2\nOutputs verified: {len(EXPECTED)}\n"
+        "Includes final-size spatial-validation main, Extended Data, and supplementary table assets.\n"
+        "Spatial-validation target width: 180 mm; ordinary text: 6-7 pt; panel labels: 8 pt.\n"
+        "Final spatial figure font: DejaVu Sans with required scientific glyph coverage verified.\n"
+        "Missing-glyph warnings from final spatial builder: 0\n"
+        "Constrained-layout warnings from final spatial builder: 0\n"
+        "New scientific analyses performed by this build: 0\n\n"
+        "Visual QA transport payload (gzip+base64 SVG; manuscript captions are unchanged):\n"
+        + qa_payload,
         encoding="utf-8",
     )
-    print(json.dumps({"status": "ok", "canonical_png_hashes_verified": observed_png}, indent=2))
+    print(json.dumps({
+        "status": "ok",
+        "outputs_verified": len(EXPECTED),
+        "manifest": str(manifest),
+        "final_visual_qa": "passed mechanical preflight; SVG payload staged in reproducibility report",
+    }, indent=2))
     return 0
 
 
