@@ -561,3 +561,41 @@ tasks:
       - outputs/nmi_final_spatial_validation_v1/latest/figure_shuffled_regional_control.pdf
       - outputs/nmi_final_spatial_validation_v1/latest/figure_hierarchical_synthesis.png
       - outputs/nmi_final_spatial_validation_v1/latest/figure_hierarchical_synthesis.pdf
+
+  build_publication_figures_tables_v2:
+    description: >-
+      Rebuild and verify the complete current NeuroSem NMI publication asset package,
+      including all previously frozen figures/tables plus the final spatial-validation
+      main figure, Extended Data figures and supplementary tables, using completed derived
+      outputs only and performing no new scientific analysis or hypothesis testing.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_publication_figures_tables_v2.py
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    resources:
+      cpu_cores: 4
+      min_ram_gb: 8
+      wait_minutes: 60
+    working_directory: .
+    artifacts:
+      - outputs/publication_figures_tables_v2/latest/reproducibility_manifest.json
+      - outputs/publication_figures_tables_v2/latest/reproducibility_report.txt
+      - outputs/nmi_spatial_validation_publication_v1/latest/figure5_spatial_validation.pdf
+      - outputs/nmi_spatial_validation_publication_v1/latest/figure5_spatial_validation.svg
+      - outputs/nmi_spatial_validation_publication_v1/latest/figure5_spatial_validation.png
+      - outputs/nmi_spatial_validation_publication_v1/latest/figure5_spatial_validation_caption.txt
+      - outputs/nmi_spatial_validation_publication_v1/latest/extended_data_figure2_story_robustness.pdf
+      - outputs/nmi_spatial_validation_publication_v1/latest/extended_data_figure2_story_robustness.svg
+      - outputs/nmi_spatial_validation_publication_v1/latest/extended_data_figure2_story_robustness.png
+      - outputs/nmi_spatial_validation_publication_v1/latest/extended_data_figure2_story_robustness_caption.txt
+      - outputs/nmi_spatial_validation_publication_v1/latest/extended_data_figure3_system_interactions.pdf
+      - outputs/nmi_spatial_validation_publication_v1/latest/extended_data_figure3_system_interactions.svg
+      - outputs/nmi_spatial_validation_publication_v1/latest/extended_data_figure3_system_interactions.png
+      - outputs/nmi_spatial_validation_publication_v1/latest/extended_data_figure3_system_interactions_caption.txt
+      - outputs/nmi_spatial_validation_publication_v1/latest/supplementary_table12_spatial_validation.csv
+      - outputs/nmi_spatial_validation_publication_v1/latest/supplementary_table13_dose_by_system.csv
+      - outputs/nmi_spatial_validation_publication_v1/latest/supplementary_table14_backbone_by_system.csv
+      - outputs/nmi_spatial_validation_publication_v1/latest/asset_index.json
+      - outputs/nmi_spatial_validation_publication_v1/latest/source_manifest.json
