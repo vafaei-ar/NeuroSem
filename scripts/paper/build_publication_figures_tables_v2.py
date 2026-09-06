@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import base64
+import gzip
 import hashlib
 import json
 import subprocess
@@ -11,28 +13,41 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "outputs" / "publication_figures_tables_v2" / "latest"
 OLD_BUILDER = ROOT / "scripts" / "paper" / "build_publication_figures_tables_v1.py"
 NEW_BUILDER = ROOT / "scripts" / "paper" / "build_nmi_spatial_validation_publication_v1_1.py"
+SPATIAL_OUT = ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest"
 
 EXPECTED = [
     ROOT / "outputs" / "publication_figures_tables_v1" / "latest" / "reproducibility_manifest.json",
     ROOT / "outputs" / "publication_figures_tables_v1" / "latest" / "reproducibility_report.txt",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "figure5_spatial_validation.pdf",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "figure5_spatial_validation.svg",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "figure5_spatial_validation.png",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "figure5_spatial_validation_caption.txt",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "extended_data_figure2_story_robustness.pdf",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "extended_data_figure2_story_robustness.svg",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "extended_data_figure2_story_robustness.png",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "extended_data_figure2_story_robustness_caption.txt",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "extended_data_figure3_system_interactions.pdf",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "extended_data_figure3_system_interactions.svg",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "extended_data_figure3_system_interactions.png",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "extended_data_figure3_system_interactions_caption.txt",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "supplementary_table12_spatial_validation.csv",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "supplementary_table13_dose_by_system.csv",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "supplementary_table14_backbone_by_system.csv",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "asset_index.json",
-    ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest" / "source_manifest.json",
+    SPATIAL_OUT / "figure5_spatial_validation.pdf",
+    SPATIAL_OUT / "figure5_spatial_validation.svg",
+    SPATIAL_OUT / "figure5_spatial_validation.png",
+    SPATIAL_OUT / "figure5_spatial_validation_caption.txt",
+    SPATIAL_OUT / "extended_data_figure2_story_robustness.pdf",
+    SPATIAL_OUT / "extended_data_figure2_story_robustness.svg",
+    SPATIAL_OUT / "extended_data_figure2_story_robustness.png",
+    SPATIAL_OUT / "extended_data_figure2_story_robustness_caption.txt",
+    SPATIAL_OUT / "extended_data_figure3_system_interactions.pdf",
+    SPATIAL_OUT / "extended_data_figure3_system_interactions.svg",
+    SPATIAL_OUT / "extended_data_figure3_system_interactions.png",
+    SPATIAL_OUT / "extended_data_figure3_system_interactions_caption.txt",
+    SPATIAL_OUT / "supplementary_table12_spatial_validation.csv",
+    SPATIAL_OUT / "supplementary_table13_dose_by_system.csv",
+    SPATIAL_OUT / "supplementary_table14_backbone_by_system.csv",
+    SPATIAL_OUT / "asset_index.json",
+    SPATIAL_OUT / "source_manifest.json",
 ]
+
+# Canonical hashes from successful RunRelay job W7M2K8R5. These assertions make
+# the stdout visual-QA transport fail closed if a supposedly presentation-only
+# rebuild changes any of the three final spatial-validation figures.
+W7_CANONICAL = {
+    "figure5_spatial_validation.svg": "e903dc5040fc35b888d2030aa6e6425f9f44d574b3e6d25a60ad32b190a07f18",
+    "figure5_spatial_validation.png": "e68b8fc47d716d7d991de2ffc5f971dc608a5b71b119f4b0bc225bbfae64a404",
+    "extended_data_figure2_story_robustness.svg": "be0b894438f26d6aecad2d70178919a75df1cef6835d29a89e20fbe211521423",
+    "extended_data_figure2_story_robustness.png": "9f0741df99e77404b000d164c5be196b90968f7c288a8ddd2c0ead91c6e98458",
+    "extended_data_figure3_system_interactions.svg": "5ac996f577d22cd96f81e0372f43e5ba5a729ec881fe015960260062b74f086b",
+    "extended_data_figure3_system_interactions.png": "a0c957f03bb896764fffb0f66643bb54562a12333706db2842b17e9fe8561857",
+}
 
 
 def sha256(path: Path) -> str:
@@ -47,6 +62,28 @@ def run(path: Path) -> None:
     proc = subprocess.run([sys.executable, str(path)], cwd=ROOT, check=False)
     if proc.returncode != 0:
         raise RuntimeError(f"Publication builder failed: {path.relative_to(ROOT)} (exit {proc.returncode})")
+
+
+def emit_visual_qa_payload() -> None:
+    observed = {}
+    for name, expected_hash in W7_CANONICAL.items():
+        path = SPATIAL_OUT / name
+        digest = sha256(path)
+        observed[name] = digest
+        if digest != expected_hash:
+            raise RuntimeError(
+                f"Visual-QA canonical hash mismatch for {name}: expected {expected_hash}, observed {digest}"
+            )
+
+    print("RUNRELAY_VISUAL_QA_HASHES " + json.dumps(observed, sort_keys=True))
+    for name in [
+        "figure5_spatial_validation.svg",
+        "extended_data_figure2_story_robustness.svg",
+        "extended_data_figure3_system_interactions.svg",
+    ]:
+        raw = (SPATIAL_OUT / name).read_bytes()
+        payload = base64.b64encode(gzip.compress(raw, compresslevel=9, mtime=0)).decode("ascii")
+        print(f"RUNRELAY_VISUAL_QA_SVG_GZIP_BASE64 {name} {W7_CANONICAL[name]} {payload}")
 
 
 def main() -> int:
@@ -95,6 +132,7 @@ def main() -> int:
         "New scientific analyses performed by this build: 0\n",
         encoding="utf-8",
     )
+    emit_visual_qa_payload()
     print(json.dumps({"status": "ok", "outputs_verified": len(EXPECTED), "manifest": str(manifest)}, indent=2))
     return 0
 
