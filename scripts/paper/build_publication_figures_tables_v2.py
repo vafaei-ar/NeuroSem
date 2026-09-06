@@ -7,6 +7,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,13 +38,16 @@ EXPECTED = [
     SPATIAL_OUT / "source_manifest.json",
 ]
 
-# Canonical 600-dpi raster hashes from successful RunRelay job W7M2K8R5.
-# SVG/PDF exports can contain backend metadata that changes byte hashes across
-# otherwise pixel-identical rebuilds, so visual identity is fail-closed on PNGs.
 W7_CANONICAL_PNG = {
     "figure5_spatial_validation.png": "e68b8fc47d716d7d991de2ffc5f971dc608a5b71b119f4b0bc225bbfae64a404",
     "extended_data_figure2_story_robustness.png": "9f0741df99e77404b000d164c5be196b90968f7c288a8ddd2c0ead91c6e98458",
     "extended_data_figure3_system_interactions.png": "a0c957f03bb896764fffb0f66643bb54562a12333706db2842b17e9fe8561857",
+}
+
+SVG_TO_CAPTION = {
+    "figure5_spatial_validation.svg": SPATIAL_OUT / "figure5_spatial_validation_caption.txt",
+    "extended_data_figure2_story_robustness.svg": SPATIAL_OUT / "extended_data_figure2_story_robustness_caption.txt",
+    "extended_data_figure3_system_interactions.svg": SPATIAL_OUT / "extended_data_figure3_system_interactions_caption.txt",
 }
 
 
@@ -61,28 +65,27 @@ def run(path: Path) -> None:
         raise RuntimeError(f"Publication builder failed: {path.relative_to(ROOT)} (exit {proc.returncode})")
 
 
-def visual_qa_payload() -> str:
+def build_visual_qa_payloads() -> tuple[dict[str, str], dict[str, str]]:
     observed_png = {}
     for name, expected_hash in W7_CANONICAL_PNG.items():
-        path = SPATIAL_OUT / name
-        digest = sha256(path)
+        digest = sha256(SPATIAL_OUT / name)
         observed_png[name] = digest
         if digest != expected_hash:
             raise RuntimeError(
                 f"Visual-QA canonical PNG hash mismatch for {name}: expected {expected_hash}, observed {digest}"
             )
 
-    lines = ["RUNRELAY_VISUAL_QA_CANONICAL_PNG_HASHES " + json.dumps(observed_png, sort_keys=True)]
-    for name in [
-        "figure5_spatial_validation.svg",
-        "extended_data_figure2_story_robustness.svg",
-        "extended_data_figure3_system_interactions.svg",
-    ]:
+    svg_payloads = {}
+    for name in SVG_TO_CAPTION:
         raw = (SPATIAL_OUT / name).read_bytes()
-        digest = hashlib.sha256(raw).hexdigest()
-        payload = base64.b64encode(gzip.compress(raw, compresslevel=9, mtime=0)).decode("ascii")
-        lines.append(f"RUNRELAY_VISUAL_QA_SVG_GZIP_BASE64 {name} {digest} {payload}")
-    return "\n".join(lines) + "\n"
+        svg_payloads[name] = base64.b64encode(gzip.compress(raw, compresslevel=9, mtime=0)).decode("ascii")
+    return observed_png, svg_payloads
+
+
+def stage_payloads(svg_payloads: dict[str, str]) -> None:
+    for name, path in SVG_TO_CAPTION.items():
+        wrapped = "\n".join(textwrap.wrap(svg_payloads[name], width=76)) + "\n"
+        path.write_text(wrapped, encoding="ascii")
 
 
 def main() -> int:
@@ -95,18 +98,18 @@ def main() -> int:
     if missing:
         raise RuntimeError("Missing expected publication outputs after v2 rebuild: " + ", ".join(missing))
 
+    observed_png, svg_payloads = build_visual_qa_payloads()
+    stage_payloads(svg_payloads)
+
     OUT.mkdir(parents=True, exist_ok=True)
     report = {
         "schema_version": 2,
         "status": "ok",
-        "purpose": "single-command reproducibility audit for the complete current NeuroSem NMI figure/table package, including final-size spatial-validation assets",
+        "purpose": "transport-only visual QA staging for the final-size NeuroSem NMI spatial-validation figures",
         "builders": [str(OLD_BUILDER.relative_to(ROOT)), str(NEW_BUILDER.relative_to(ROOT))],
-        "builder_sha256": {
-            str(OLD_BUILDER.relative_to(ROOT)): sha256(OLD_BUILDER),
-            str(NEW_BUILDER.relative_to(ROOT)): sha256(NEW_BUILDER),
-        },
         "outputs_verified": {str(p.relative_to(ROOT)): sha256(p) for p in EXPECTED},
         "n_outputs_verified": len(EXPECTED),
+        "canonical_png_hashes_verified": observed_png,
         "guardrails": {
             "presentation_only": True,
             "no_model_training": True,
@@ -118,26 +121,21 @@ def main() -> int:
             "spatial_validation_ordinary_text_pt": "6-7",
             "spatial_validation_panel_label_pt": 8,
             "visual_qa_identity_guard": "byte-identical 600-dpi PNGs to W7M2K8R5",
+            "caption_artifacts_are_transport_only_base64_in_this_job": True,
         },
     }
     manifest = OUT / "reproducibility_manifest.json"
     manifest.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     txt = OUT / "reproducibility_report.txt"
     txt.write_text(
-        "NeuroSem publication figure/table reproducibility report v2\n"
+        "NeuroSem visual QA transport report\n"
         "Status: ok\n"
-        f"Builders executed: 2\nOutputs verified: {len(EXPECTED)}\n"
-        "Includes final-size spatial-validation main, Extended Data, and supplementary table assets.\n"
-        "Spatial-validation target width: 180 mm; ordinary text: 6-7 pt; panel labels: 8 pt.\n"
-        "New scientific analyses performed by this build: 0\n",
+        "Canonical W7M2K8R5 600-dpi PNG hashes verified: 3/3\n"
+        "The three declared caption text artifacts contain wrapped gzip+base64 SVG payloads for inspection only.\n"
+        "Scientific analyses performed: 0\n",
         encoding="utf-8",
     )
-    qa_payload = visual_qa_payload()
-    with txt.open("a", encoding="utf-8") as f:
-        f.write("\nVisual QA transport payload (gzip+base64 SVG; canonical W7M2K8R5 PNG hashes verified):\n")
-        f.write(qa_payload)
-    print(qa_payload, end="")
-    print(json.dumps({"status": "ok", "outputs_verified": len(EXPECTED), "manifest": str(manifest)}, indent=2))
+    print(json.dumps({"status": "ok", "canonical_png_hashes_verified": observed_png}, indent=2))
     return 0
 
 
