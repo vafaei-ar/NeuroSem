@@ -525,3 +525,39 @@ tasks:
       - outputs/nmi_remaining_regional_ideas_v1/latest/figure_crossmodal_coupling.pdf
       - outputs/nmi_remaining_regional_ideas_v1/latest/figure_semantic_cost_specificity.png
       - outputs/nmi_remaining_regional_ideas_v1/latest/figure_semantic_cost_specificity.pdf
+
+  run_nmi_final_spatial_validation_v1:
+    description: >-
+      Run the frozen post-confirmatory final spatial validation suite: participant-by-story
+      robustness, a spatial-autocorrelation-aware left-DK surrogate null, the regional
+      genuine-versus-shuffled neural-target control across three reviewer seeds, and
+      multilevel dose/backbone-by-system synthesis without retraining or outcome-driven selection.
+    command:
+      - .venv/bin/python
+      - scripts/analysis/run_nmi_final_spatial_validation_v1.py
+    approval: manual
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 32
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/nmi_final_spatial_validation_v1/latest/summary.json
+      - outputs/nmi_final_spatial_validation_v1/latest/report.txt
+      - outputs/nmi_final_spatial_validation_v1/latest/story_leave_one_out.csv
+      - outputs/nmi_final_spatial_validation_v1/latest/spatial_surrogate_null.csv
+      - outputs/nmi_final_spatial_validation_v1/latest/shuffled_regional_participant_results.csv
+      - outputs/nmi_final_spatial_validation_v1/latest/shuffled_regional_seed_summary.csv
+      - outputs/nmi_final_spatial_validation_v1/latest/hierarchical_synthesis_coefficients.csv
+      - outputs/nmi_final_spatial_validation_v1/latest/figure_story_robustness.png
+      - outputs/nmi_final_spatial_validation_v1/latest/figure_story_robustness.pdf
+      - outputs/nmi_final_spatial_validation_v1/latest/figure_spatial_surrogate.png
+      - outputs/nmi_final_spatial_validation_v1/latest/figure_spatial_surrogate.pdf
+      - outputs/nmi_final_spatial_validation_v1/latest/figure_shuffled_regional_control.png
+      - outputs/nmi_final_spatial_validation_v1/latest/figure_shuffled_regional_control.pdf
+      - outputs/nmi_final_spatial_validation_v1/latest/figure_hierarchical_synthesis.png
+      - outputs/nmi_final_spatial_validation_v1/latest/figure_hierarchical_synthesis.pdf
