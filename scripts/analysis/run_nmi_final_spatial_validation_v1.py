@@ -98,19 +98,19 @@ def main() -> int:
     if missing:
         raise FileNotFoundError("missing frozen inputs: " + ", ".join(missing))
 
-    atomic_progress(0, 4, "story-robustness", "starting final spatial validation suite")
+    atomic_progress(0, 12, "story-robustness", "starting final spatial validation suite")
     story_summary, loo_rows = story_robustness()
     write_csv(OUT / "story_leave_one_out.csv", loo_rows)
-    atomic_progress(1, 4, "spatial-surrogate", "story robustness complete")
+    atomic_progress(1, 12, "spatial-surrogate", "story robustness complete")
 
     spatial_summary, null_beta = spatial_surrogate_test()
     write_csv(OUT / "spatial_surrogate_null.csv", [{"surrogate": i, "language_beta": b} for i, b in enumerate(null_beta)])
-    atomic_progress(2, 4, "regional-shuffled-control", "spatial surrogate test complete")
+    atomic_progress(2, 12, "regional-shuffled-control", "spatial surrogate test complete")
 
     shuffled_summary, shuffled_participant_rows, shuffled_seed_rows = shuffled_regional_control()
     write_csv(OUT / "shuffled_regional_participant_results.csv", shuffled_participant_rows)
     write_csv(OUT / "shuffled_regional_seed_summary.csv", shuffled_seed_rows)
-    atomic_progress(3, 4, "hierarchical-synthesis", "regional shuffled-target control complete")
+    atomic_progress(11, 12, "hierarchical-synthesis", "regional shuffled-target control complete")
 
     synthesis_summary, synthesis_coeffs = hierarchical_synthesis()
     write_csv(OUT / "hierarchical_synthesis_coefficients.csv", synthesis_coeffs)
@@ -153,7 +153,7 @@ def main() -> int:
         f"Backbone x system synthesis Wald P: {synthesis_summary['backbone_by_system']['interaction_wald_p']:.12g}; Holm P={synthesis_summary['backbone_by_system']['two_model_holm_p']:.12g}",
     ]
     (OUT / "report.txt").write_text("\n".join(report) + "\n", encoding="utf-8")
-    atomic_progress(4, 4, "complete", "final spatial validation suite complete")
+    atomic_progress(12, 12, "complete", "final spatial validation suite complete")
     print(json.dumps({"status": "ok", "output": str(OUT / "summary.json")}, indent=2), flush=True)
     return 0
 
