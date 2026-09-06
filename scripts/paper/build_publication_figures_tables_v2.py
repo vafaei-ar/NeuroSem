@@ -37,15 +37,12 @@ EXPECTED = [
     SPATIAL_OUT / "source_manifest.json",
 ]
 
-# Canonical hashes from successful RunRelay job W7M2K8R5. These assertions make
-# the visual-QA transport fail closed if a supposedly presentation-only rebuild
-# changes any of the three final spatial-validation figures.
-W7_CANONICAL = {
-    "figure5_spatial_validation.svg": "e903dc5040fc35b888d2030aa6e6425f9f44d574b3e6d25a60ad32b190a07f18",
+# Canonical 600-dpi raster hashes from successful RunRelay job W7M2K8R5.
+# SVG/PDF exports can contain backend metadata that changes byte hashes across
+# otherwise pixel-identical rebuilds, so visual identity is fail-closed on PNGs.
+W7_CANONICAL_PNG = {
     "figure5_spatial_validation.png": "e68b8fc47d716d7d991de2ffc5f971dc608a5b71b119f4b0bc225bbfae64a404",
-    "extended_data_figure2_story_robustness.svg": "be0b894438f26d6aecad2d70178919a75df1cef6835d29a89e20fbe211521423",
     "extended_data_figure2_story_robustness.png": "9f0741df99e77404b000d164c5be196b90968f7c288a8ddd2c0ead91c6e98458",
-    "extended_data_figure3_system_interactions.svg": "5ac996f577d22cd96f81e0372f43e5ba5a729ec881fe015960260062b74f086b",
     "extended_data_figure3_system_interactions.png": "a0c957f03bb896764fffb0f66643bb54562a12333706db2842b17e9fe8561857",
 }
 
@@ -65,25 +62,26 @@ def run(path: Path) -> None:
 
 
 def visual_qa_payload() -> str:
-    observed = {}
-    for name, expected_hash in W7_CANONICAL.items():
+    observed_png = {}
+    for name, expected_hash in W7_CANONICAL_PNG.items():
         path = SPATIAL_OUT / name
         digest = sha256(path)
-        observed[name] = digest
+        observed_png[name] = digest
         if digest != expected_hash:
             raise RuntimeError(
-                f"Visual-QA canonical hash mismatch for {name}: expected {expected_hash}, observed {digest}"
+                f"Visual-QA canonical PNG hash mismatch for {name}: expected {expected_hash}, observed {digest}"
             )
 
-    lines = ["RUNRELAY_VISUAL_QA_HASHES " + json.dumps(observed, sort_keys=True)]
+    lines = ["RUNRELAY_VISUAL_QA_CANONICAL_PNG_HASHES " + json.dumps(observed_png, sort_keys=True)]
     for name in [
         "figure5_spatial_validation.svg",
         "extended_data_figure2_story_robustness.svg",
         "extended_data_figure3_system_interactions.svg",
     ]:
         raw = (SPATIAL_OUT / name).read_bytes()
+        digest = hashlib.sha256(raw).hexdigest()
         payload = base64.b64encode(gzip.compress(raw, compresslevel=9, mtime=0)).decode("ascii")
-        lines.append(f"RUNRELAY_VISUAL_QA_SVG_GZIP_BASE64 {name} {W7_CANONICAL[name]} {payload}")
+        lines.append(f"RUNRELAY_VISUAL_QA_SVG_GZIP_BASE64 {name} {digest} {payload}")
     return "\n".join(lines) + "\n"
 
 
@@ -119,6 +117,7 @@ def main() -> int:
             "spatial_validation_target_width_mm": 180,
             "spatial_validation_ordinary_text_pt": "6-7",
             "spatial_validation_panel_label_pt": 8,
+            "visual_qa_identity_guard": "byte-identical 600-dpi PNGs to W7M2K8R5",
         },
     }
     manifest = OUT / "reproducibility_manifest.json"
@@ -135,7 +134,7 @@ def main() -> int:
     )
     qa_payload = visual_qa_payload()
     with txt.open("a", encoding="utf-8") as f:
-        f.write("\nVisual QA transport payload (gzip+base64 SVG; canonical W7M2K8R5 hashes verified):\n")
+        f.write("\nVisual QA transport payload (gzip+base64 SVG; canonical W7M2K8R5 PNG hashes verified):\n")
         f.write(qa_payload)
     print(qa_payload, end="")
     print(json.dumps({"status": "ok", "outputs_verified": len(EXPECTED), "manifest": str(manifest)}, indent=2))
