@@ -26,12 +26,8 @@ FUNCTIONAL_LANGUAGE = ("IFG", "IFGorb", "MFG", "AntTemp", "PostTemp", "AngG")
 LEFT_SENSORIMOTOR = ("precentral", "postcentral", "paracentral")
 LEFT_VISUAL = ("pericalcarine", "cuneus", "lingual", "lateraloccipital")
 DK_LANGUAGE = (
-    "parsopercularis",
-    "parstriangularis",
-    "superiortemporal",
-    "middletemporal",
-    "inferiorparietal",
-    "supramarginal",
+    "parsopercularis", "parstriangularis", "superiortemporal",
+    "middletemporal", "inferiorparietal", "supramarginal",
 )
 
 
@@ -45,9 +41,9 @@ def write_csv(path: Path, rows: list[dict]) -> None:
         raise RuntimeError(f"no rows for {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
 
 
 def sha256(path: Path) -> str:
@@ -61,8 +57,8 @@ def sha256(path: Path) -> str:
 def exact_two_sided_signflip_p(values: np.ndarray) -> float:
     x = np.asarray(values, dtype=float)
     obs = abs(float(x.mean()))
-    total = 1 << len(x)
     ge = 0
+    total = 1 << len(x)
     for bits in range(total):
         signs = np.ones(len(x), dtype=float)
         for j in range(len(x)):
@@ -99,12 +95,9 @@ def summarize(values: np.ndarray) -> dict:
     x = np.asarray(values, dtype=float)
     lo, hi = bootstrap_ci(x)
     return {
-        "mean": float(np.mean(x)),
-        "median": float(np.median(x)),
-        "n_positive": int(np.sum(x > 0)),
-        "n_total": int(len(x)),
-        "bootstrap_ci_low": lo,
-        "bootstrap_ci_high": hi,
+        "mean": float(np.mean(x)), "median": float(np.median(x)),
+        "n_positive": int(np.sum(x > 0)), "n_total": int(len(x)),
+        "bootstrap_ci_low": lo, "bootstrap_ci_high": hi,
         "exact_two_sided_signflip_p": exact_two_sided_signflip_p(x),
     }
 
@@ -121,27 +114,24 @@ def main() -> int:
     if len(subjects) != 12:
         raise RuntimeError(f"expected 12 participants, found {len(subjects)}")
 
-    # Index participant deltas and regional model-blind reliability.
-    delta: dict[tuple[str, str, str, str], float] = {}
-    for r in participant_rows:
-        key = (r["family"], r["hemisphere"], r["region_name"], r["subject"])
-        delta[key] = float(r["delta_0p10_minus_0"])
-
-    reliability: dict[tuple[str, str, str], float] = {}
-    for r in region_rows:
-        reliability[(r["family"], r["hemisphere"], r["region_name"])] = float(
-            r["model_blind_reliability_mean"]
-        )
+    delta = {
+        (r["family"], r["hemisphere"], r["region_name"], r["subject"]): float(r["delta_0p10_minus_0"])
+        for r in participant_rows
+    }
+    reliability = {
+        (r["family"], r["hemisphere"], r["region_name"]): float(r["model_blind_reliability_mean"])
+        for r in region_rows
+    }
 
     def group_vector(family: str, hemi: str, names: tuple[str, ...]) -> np.ndarray:
         out = []
         for sub in subjects:
             vals = []
             for name in names:
-                k = (family, hemi, name, sub)
-                if k not in delta:
-                    raise RuntimeError(f"missing participant delta for {k}")
-                vals.append(delta[k])
+                key = (family, hemi, name, sub)
+                if key not in delta:
+                    raise RuntimeError(f"missing participant delta for {key}")
+                vals.append(delta[key])
             out.append(float(np.mean(vals)))
         return np.asarray(out, dtype=float)
 
@@ -152,13 +142,11 @@ def main() -> int:
 
     primary_motor = functional - motor
     primary_visual = functional - visual
-    primary_matrix = np.column_stack([primary_motor, primary_visual])
-    primary_fwer = exact_maxstat_p(primary_matrix)
+    primary_fwer = exact_maxstat_p(np.column_stack([primary_motor, primary_visual]))
 
-    # Reliability-only one-to-one matching: six language parcels to six of seven fixed controls.
     controls = tuple(sorted(LEFT_SENSORIMOTOR + LEFT_VISUAL))
-    lang_rels = [reliability[("language", "L", name)] for name in FUNCTIONAL_LANGUAGE]
-    control_rels = {name: reliability[("dk68", "L", name)] for name in controls}
+    lang_rels = [reliability[("language", "L", n)] for n in FUNCTIONAL_LANGUAGE]
+    control_rels = {n: reliability[("dk68", "L", n)] for n in controls}
     best = None
     best_key = None
     for subset in itertools.combinations(controls, len(FUNCTIONAL_LANGUAGE)):
@@ -166,29 +154,26 @@ def main() -> int:
             cost = float(sum(abs(a - control_rels[b]) for a, b in zip(lang_rels, perm)))
             key = (round(cost, 15), tuple(perm))
             if best_key is None or key < best_key:
-                best_key = key
-                best = perm
-    if best is None:
+                best_key, best = key, perm
+    if best is None or best_key is None:
         raise RuntimeError("reliability matching failed")
     matched_controls = tuple(best)
     matched_vec = group_vector("dk68", "L", matched_controls)
     matched_contrast = functional - matched_vec
 
-    # Same-atlas anatomical replication.
     dk_vs_motor = dk_lang - motor
     dk_vs_visual = dk_lang - visual
 
-    # Reliability-adjusted same-atlas contrast across the frozen 13 left-DK parcels.
     pooled_controls = LEFT_SENSORIMOTOR + LEFT_VISUAL
     all_names = DK_LANGUAGE + pooled_controls
-    rel_x = np.asarray([reliability[("dk68", "L", name)] for name in all_names], dtype=float)
+    rel_x = np.asarray([reliability[("dk68", "L", n)] for n in all_names], dtype=float)
     X = np.column_stack([np.ones(len(rel_x)), rel_x])
     adjusted = []
     for sub in subjects:
-        y = np.asarray([delta[("dk68", "L", name, sub)] for name in all_names], dtype=float)
+        y = np.asarray([delta[("dk68", "L", n, sub)] for n in all_names], dtype=float)
         beta, *_ = np.linalg.lstsq(X, y, rcond=None)
         resid = y - X @ beta
-        adjusted.append(float(np.mean(resid[: len(DK_LANGUAGE)]) - np.mean(resid[len(DK_LANGUAGE) :])))
+        adjusted.append(float(np.mean(resid[:len(DK_LANGUAGE)]) - np.mean(resid[len(DK_LANGUAGE):])))
     adjusted = np.asarray(adjusted, dtype=float)
 
     contrast_vectors = {
@@ -214,71 +199,36 @@ def main() -> int:
 
     region_group_rows = []
     for name in FUNCTIONAL_LANGUAGE:
-        region_group_rows.append({
-            "analysis_group": "functional_language",
-            "family": "language",
-            "hemisphere": "L",
-            "region_name": name,
-            "model_blind_reliability_mean": reliability[("language", "L", name)],
-        })
-    for group, names in [
-        ("left_sensorimotor", LEFT_SENSORIMOTOR),
-        ("left_visual", LEFT_VISUAL),
-        ("dk_language_associated", DK_LANGUAGE),
-    ]:
+        region_group_rows.append({"analysis_group": "functional_language", "family": "language", "hemisphere": "L", "region_name": name, "model_blind_reliability_mean": reliability[("language", "L", name)]})
+    for group, names in (("left_sensorimotor", LEFT_SENSORIMOTOR), ("left_visual", LEFT_VISUAL), ("dk_language_associated", DK_LANGUAGE)):
         for name in names:
-            region_group_rows.append({
-                "analysis_group": group,
-                "family": "dk68",
-                "hemisphere": "L",
-                "region_name": name,
-                "model_blind_reliability_mean": reliability[("dk68", "L", name)],
-            })
+            region_group_rows.append({"analysis_group": group, "family": "dk68", "hemisphere": "L", "region_name": name, "model_blind_reliability_mean": reliability[("dk68", "L", name)]})
     for lang, control in zip(FUNCTIONAL_LANGUAGE, matched_controls):
+        lang_rel = reliability[("language", "L", lang)]
+        control_rel = reliability[("dk68", "L", control)]
         region_group_rows.append({
-            "analysis_group": "reliability_match_pair",
-            "family": "language_to_dk68",
-            "hemisphere": "L",
-            "region_name": f"{lang} -> {control}",
-            "model_blind_reliability_mean": (
-                f"{reliability[(\"language\", \"L\", lang)]:.12g} -> "
-                f"{reliability[(\"dk68\", \"L\", control)]:.12g}"
-            ),
+            "analysis_group": "reliability_match_pair", "family": "language_to_dk68",
+            "hemisphere": "L", "region_name": f"{lang} -> {control}",
+            "model_blind_reliability_mean": f"{lang_rel:.12g} -> {control_rel:.12g}",
         })
 
     summary = {
         "schema_version": 1,
         "analysis": "SMN4Lang fMRI post-confirmatory language-specificity analysis",
-        "protocol": PROTOCOL,
-        "status": "ok",
-        "input_sha256": {
-            str(participant_path): sha256(participant_path),
-            str(region_path): sha256(region_path),
-        },
-        "n_subjects": len(subjects),
-        "bootstrap_n": N_BOOT,
-        "bootstrap_seed": BOOTSTRAP_SEED,
+        "protocol": PROTOCOL, "status": "ok",
+        "input_sha256": {str(participant_path): sha256(participant_path), str(region_path): sha256(region_path)},
+        "n_subjects": len(subjects), "bootstrap_n": N_BOOT, "bootstrap_seed": BOOTSTRAP_SEED,
         "frozen_groups": {
-            "functional_language": list(FUNCTIONAL_LANGUAGE),
-            "left_sensorimotor": list(LEFT_SENSORIMOTOR),
-            "left_visual": list(LEFT_VISUAL),
-            "dk_language_associated": list(DK_LANGUAGE),
+            "functional_language": list(FUNCTIONAL_LANGUAGE), "left_sensorimotor": list(LEFT_SENSORIMOTOR),
+            "left_visual": list(LEFT_VISUAL), "dk_language_associated": list(DK_LANGUAGE),
         },
         "reliability_matching": {
-            "candidate_controls": list(controls),
-            "matched_controls_in_functional_language_order": list(matched_controls),
-            "total_absolute_reliability_difference": float(best_key[0]),
-            "used_transfer_outcomes_for_matching": False,
+            "candidate_controls": list(controls), "matched_controls_in_functional_language_order": list(matched_controls),
+            "total_absolute_reliability_difference": float(best_key[0]), "used_transfer_outcomes_for_matching": False,
         },
         "primary": {
-            "functional_language_minus_left_sensorimotor": {
-                **summarize(primary_motor),
-                "familywise_maxstat_p": float(primary_fwer[0]),
-            },
-            "functional_language_minus_left_visual": {
-                **summarize(primary_visual),
-                "familywise_maxstat_p": float(primary_fwer[1]),
-            },
+            "functional_language_minus_left_sensorimotor": {**summarize(primary_motor), "familywise_maxstat_p": float(primary_fwer[0])},
+            "functional_language_minus_left_visual": {**summarize(primary_visual), "familywise_maxstat_p": float(primary_fwer[1])},
         },
         "sensitivities": {
             "functional_language_minus_reliability_matched_control": summarize(matched_contrast),
@@ -287,18 +237,13 @@ def main() -> int:
             "dk_language_minus_pooled_controls_reliability_adjusted": summarize(adjusted),
         },
         "system_mean_deltas": {
-            "functional_language": float(functional.mean()),
-            "dk_language_associated": float(dk_lang.mean()),
-            "left_sensorimotor": float(motor.mean()),
-            "left_visual": float(visual.mean()),
+            "functional_language": float(functional.mean()), "dk_language_associated": float(dk_lang.mean()),
+            "left_sensorimotor": float(motor.mean()), "left_visual": float(visual.mean()),
             "reliability_matched_control": float(matched_vec.mean()),
         },
         "guardrails": {
-            "post_confirmatory": True,
-            "no_new_model_training": True,
-            "no_new_fmri_preprocessing": True,
-            "no_region_selection_from_transfer_outcomes": True,
-            "all_frozen_control_regions_retained": True,
+            "post_confirmatory": True, "no_new_model_training": True, "no_new_fmri_preprocessing": True,
+            "no_region_selection_from_transfer_outcomes": True, "all_frozen_control_regions_retained": True,
             "participant_is_inferential_unit": True,
         },
     }
@@ -308,23 +253,19 @@ def main() -> int:
     write_csv(OUTPUT_DIR / "region_groups_and_reliability.csv", region_group_rows)
     (OUTPUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
 
-    # Presentation-only summary figure from the frozen outputs.
     fig, axes = plt.subplots(1, 3, figsize=(10.5, 3.35), constrained_layout=True)
     x = np.arange(len(subjects))
-    for vals, label in [(primary_motor, "Language - motor"), (primary_visual, "Language - visual")]:
+    for vals, label in ((primary_motor, "Language - motor"), (primary_visual, "Language - visual")):
         axes[0].plot(x, vals * 1e3, marker="o", linewidth=1, label=label)
     axes[0].axhline(0, linewidth=0.8)
-    axes[0].set_title("Functional language contrasts")
-    axes[0].set_ylabel("Participant contrast (delta RSA x 10^-3)")
-    axes[0].set_xlabel("Participant")
+    axes[0].set(title="Functional language contrasts", ylabel="Participant contrast (delta RSA x 10^-3)", xlabel="Participant")
     axes[0].legend(frameon=False, fontsize=8)
 
     labels = ["Functional\nlanguage", "DK language\nassociated", "Sensorimotor", "Visual"]
     means = np.asarray([functional.mean(), dk_lang.mean(), motor.mean(), visual.mean()]) * 1e3
     axes[1].bar(np.arange(4), means)
     axes[1].set_xticks(np.arange(4), labels, rotation=20, ha="right")
-    axes[1].set_ylabel("Mean delta RSA x 10^-3")
-    axes[1].set_title("Frozen regional systems")
+    axes[1].set(ylabel="Mean delta RSA x 10^-3", title="Frozen regional systems")
 
     sens_names = ["Matched\ncontrol", "DK-motor", "DK-visual", "Reliability-\nadjusted"]
     sens_vals = [matched_contrast, dk_vs_motor, dk_vs_visual, adjusted]
@@ -333,39 +274,30 @@ def main() -> int:
     for v in sens_vals:
         lo, hi = bootstrap_ci(v)
         sens_err.append([(v.mean() - lo) * 1e3, (hi - v.mean()) * 1e3])
-    yerr = np.asarray(sens_err).T
-    axes[2].errorbar(np.arange(4), sens_means, yerr=yerr, fmt="o", capsize=3)
+    axes[2].errorbar(np.arange(4), sens_means, yerr=np.asarray(sens_err).T, fmt="o", capsize=3)
     axes[2].axhline(0, linewidth=0.8)
     axes[2].set_xticks(np.arange(4), sens_names, rotation=20, ha="right")
-    axes[2].set_ylabel("Language advantage (delta RSA x 10^-3)")
-    axes[2].set_title("Specificity sensitivities")
-
+    axes[2].set(ylabel="Language advantage (delta RSA x 10^-3)", title="Specificity sensitivities")
     fig.suptitle("SMN4Lang fMRI post-confirmatory language-specificity analysis", fontsize=11)
     fig.savefig(OUTPUT_DIR / "figure_language_specificity.png", dpi=600)
     fig.savefig(OUTPUT_DIR / "figure_language_specificity.pdf")
     plt.close(fig)
 
     report_lines = [
-        "SMN4Lang fMRI language-specificity analysis v1",
-        "Status: ok",
-        "Post-confirmatory: yes",
-        f"Participants: {len(subjects)}",
-        "",
+        "SMN4Lang fMRI language-specificity analysis v1", "Status: ok", "Post-confirmatory: yes",
+        f"Participants: {len(subjects)}", "",
+        f"Functional language mean delta: {functional.mean():.9g}",
+        f"Left sensorimotor mean delta: {motor.mean():.9g}",
+        f"Left visual mean delta: {visual.mean():.9g}",
+        f"DK language-associated mean delta: {dk_lang.mean():.9g}", "",
+        f"Language - sensorimotor mean: {primary_motor.mean():.9g}; FWER P={primary_fwer[0]:.9g}",
+        f"Language - visual mean: {primary_visual.mean():.9g}; FWER P={primary_fwer[1]:.9g}",
+        f"Language - reliability-matched control mean: {matched_contrast.mean():.9g}",
+        f"DK language - sensorimotor mean: {dk_vs_motor.mean():.9g}",
+        f"DK language - visual mean: {dk_vs_visual.mean():.9g}",
+        f"Reliability-adjusted DK language advantage mean: {adjusted.mean():.9g}",
     ]
-    for name, obj in summary["primary"].items():
-        report_lines.append(
-            f"PRIMARY {name}: mean={obj['mean']:.9g}; 95% CI=[{obj['bootstrap_ci_low']:.9g}, {obj['bootstrap_ci_high']:.9g}]; "
-            f"positive={obj['n_positive']}/{obj['n_total']}; exact P={obj['exact_two_sided_signflip_p']:.9g}; "
-            f"FWER P={obj['familywise_maxstat_p']:.9g}"
-        )
-    report_lines.append("")
-    for name, obj in summary["sensitivities"].items():
-        report_lines.append(
-            f"SENSITIVITY {name}: mean={obj['mean']:.9g}; 95% CI=[{obj['bootstrap_ci_low']:.9g}, {obj['bootstrap_ci_high']:.9g}]; "
-            f"positive={obj['n_positive']}/{obj['n_total']}; exact P={obj['exact_two_sided_signflip_p']:.9g}"
-        )
     (OUTPUT_DIR / "report.txt").write_text("\n".join(report_lines) + "\n", encoding="utf-8")
-
     print(json.dumps({"status": "ok", "output_dir": str(OUTPUT_DIR), "n_subjects": len(subjects)}, indent=2))
     return 0
 
