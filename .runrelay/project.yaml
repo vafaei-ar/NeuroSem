@@ -561,3 +561,30 @@ tasks:
       - outputs/nmi_final_spatial_validation_v1/latest/figure_shuffled_regional_control.pdf
       - outputs/nmi_final_spatial_validation_v1/latest/figure_hierarchical_synthesis.png
       - outputs/nmi_final_spatial_validation_v1/latest/figure_hierarchical_synthesis.pdf
+
+  build_nmi_final_validation_assets_v1:
+    description: >-
+      Build the publication-ready NMI final-validation figure package from frozen derived outputs only: Figure 5 spatial validation, Extended Data Figure 2 robustness/boundary conditions, two supplementary tables, legends and a SHA-256 source manifest. No new scientific analysis.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_nmi_final_validation_assets_v1.py
+    approval: manual
+    timeout_minutes: 20
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 30
+    working_directory: .
+    artifacts:
+      - outputs/nmi_final_validation_assets_v1/latest/source_manifest.json
+      - outputs/nmi_final_validation_assets_v1/latest/figures/figure5_spatial_validation.pdf
+      - outputs/nmi_final_validation_assets_v1/latest/figures/figure5_spatial_validation.svg
+      - outputs/nmi_final_validation_assets_v1/latest/figures/figure5_spatial_validation.png
+      - outputs/nmi_final_validation_assets_v1/latest/figures/figure5_caption.txt
+      - outputs/nmi_final_validation_assets_v1/latest/figures/extended_data_figure2_robustness_boundary_conditions.pdf
+      - outputs/nmi_final_validation_assets_v1/latest/figures/extended_data_figure2_robustness_boundary_conditions.svg
+      - outputs/nmi_final_validation_assets_v1/latest/figures/extended_data_figure2_robustness_boundary_conditions.png
+      - outputs/nmi_final_validation_assets_v1/latest/figures/extended_data_figure2_caption.txt
+      - outputs/nmi_final_validation_assets_v1/latest/tables/supplementary_table12_final_spatial_validation.csv
+      - outputs/nmi_final_validation_assets_v1/latest/tables/supplementary_table13_system_interactions.csv
