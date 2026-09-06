@@ -7,8 +7,8 @@ import numpy as np
 
 from scripts.analysis.nmi_remaining_regional_core_v1 import (
     CACHE, FUNCTIONAL_FRONTAL, FUNCTIONAL_LANGUAGE, FUNCTIONAL_TEMPORAL,
-    POOLED_CONTROL, SEEDS, STORIES, SUBJECTS, build_selected_neural_cache,
-    e5_model_residual,
+    POOLED_CONTROL, SEEDS, STORIES, SUBJECTS, atomic_progress,
+    build_selected_neural_cache, e5_model_residual,
 )
 from scripts.analysis.run_smn4lang_fmri_reliability import TR, canonical_hrf, fisher_mean
 from scripts.tuning.evaluate_smn4lang_fmri_e5_transfer_v1 import safe_spearman
@@ -95,6 +95,7 @@ def shuffled_regional_control() -> tuple[dict, list[dict], list[dict]]:
     temp_idx = np.asarray([name_to_idx[n] for n in FUNCTIONAL_TEMPORAL], int)
 
     participant_rows, seed_rows, vectors = [], [], []
+    completed_arms = 0
     for seed in SEEDS:
         root = REVIEWER_ROOT / f"seed_{seed}"
         adapters = {
@@ -102,7 +103,16 @@ def shuffled_regional_control() -> tuple[dict, list[dict], list[dict]]:
             "genuine": latest_adapter(root / "neural"),
             "shuffled": latest_adapter(root / "shuffled_neural"),
         }
-        arm = {name: evaluate_adapter(path, meta, contexts, "cuda") for name, path in adapters.items()}
+        arm = {}
+        for name, path in adapters.items():
+            arm[name] = evaluate_adapter(path, meta, contexts, "cuda")
+            completed_arms += 1
+            atomic_progress(
+                2 + completed_arms,
+                12,
+                "regional-shuffled-control",
+                f"completed seed {seed} arm {name}",
+            )
         gen_delta = arm["genuine"] - arm["text"]
         shuf_delta = arm["shuffled"] - arm["text"]
         gen_spec = gen_delta[:, lang_idx].mean(axis=1) - gen_delta[:, control_idx].mean(axis=1)
