@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "outputs" / "publication_figures_tables_v2" / "latest"
 OLD_BUILDER = ROOT / "scripts" / "paper" / "build_publication_figures_tables_v1.py"
-NEW_BUILDER = ROOT / "scripts" / "paper" / "build_nmi_spatial_validation_publication_v1.py"
+NEW_BUILDER = ROOT / "scripts" / "paper" / "build_nmi_spatial_validation_publication_v1_1.py"
 
 EXPECTED = [
     ROOT / "outputs" / "publication_figures_tables_v1" / "latest" / "reproducibility_manifest.json",
@@ -63,7 +63,7 @@ def main() -> int:
     report = {
         "schema_version": 2,
         "status": "ok",
-        "purpose": "single-command reproducibility audit for the complete current NeuroSem NMI figure/table package, including the final spatial-validation assets",
+        "purpose": "single-command reproducibility audit for the complete current NeuroSem NMI figure/table package, including final-size spatial-validation assets",
         "builders": [str(OLD_BUILDER.relative_to(ROOT)), str(NEW_BUILDER.relative_to(ROOT))],
         "builder_sha256": {
             str(OLD_BUILDER.relative_to(ROOT)): sha256(OLD_BUILDER),
@@ -78,6 +78,9 @@ def main() -> int:
             "no_new_neural_analysis": True,
             "no_new_hypothesis_testing": True,
             "uses_completed_frozen_derived_outputs": True,
+            "spatial_validation_target_width_mm": 180,
+            "spatial_validation_ordinary_text_pt": "6-7",
+            "spatial_validation_panel_label_pt": 8,
         },
     }
     manifest = OUT / "reproducibility_manifest.json"
@@ -87,7 +90,8 @@ def main() -> int:
         "NeuroSem publication figure/table reproducibility report v2\n"
         "Status: ok\n"
         f"Builders executed: 2\nOutputs verified: {len(EXPECTED)}\n"
-        "Includes final spatial-validation main, Extended Data, and supplementary table assets.\n"
+        "Includes final-size spatial-validation main, Extended Data, and supplementary table assets.\n"
+        "Spatial-validation target width: 180 mm; ordinary text: 6-7 pt; panel labels: 8 pt.\n"
         "New scientific analyses performed by this build: 0\n",
         encoding="utf-8",
     )
