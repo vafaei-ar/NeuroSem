@@ -50,3 +50,29 @@ tasks:
       - outputs/nmi_v116_provenance_audit_v1/latest/sts_source_hits.csv
       - outputs/nmi_v116_provenance_audit_v1/latest/output_inventory.csv
       - outputs/nmi_v116_provenance_audit_v1/latest/candidate_sts_files.csv
+
+  audit_nmi_v116_reconciliation_v1:
+    description: >-
+      Reconcile the key NMI v1.16 provenance disputes using only already-completed
+      safe derived outputs and historical committed code: DERCo, E5 optimization-seed
+      robustness, the two mBERT protocols, and the ZuCo cohort/exclusion metadata.
+      This task performs no model training, model evaluation, neural analysis,
+      hypothesis testing, raw-data export, or manuscript editing.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_nmi_v116_reconciliation_v1.py
+    approval: manual
+    timeout_minutes: 15
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 30
+    working_directory: .
+    artifacts:
+      - outputs/nmi_v116_reconciliation_v1/latest/summary.json
+      - outputs/nmi_v116_reconciliation_v1/latest/report.txt
+      - outputs/nmi_v116_reconciliation_v1/latest/source_summaries.json
+      - outputs/nmi_v116_reconciliation_v1/latest/mbert_protocol_comparison.csv
+      - outputs/nmi_v116_reconciliation_v1/latest/key_reconciliation_rows.csv
+      - outputs/nmi_v116_reconciliation_v1/latest/multiseed_primary_table.csv
