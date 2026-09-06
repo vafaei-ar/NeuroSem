@@ -76,3 +76,27 @@ tasks:
       - outputs/nmi_v116_reconciliation_v1/latest/mbert_protocol_comparison.csv
       - outputs/nmi_v116_reconciliation_v1/latest/key_reconciliation_rows.csv
       - outputs/nmi_v116_reconciliation_v1/latest/multiseed_primary_table.csv
+
+  materialize_nmi_alternative_signal_mpnet_v1:
+    description: >-
+      Materialize the frozen structured item-linked non-neural MPNet relational
+      targets for ChineseEEG source runs 01-06 using source text and nuisance metadata
+      only, before any E5 training or external evaluation. This task must not read EEG
+      feature arrays, neural target values, external targets, or transfer outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/materialize_nmi_alternative_signal_mpnet_v1.py
+    approval: manual
+    timeout_minutes: 120
+    requires_gpu: true
+    resources:
+      cpu_cores: 4
+      min_ram_gb: 12
+      gpu_count: 1
+      min_vram_gb: 8
+      wait_minutes: 240
+    working_directory: .
+    artifacts:
+      - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/summary.json
+      - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/report.txt
+      - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/target_manifest.csv
