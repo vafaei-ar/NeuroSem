@@ -210,3 +210,27 @@ tasks:
       - outputs/nmi_mpnet_model_space_comparison_v1/latest/report.txt
       - outputs/nmi_mpnet_model_space_comparison_v1/latest/seed_comparison_metrics.csv
       - outputs/nmi_mpnet_model_space_comparison_v1/latest/representation_metrics.csv
+
+  build_nmi_v118_figure1_provenance_v1:
+    description: >-
+      Rebuild NeuroSem Figure 1 from the historical development summary, the
+      S0YJMCMF ChineseEEG reliability replay and the two frozen task-level C-MTEB STS
+      summaries, while recording exact source and output hashes. Presentation-only:
+      no model fitting, neural analysis, representation selection or hypothesis test.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_nmi_figure1_provenance_v1.py
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 30
+    working_directory: .
+    artifacts:
+      - outputs/nmi_v118_figure1_provenance_v1/latest/figure1.pdf
+      - outputs/nmi_v118_figure1_provenance_v1/latest/figure1.svg
+      - outputs/nmi_v118_figure1_provenance_v1/latest/figure1.png
+      - outputs/nmi_v118_figure1_provenance_v1/latest/source_manifest.json
+      - outputs/nmi_v118_figure1_provenance_v1/latest/report.txt
