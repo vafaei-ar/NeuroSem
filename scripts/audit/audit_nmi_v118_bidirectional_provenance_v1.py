@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Build the first machine-verifiable NeuroSem NMI v1.18 provenance ledger.
+"""Second-pass machine-verifiable NeuroSem NMI v1.18 provenance ledger.
 
-This is a read-only audit of already-completed derived outputs. It does not train or
-score models, recompute neural outcomes, select analyses, or edit the manuscript.
-The starting claim/source manifest is committed separately so unresolved lineage is
-visible rather than silently inferred.
+Read-only audit of already-completed safe derived outputs. This pass overlays the
+v1.17 claim inventory with recovered RunRelay lineage and atomic coverage for the
+previously unenumerated dose/model-space/reverse/spatial result families. It does
+not train or score models, recompute neural outcomes, select analyses, or edit the
+manuscript.
 """
 from __future__ import annotations
 
@@ -13,33 +14,16 @@ import hashlib
 import json
 import math
 import re
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[2]
-MANIFEST = ROOT / "docs" / "NMI_V117_CLAIM_MANIFEST_V1.json"
-OUT = ROOT / "outputs" / "nmi_v118_provenance_ledger_v1" / "latest"
-
-CLAIM_FIELDS = [
-    "claim_id", "manuscript_version", "manuscript_location", "claim_label",
-    "reported_value", "units_or_scale", "inferential_role", "source_job_id",
-    "source_job_status", "source_project_commit", "artifact_path", "artifact_sha256",
-    "field_selector", "observed_value", "comparison_tolerance", "cohort_or_item_set",
-    "model_or_adapter_identity", "provenance_class", "verification_status", "notes",
-]
-OUTPUT_FIELDS = [
-    "output_id", "job_id", "job_status", "project_commit", "task", "artifact_path",
-    "artifact_sha256", "scientific_role", "cohort_or_item_set", "model_or_adapter_identity",
-    "manuscript_disposition", "superseded_by", "notes",
-]
-EXCEPTION_FIELDS = ["exception_id", "severity", "category", "source_or_claim", "message"]
-SOURCE_FIELDS = [
-    "source_id", "artifact_path", "expected_sha256", "observed_sha256", "hash_status",
-    "job_id", "job_status", "project_commit", "task", "provenance_class", "disposition",
-]
+BASE = Path("docs/NMI_V117_CLAIM_MANIFEST_V1.json")
+OVERLAY = Path("docs/NMI_V118_PROVENANCE_OVERLAY_V2.json")
+OUT = Path("outputs/nmi_v118_provenance_ledger_v1/latest")
 
 
-def sha256_file(path: Path) -> str:
+def sha256(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
@@ -47,233 +31,353 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def load_structured(path: Path) -> Any:
-    if path.suffix.lower() == ".json":
-        return json.loads(path.read_text(encoding="utf-8"))
-    if path.suffix.lower() == ".csv":
-        with path.open("r", encoding="utf-8", newline="") as f:
-            return list(csv.DictReader(f))
-    raise ValueError(f"Unsupported structured source: {path}")
+def write_csv(path: Path, rows: list[dict[str, Any]], fieldnames: list[str] | None = None) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if fieldnames is None:
+        fieldnames = list(rows[0]) if rows else ["status"]
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+        w.writeheader()
+        if rows:
+            w.writerows(rows)
 
 
-def selector_tokens(selector: str) -> list[Any]:
-    tokens: list[Any] = []
-    for part in selector.split("."):
-        m = re.fullmatch(r"([^\[]+)(.*)", part)
-        if not m:
-            raise KeyError(selector)
-        tokens.append(m.group(1))
-        tail = m.group(2)
-        for idx in re.findall(r"\[(\d+)\]", tail):
-            tokens.append(int(idx))
-    return tokens
-
-
-def select(obj: Any, selector: str) -> Any:
-    cur = obj
-    for token in selector_tokens(selector):
-        if isinstance(token, int):
-            cur = cur[token]
+def split_selector(selector: str) -> list[str]:
+    parts, buf, depth = [], [], 0
+    for ch in selector:
+        if ch == "." and depth == 0:
+            parts.append("".join(buf)); buf = []
         else:
-            cur = cur[token]
+            if ch == "[": depth += 1
+            elif ch == "]": depth -= 1
+            buf.append(ch)
+    if buf:
+        parts.append("".join(buf))
+    if depth != 0:
+        raise KeyError(f"unbalanced selector: {selector}")
+    return parts
+
+
+def parse_scalar(raw: str) -> Any:
+    s = raw.strip()
+    if (len(s) >= 2 and s[0] == s[-1] and s[0] in "\"'"):
+        return s[1:-1]
+    if s.lower() == "true": return True
+    if s.lower() == "false": return False
+    if s.lower() == "null": return None
+    try:
+        if re.fullmatch(r"[-+]?\d+", s): return int(s)
+        return float(s)
+    except ValueError:
+        return s
+
+
+def equivalent(a: Any, b: Any) -> bool:
+    if isinstance(a, bool) or isinstance(b, bool):
+        return a is b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return math.isclose(float(a), float(b), rel_tol=0, abs_tol=1e-12)
+    return str(a) == str(b)
+
+
+def apply_bracket(value: Any, spec: str) -> Any:
+    if re.fullmatch(r"\d+", spec):
+        return value[int(spec)]
+    if not isinstance(value, list):
+        raise KeyError(f"filter applied to non-list: [{spec}]")
+    conds = []
+    for item in spec.split(","):
+        if "=" not in item:
+            raise KeyError(f"bad filter condition: {item}")
+        k, v = item.split("=", 1)
+        conds.append((k.strip(), parse_scalar(v)))
+    hits = []
+    for rec in value:
+        if not isinstance(rec, dict):
+            continue
+        ok = True
+        for k, expected in conds:
+            if k not in rec or not equivalent(rec[k], expected):
+                ok = False; break
+        if ok:
+            hits.append(rec)
+    if len(hits) != 1:
+        raise KeyError(f"filter [{spec}] matched {len(hits)} rows")
+    return hits[0]
+
+
+def select(payload: Any, selector: str) -> Any:
+    cur = payload
+    for part in split_selector(selector):
+        m = re.match(r"^([^\[]+)", part)
+        if m:
+            key = m.group(1)
+            if not isinstance(cur, dict) or key not in cur:
+                raise KeyError(f"missing key {key} in {selector}")
+            cur = cur[key]
+        for spec in re.findall(r"\[([^\]]+)\]", part):
+            cur = apply_bracket(cur, spec)
     return cur
 
 
-def comparable(observed: Any, reported: Any, tolerance: float) -> tuple[bool, str]:
-    if isinstance(reported, bool):
-        return observed is reported, f"observed={observed!r}"
-    if isinstance(reported, (int, float)) and not isinstance(reported, bool):
-        try:
-            obs = float(observed)
-            rep = float(reported)
-        except Exception:
-            return False, f"non-numeric observed={observed!r}"
-        if not (math.isfinite(obs) and math.isfinite(rep)):
-            return False, f"non-finite comparison observed={obs}, reported={rep}"
-        diff = abs(obs - rep)
-        return diff <= float(tolerance), f"abs_diff={diff:.12g}"
-    return str(observed) == str(reported), f"observed={observed!r}"
+def compare_value(reported: Any, observed: Any, tolerance: Any) -> tuple[str, str]:
+    if isinstance(reported, bool) or isinstance(observed, bool):
+        ok = reported is observed
+        return ("verified" if ok else "incorrect", "" if ok else f"reported={reported!r}; observed={observed!r}")
+    if isinstance(reported, (int, float)) and isinstance(observed, (int, float)):
+        r, o = float(reported), float(observed)
+        tol = float(tolerance or 0)
+        diff = abs(r - o)
+        ok = math.isfinite(r) and math.isfinite(o) and diff <= tol + 1e-15
+        return ("verified" if ok else "incorrect", f"abs_diff={diff:.15g}; tolerance={tol:.15g}")
+    ok = str(reported) == str(observed)
+    return ("verified" if ok else "incorrect", "" if ok else f"reported={reported!r}; observed={observed!r}")
 
 
-def write_csv(path: Path, rows: list[dict], fields: list[str]) -> None:
-    with path.open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
-        w.writeheader()
-        w.writerows(rows)
+def scan_run07_history() -> dict[str, Any]:
+    roots = [Path("outputs/chineseeeg_run07_holdout_rsa"), Path("outputs/chineseeeg_run07_holdout_embeddings")]
+    entries = []
+    count_keys = {"n_subjects", "n_participants", "n_valid_subjects", "subject_count", "n_subjects_evaluated"}
+
+    def find_counts(x: Any, prefix: str = "") -> list[tuple[str, Any]]:
+        out = []
+        if isinstance(x, dict):
+            for k, v in x.items():
+                p = f"{prefix}.{k}" if prefix else k
+                if k in count_keys and isinstance(v, (int, float)):
+                    out.append((p, v))
+                out.extend(find_counts(v, p))
+        elif isinstance(x, list):
+            for i, v in enumerate(x):
+                out.extend(find_counts(v, f"{prefix}[{i}]"))
+        return out
+
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in sorted(root.rglob("summary.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                entries.append({
+                    "path": str(path),
+                    "sha256": sha256(path),
+                    "subject_count_candidates": find_counts(data),
+                })
+            except Exception as e:
+                entries.append({"path": str(path), "error": f"{type(e).__name__}: {e}"})
+    return {"roots": [str(r) for r in roots], "n_summary_files": len(entries), "entries": entries}
 
 
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    manuscript_version = manifest["manuscript_version"]
+    base = json.loads(BASE.read_text(encoding="utf-8"))
+    overlay = json.loads(OVERLAY.read_text(encoding="utf-8"))
 
-    exceptions: list[dict] = []
-    source_rows: list[dict] = []
-    source_cache: dict[str, Any] = {}
-    source_state: dict[str, dict] = {}
+    sources = {k: dict(v) for k, v in base["sources"].items()}
+    for key, patch in overlay.get("source_overrides", {}).items():
+        if key not in sources:
+            raise RuntimeError(f"overlay override references absent source: {key}")
+        sources[key].update(patch)
+    for key, rec in overlay.get("source_additions", {}).items():
+        if key in sources:
+            raise RuntimeError(f"overlay addition duplicates source: {key}")
+        sources[key] = dict(rec)
 
-    for source_id, src in manifest["sources"].items():
-        path = ROOT / src["path"]
-        observed_sha = ""
-        hash_status = "missing"
-        if path.exists() and path.is_file():
-            observed_sha = sha256_file(path)
-            hash_status = "verified" if observed_sha == src.get("sha256") else "mismatch"
-            if path.suffix.lower() in {".json", ".csv"}:
-                try:
-                    source_cache[source_id] = load_structured(path)
-                except Exception as exc:
-                    exceptions.append({
-                        "exception_id": f"SRC_PARSE_{source_id}", "severity": "blocking",
-                        "category": "source_parse", "source_or_claim": source_id,
-                        "message": f"Could not parse {src['path']}: {type(exc).__name__}: {exc}",
-                    })
-        else:
-            exceptions.append({
-                "exception_id": f"SRC_MISSING_{source_id}", "severity": "blocking",
-                "category": "missing_artifact", "source_or_claim": source_id,
-                "message": f"Required artifact is missing: {src['path']}",
-            })
-        if hash_status == "mismatch":
-            exceptions.append({
-                "exception_id": f"SRC_HASH_{source_id}", "severity": "blocking",
-                "category": "hash_mismatch", "source_or_claim": source_id,
-                "message": f"Expected {src.get('sha256')} but observed {observed_sha} for {src['path']}",
-            })
-        missing_meta = [k for k in ("job_id", "project_commit", "task") if not src.get(k)]
-        if missing_meta:
-            exceptions.append({
-                "exception_id": f"SRC_META_{source_id}", "severity": "major",
-                "category": "missing_job_lineage", "source_or_claim": source_id,
-                "message": "Missing source job metadata fields: " + ", ".join(missing_meta),
-            })
-        source_state[source_id] = {"path": path, "hash_status": hash_status, "observed_sha": observed_sha, **src}
-        source_rows.append({
-            "source_id": source_id, "artifact_path": src["path"],
-            "expected_sha256": src.get("sha256", ""), "observed_sha256": observed_sha,
-            "hash_status": hash_status, "job_id": src.get("job_id") or "",
-            "job_status": src.get("job_status") or "", "project_commit": src.get("project_commit") or "",
-            "task": src.get("task") or "", "provenance_class": src.get("provenance_class") or "",
-            "disposition": src.get("disposition") or "",
-        })
+    added_claims = []
+    for claim_file in overlay.get("claim_files", []):
+        payload = json.loads(Path(claim_file).read_text(encoding="utf-8"))
+        added_claims.extend(payload.get("claims", []))
+    claims = list(base.get("claims", [])) + added_claims
+    ids = [c["claim_id"] for c in claims]
+    dup = [k for k, v in Counter(ids).items() if v > 1]
+    if dup:
+        raise RuntimeError(f"duplicate claim ids: {dup}")
 
-    claim_rows: list[dict] = []
-    for claim in manifest["claims"]:
-        source_id = claim["source"]
-        src = source_state.get(source_id)
-        observed: Any = ""
-        status = "missing"
-        notes: list[str] = []
-        if src is None:
-            notes.append("source id absent from manifest")
-        elif src["hash_status"] != "verified":
-            status = "missing" if src["hash_status"] == "missing" else "unresolved"
-            notes.append(f"source hash status={src['hash_status']}")
-        elif source_id not in source_cache:
-            status = "unresolved"
-            notes.append("structured source was not parsed")
-        else:
+    exceptions: list[dict[str, Any]] = []
+    source_rows = []
+    payloads: dict[str, Any] = {}
+    for key, src in sources.items():
+        p = Path(src["path"])
+        exists = p.is_file()
+        observed_hash = sha256(p) if exists else ""
+        expected_hash = src.get("sha256") or ""
+        hash_ok = bool(exists and expected_hash and observed_hash == expected_hash)
+        if exists:
             try:
-                observed = select(source_cache[source_id], claim["selector"])
-                ok, detail = comparable(observed, claim["reported_value"], claim.get("tolerance", 0.0))
-                status = "verified" if ok else "incorrect"
-                notes.append(detail)
-            except Exception as exc:
+                payloads[key] = json.loads(p.read_text(encoding="utf-8"))
+            except Exception as e:
+                payloads[key] = None
+                exceptions.append({"exception_type":"source_parse_error","severity":"blocking","source":key,"claim_id":"","detail":f"{type(e).__name__}: {e}"})
+        else:
+            payloads[key] = None
+        missing_meta = [f for f in ("job_id", "job_status", "project_commit", "task") if not src.get(f)]
+        if missing_meta:
+            exceptions.append({"exception_type":"missing_job_lineage","severity":"blocking","source":key,"claim_id":"","detail":"missing " + ",".join(missing_meta)})
+        if not exists:
+            exceptions.append({"exception_type":"missing_source_artifact","severity":"blocking","source":key,"claim_id":"","detail":str(p)})
+        elif not hash_ok:
+            exceptions.append({"exception_type":"source_hash_mismatch","severity":"blocking","source":key,"claim_id":"","detail":f"expected={expected_hash}; observed={observed_hash}"})
+        source_rows.append({
+            "source_key": key,
+            "artifact_path": str(p),
+            "expected_sha256": expected_hash,
+            "observed_sha256": observed_hash,
+            "hash_verified": hash_ok,
+            "job_id": src.get("job_id") or "",
+            "job_status": src.get("job_status") or "",
+            "project_commit": src.get("project_commit") or "",
+            "task": src.get("task") or "",
+            "provenance_class": src.get("provenance_class") or "",
+            "manuscript_disposition": src.get("disposition") or "",
+            "lineage_note": src.get("lineage_note") or "",
+        })
+
+    claim_rows = []
+    claims_by_source = Counter()
+    for claim in claims:
+        src_key = claim["source"]
+        claims_by_source[src_key] += 1
+        src = sources.get(src_key)
+        status, detail, observed = "missing", "", ""
+        if src is None:
+            detail = "source key absent from manifest"
+        else:
+            srow = next(r for r in source_rows if r["source_key"] == src_key)
+            if not srow["hash_verified"]:
                 status = "unresolved"
-                notes.append(f"selector failed: {type(exc).__name__}: {exc}")
+                detail = "source artifact missing or hash not verified"
+            elif payloads.get(src_key) is None:
+                status = "unresolved"
+                detail = "source payload unavailable"
+            else:
+                try:
+                    observed = select(payloads[src_key], claim["selector"])
+                    status, detail = compare_value(claim["reported_value"], observed, claim.get("tolerance", 0))
+                except Exception as e:
+                    status = "unresolved"
+                    detail = f"selector_error={type(e).__name__}: {e}"
         if status != "verified":
-            exceptions.append({
-                "exception_id": f"CLAIM_{claim['claim_id']}",
-                "severity": "blocking" if claim.get("inferential_role") == "primary" else "major",
-                "category": f"claim_{status}", "source_or_claim": claim["claim_id"],
-                "message": "; ".join(notes) or status,
-            })
+            exceptions.append({"exception_type":f"claim_{status}","severity":"blocking","source":src_key,"claim_id":claim["claim_id"],"detail":detail})
         claim_rows.append({
-            "claim_id": claim["claim_id"], "manuscript_version": manuscript_version,
-            "manuscript_location": claim.get("manuscript_location", ""), "claim_label": claim.get("claim_label", ""),
-            "reported_value": claim.get("reported_value", ""), "units_or_scale": claim.get("units_or_scale", ""),
-            "inferential_role": claim.get("inferential_role", ""), "source_job_id": src.get("job_id") or "" if src else "",
-            "source_job_status": src.get("job_status") or "" if src else "", "source_project_commit": src.get("project_commit") or "" if src else "",
-            "artifact_path": src.get("path") or "" if src else "", "artifact_sha256": src.get("observed_sha") or "" if src else "",
-            "field_selector": claim.get("selector", ""), "observed_value": observed,
-            "comparison_tolerance": claim.get("tolerance", 0), "cohort_or_item_set": claim.get("cohort_or_item_set", ""),
+            "claim_id": claim["claim_id"],
+            "manuscript_version": base.get("manuscript_version", "v1.17"),
+            "manuscript_location": claim.get("manuscript_location", ""),
+            "claim_label": claim.get("claim_label", ""),
+            "reported_value": claim.get("reported_value", ""),
+            "units_or_scale": claim.get("units_or_scale", ""),
+            "inferential_role": claim.get("inferential_role", ""),
+            "source_key": src_key,
+            "source_job_id": (src or {}).get("job_id") or "",
+            "source_job_status": (src or {}).get("job_status") or "",
+            "source_project_commit": (src or {}).get("project_commit") or "",
+            "artifact_path": (src or {}).get("path") or "",
+            "artifact_sha256": (src or {}).get("sha256") or "",
+            "field_selector": claim.get("selector", ""),
+            "observed_value": observed,
+            "comparison_tolerance": claim.get("tolerance", 0),
+            "cohort_or_item_set": claim.get("cohort_or_item_set", ""),
             "model_or_adapter_identity": claim.get("model_or_adapter_identity", ""),
-            "provenance_class": src.get("provenance_class") or "" if src else "",
-            "verification_status": status, "notes": "; ".join(notes),
+            "provenance_class": (src or {}).get("provenance_class") or "",
+            "verification_status": status,
+            "notes": detail,
         })
 
-    claim_sources = {c["source"] for c in manifest["claims"]}
-    output_rows: list[dict] = []
-    for source_id, src in source_state.items():
+    required = overlay.get("required_source_families", [])
+    disposition_only = set(overlay.get("disposition_only_sources", []))
+    for key in required:
+        if claims_by_source[key] == 0 and key not in disposition_only:
+            exceptions.append({"exception_type":"claim_coverage_pending","severity":"blocking","source":key,"claim_id":"","detail":"required manuscript source family has no atomic claim rows"})
+
+    for rec in overlay.get("lineage_reconciliations", []):
+        if rec.get("status") != "resolved":
+            exceptions.append({"exception_type":"lineage_unresolved","severity":"blocking","source":"","claim_id":rec.get("lineage_id", ""),"detail":rec.get("description", "") + ": " + rec.get("resolution", "")})
+
+    for rec in overlay.get("expected_manuscript_corrections", []):
+        if not str(rec.get("status", "")).startswith("completed"):
+            exceptions.append({"exception_type":"manuscript_or_shipping_correction_pending","severity":"blocking","source":"","claim_id":rec.get("correction_id", ""),"detail":f"{rec.get('location','')}: {rec.get('required_v118','')}"})
+
+    output_rows = []
+    for r in source_rows:
         output_rows.append({
-            "output_id": source_id, "job_id": src.get("job_id") or "", "job_status": src.get("job_status") or "",
-            "project_commit": src.get("project_commit") or "", "task": src.get("task") or "",
-            "artifact_path": src.get("path") or "", "artifact_sha256": src.get("observed_sha") or "",
-            "scientific_role": "claim-bearing" if source_id in claim_sources else "required reverse-ledger source family",
-            "cohort_or_item_set": "", "model_or_adapter_identity": "",
-            "manuscript_disposition": src.get("disposition") or "", "superseded_by": "",
-            "notes": "hash-pinned" if src.get("hash_status") == "verified" else f"hash_status={src.get('hash_status')}",
+            "output_id": r["source_key"],
+            "job_id": r["job_id"],
+            "job_status": r["job_status"],
+            "project_commit": r["project_commit"],
+            "task": r["task"],
+            "artifact_path": r["artifact_path"],
+            "artifact_sha256": r["expected_sha256"],
+            "scientific_role": r["provenance_class"],
+            "cohort_or_item_set": "",
+            "model_or_adapter_identity": "",
+            "manuscript_disposition": r["manuscript_disposition"],
+            "superseded_by": "",
+            "notes": r["lineage_note"],
         })
 
-    for source_id in manifest.get("required_source_families_without_atomic_claim_rows_yet", []):
-        exceptions.append({
-            "exception_id": f"COVERAGE_{source_id}", "severity": "major", "category": "claim_coverage_pending",
-            "source_or_claim": source_id,
-            "message": "Source family is in manuscript scope but atomic v1.17 claim rows have not yet been enumerated in the claim manifest.",
-        })
-    for i, message in enumerate(manifest.get("known_lineage_exceptions_to_test", []), start=1):
-        exceptions.append({
-            "exception_id": f"LINEAGE_{i:02d}", "severity": "major", "category": "lineage_reconciliation_pending",
-            "source_or_claim": "cross-source", "message": message,
-        })
+    run07_scan = scan_run07_history()
+    status_counts = Counter(r["verification_status"] for r in claim_rows)
+    source_hash_ok = sum(bool(r["hash_verified"]) for r in source_rows)
+    unresolved_lineages = [x for x in overlay.get("lineage_reconciliations", []) if x.get("status") != "resolved"]
+    pending_corrections = [x for x in overlay.get("expected_manuscript_corrections", []) if not str(x.get("status", "")).startswith("completed")]
+    coverage_exceptions = [e for e in exceptions if e["exception_type"] == "claim_coverage_pending"]
+    blocking = [e for e in exceptions if e.get("severity") == "blocking"]
 
-    write_csv(OUT / "claim_to_source.csv", claim_rows, CLAIM_FIELDS)
-    write_csv(OUT / "output_to_manuscript.csv", output_rows, OUTPUT_FIELDS)
-    write_csv(OUT / "exceptions.csv", exceptions, EXCEPTION_FIELDS)
-    write_csv(OUT / "source_manifest.csv", source_rows, SOURCE_FIELDS)
-
-    status_counts: dict[str, int] = {}
-    for row in claim_rows:
-        status_counts[row["verification_status"]] = status_counts.get(row["verification_status"], 0) + 1
-    severity_counts: dict[str, int] = {}
-    for row in exceptions:
-        severity_counts[row["severity"]] = severity_counts.get(row["severity"], 0) + 1
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "ok",
-        "analysis_stage": "v1.18 bidirectional provenance ledger first pass",
-        "manuscript_version_audited": manuscript_version,
+        "analysis_stage": "second-pass bidirectional provenance ledger expansion",
+        "manuscript_version_audited": base.get("manuscript_version", "v1.17"),
+        "base_manifest": str(BASE),
+        "overlay": str(OVERLAY),
         "claim_rows": len(claim_rows),
-        "claim_status_counts": status_counts,
+        "claim_status_counts": dict(status_counts),
         "source_rows": len(source_rows),
-        "verified_source_hashes": sum(r["hash_status"] == "verified" for r in source_rows),
+        "verified_source_hashes": source_hash_ok,
+        "coverage_complete_for_declared_source_families": not coverage_exceptions,
+        "lineage_reconciliations": overlay.get("lineage_reconciliations", []),
+        "unresolved_lineage_count": len(unresolved_lineages),
+        "pending_manuscript_or_shipping_corrections": pending_corrections,
+        "run07_history_scan": run07_scan,
         "exception_rows": len(exceptions),
-        "exception_severity_counts": severity_counts,
-        "shipping_gate_pass": bool(claim_rows) and all(r["verification_status"] == "verified" for r in claim_rows) and not exceptions,
+        "blocking_exception_rows": len(blocking),
+        "shipping_gate_pass": len(blocking) == 0,
         "guardrails": {
             "model_training_performed": False,
-            "neural_analysis_performed": False,
             "model_evaluation_performed": False,
-            "manuscript_edited": False,
-            "unresolved_items_are_preserved": True,
+            "neural_analysis_performed": False,
+            "manuscript_editing_performed": False,
+            "source_hashes_checked": True,
+            "filtered_list_selectors_supported": True,
         },
-        "next_action": "Resolve exceptions, enumerate remaining manuscript claim families, rerun until the shipping gate criteria in docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md are satisfied.",
+        "next_action": "Resolve remaining run-07 history and manuscript/shipping corrections; then rebuild v1.18 and rerun a final document-linked shipping ledger." if blocking else "Ledger gate passed; regenerate the final artifact bundle from this state."
     }
-    (OUT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    lines = [
-        "NeuroSem NMI v1.18 bidirectional provenance ledger - first pass",
-        "",
-        f"Claim rows: {len(claim_rows)}",
-        "Claim status: " + ", ".join(f"{k}={v}" for k, v in sorted(status_counts.items())),
-        f"Source rows: {len(source_rows)}; verified source hashes: {summary['verified_source_hashes']}",
-        f"Exceptions: {len(exceptions)} (" + ", ".join(f"{k}={v}" for k, v in sorted(severity_counts.items())) + ")",
+
+    claim_fields = ["claim_id","manuscript_version","manuscript_location","claim_label","reported_value","units_or_scale","inferential_role","source_key","source_job_id","source_job_status","source_project_commit","artifact_path","artifact_sha256","field_selector","observed_value","comparison_tolerance","cohort_or_item_set","model_or_adapter_identity","provenance_class","verification_status","notes"]
+    output_fields = ["output_id","job_id","job_status","project_commit","task","artifact_path","artifact_sha256","scientific_role","cohort_or_item_set","model_or_adapter_identity","manuscript_disposition","superseded_by","notes"]
+    source_fields = ["source_key","artifact_path","expected_sha256","observed_sha256","hash_verified","job_id","job_status","project_commit","task","provenance_class","manuscript_disposition","lineage_note"]
+    exc_fields = ["exception_type","severity","source","claim_id","detail"]
+    write_csv(OUT / "claim_to_source.csv", claim_rows, claim_fields)
+    write_csv(OUT / "output_to_manuscript.csv", output_rows, output_fields)
+    write_csv(OUT / "source_manifest.csv", source_rows, source_fields)
+    write_csv(OUT / "exceptions.csv", exceptions, exc_fields)
+    (OUT / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    report = [
+        "NeuroSem NMI v1.18 bidirectional provenance ledger - second pass",
+        "Status: ok",
+        f"Claims: {len(claim_rows)} ({dict(status_counts)})",
+        f"Sources: {len(source_rows)}; exact source hashes verified: {source_hash_ok}/{len(source_rows)}",
+        f"Declared source-family coverage complete: {not coverage_exceptions}",
+        f"Unresolved lineages: {len(unresolved_lineages)}",
+        f"Pending manuscript/shipping corrections: {len(pending_corrections)}",
+        f"Exceptions: {len(exceptions)}; blocking: {len(blocking)}",
         f"Shipping gate pass: {summary['shipping_gate_pass']}",
+        f"Run-07 historical summaries discovered: {run07_scan['n_summary_files']}",
         "",
-        "This is intentionally a first pass. Any missing job lineage, incomplete claim-family coverage,",
-        "failed/recovery lineage, or source mismatch remains explicit in exceptions.csv.",
+        "The audit intentionally preserves v1.17 discrepancies rather than widening tolerances or rewriting reported values. A final pass must be linked to the edited v1.18 manuscript and fresh artifact bundle."
     ]
-    (OUT / "report.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(json.dumps(summary, indent=2))
+    (OUT / "report.txt").write_text("\n".join(report) + "\n", encoding="utf-8")
+    print(json.dumps({"status":"ok","claim_rows":len(claim_rows),"verified":status_counts.get("verified",0),"exceptions":len(exceptions),"shipping_gate_pass":summary["shipping_gate_pass"]}, indent=2))
     return 0
 
 
