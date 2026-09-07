@@ -64,6 +64,10 @@ def merged_state() -> tuple[dict[str, dict], list[dict], list[dict], list[dict]]
         sources[key] = dict(rec)
     for key, rec in v3.get("source_additions", {}).items():
         sources[key] = dict(rec)
+    for key, patch in v3.get("source_overrides", {}).items():
+        if key not in sources:
+            raise RuntimeError(f"Unknown v1.18 source override: {key}")
+        sources[key].update(patch)
 
     claims = [dict(c) for c in base.get("claims", [])]
     for claim_file in v2.get("claim_files", []):
