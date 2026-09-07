@@ -20,6 +20,7 @@ PANEL_RESOLVED_MODELS = REPO_ROOT / "outputs/nmi_bidirectional_model_family_pane
 MATERIALIZER = REPO_ROOT / "scripts/robustness/materialize_nmi_alternative_signal_mpnet_v1.py"
 MODEL_ID = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 PREFLIGHT = REPO_ROOT / "outputs/nmi_alternative_signal_mpnet_targets_v1/latest/preflight.txt"
+MAX_DIAGNOSTIC_CHARS = 12000
 
 
 def frozen_panel_revision() -> tuple[str, str]:
@@ -40,6 +41,13 @@ def note(text: str) -> None:
         f.write(text.rstrip() + "\n")
 
 
+def diagnostic_tail(text: str | None) -> str:
+    value = (text or "").strip()
+    if len(value) > MAX_DIAGNOSTIC_CHARS:
+        value = value[-MAX_DIAGNOSTIC_CHARS:]
+    return value
+
+
 def main() -> int:
     PREFLIGHT.parent.mkdir(parents=True, exist_ok=True)
     PREFLIGHT.write_text("MPNet alternative-signal preflight\n", encoding="utf-8")
@@ -58,12 +66,28 @@ def main() -> int:
     except Exception as exc:
         note(f"snapshot_download=failed:{type(exc).__name__}:{exc}")
         raise
-    try:
-        subprocess.run([sys.executable, str(MATERIALIZER)], cwd=REPO_ROOT, check=True)
-        note("materializer=ok")
-    except Exception as exc:
-        note(f"materializer=failed:{type(exc).__name__}:{exc}")
-        raise
+
+    proc = subprocess.run(
+        [sys.executable, str(MATERIALIZER)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    note(f"materializer_returncode={proc.returncode}")
+    stdout_tail = diagnostic_tail(proc.stdout)
+    stderr_tail = diagnostic_tail(proc.stderr)
+    if stdout_tail:
+        note("materializer_stdout_tail_begin")
+        note(stdout_tail)
+        note("materializer_stdout_tail_end")
+    if stderr_tail:
+        note("materializer_stderr_tail_begin")
+        note(stderr_tail)
+        note("materializer_stderr_tail_end")
+    if proc.returncode != 0:
+        raise RuntimeError(f"Materializer failed with exit code {proc.returncode}; see declared preflight artifact")
+    note("materializer=ok")
     return 0
 
 
