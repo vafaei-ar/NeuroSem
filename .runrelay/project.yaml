@@ -99,6 +99,7 @@ tasks:
       wait_minutes: 240
     working_directory: .
     artifacts:
+      - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/preflight.txt
       - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/summary.json
       - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/report.txt
       - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/target_manifest.csv
