@@ -1,0 +1,68 @@
+{
+  "schema_version": 3,
+  "base_overlay": "docs/NMI_V118_PROVENANCE_OVERLAY_V2.json",
+  "document_manifest": "docs/NMI_V118_DOCUMENT_MANIFEST_V1.json",
+  "purpose": "Final v1.18 provenance/shipping overlay. It closes the historical run-07 cohort-state lineage using R7K3M8V2, updates the one rounded Figure 1 claim to the edited v1.18 value, and records completion of manuscript corrections while requiring a fresh September-inclusive runtime bundle before the shipping gate can pass.",
+  "source_additions": {
+    "run07_history_audit": {
+      "path": "outputs/nmi_v118_run07_history_audit_v1/latest/summary.json",
+      "sha256": "c7d0f29657b8a648f1dc31c92058d5f033ffaf93391cda5cf19e08649d60a0e5",
+      "job_id": "R7K3M8V2",
+      "job_status": "completed",
+      "project_commit": "2316ef735770122ae348c220549a3fe31935cbf6",
+      "task": "audit_nmi_v118_run07_history_v1",
+      "provenance_class": "historical_derived_output_lineage_audit",
+      "disposition": "Methods provenance note for ChineseEEG development evidence"
+    }
+  },
+  "claim_overrides": {
+    "F1_REL_RESID": {
+      "reported_value": 0.1205,
+      "tolerance": 0.00005,
+      "manuscript_location": "Figure 1b / Results source characterization (v1.18)",
+      "override_note": "v1.18 reports the independently replayed residual LOO reliability as approximately 0.1205 rather than the v1.17 rounded 0.121."
+    }
+  },
+  "lineage_overrides": {
+    "LINEAGE_03": {
+      "status": "resolved",
+      "resolution": "R7K3M8V2 scanned 119 machine-readable run-07 JSON artifacts spanning 104 timestamped states and found both historical cohort states: 41 artifacts with aggregate count 10 and 14 with aggregate count 9, with no parse errors. The original BERT run-07 development summaries are retained as n=10 historical development outputs; the independently replayed whole-row reliability used in Figure 1 is n=9. v1.18 states this two-cohort history explicitly and makes no common-cohort or exclusion-reason inference."
+    }
+  },
+  "manuscript_correction_overrides": {
+    "CORR_F1_RESID": {
+      "status": "completed_v118_edit",
+      "evidence": "docs/NMI_V118_DOCUMENT_MANIFEST_V1.json"
+    },
+    "CORR_MPNET_ZUCO": {
+      "status": "completed_v118_edit",
+      "evidence": "docs/NMI_V118_DOCUMENT_MANIFEST_V1.json"
+    },
+    "CORR_MPNET_MAGNITUDE": {
+      "status": "completed_v118_edit",
+      "evidence": "docs/NMI_V118_DOCUMENT_MANIFEST_V1.json"
+    },
+    "CORR_AI_DISCLOSURE": {
+      "status": "completed_v118_edit",
+      "evidence": "docs/NMI_V118_DOCUMENT_MANIFEST_V1.json"
+    },
+    "CORR_REVERSE_WORDING": {
+      "status": "completed_v118_edit",
+      "evidence": "docs/NMI_V118_DOCUMENT_MANIFEST_V1.json"
+    },
+    "CORR_FRESH_BUNDLE": {
+      "status": "runtime_bundle_required",
+      "required_manifest": "outputs/nmi_v118_submission_bundle_v1/latest/bundle_manifest.json"
+    }
+  },
+  "shipping_requirements": {
+    "claim_rows_expected": 129,
+    "all_claims_verified": true,
+    "all_source_hashes_verified": true,
+    "all_lineages_resolved": true,
+    "document_manifest_required": true,
+    "document_visual_qa_required": true,
+    "fresh_bundle_required": true,
+    "publication_figure1_must_be_provenance_linked": true
+  }
+}
