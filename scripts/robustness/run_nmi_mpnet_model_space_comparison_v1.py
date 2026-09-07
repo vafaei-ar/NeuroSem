@@ -12,7 +12,14 @@ from __future__ import annotations
 
 import csv
 import json
+import os
+import sys
+import time
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
@@ -26,6 +33,27 @@ K = 10
 TEXT_ROOT = Path("outputs/nmi_multiseed_e5_v1")
 SURROGATE_ROOT = Path("outputs/nmi_alternative_signal_e5_v1")
 OUT = Path("outputs/nmi_mpnet_model_space_comparison_v1/latest")
+
+
+def write_progress(current: int, total: int, phase: str, message: str) -> None:
+    path = os.environ.get("RUNRELAY_PROGRESS_FILE")
+    if not path:
+        return
+    payload = {
+        "schema_version": 1,
+        "current": current,
+        "total": total,
+        "fraction": max(0.0, min(1.0, current / total if total else 0.0)),
+        "phase": phase,
+        "message": message,
+        "unit": "adapter encodings",
+        "updated_at_epoch": time.time(),
+    }
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(p.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+    tmp.replace(p)
 
 
 def latest_adapter(root: Path) -> Path:
@@ -122,6 +150,9 @@ def main() -> int:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     comparison_rows = []
     intrinsic_rows = []
+    completed = 0
+    total_encodings = len(SEEDS) * 3
+    write_progress(0, total_encodings, "encode", "starting frozen adapter encodings")
 
     for seed in SEEDS:
         seed_base = TEXT_ROOT / f"seed_{seed}"
@@ -131,10 +162,16 @@ def main() -> int:
 
         print(f"=== seed {seed}: text ===", flush=True)
         et = encode_adapter(text_adapter, texts, device)
+        completed += 1
+        write_progress(completed, total_encodings, "encode", f"completed text-only encoding for seed {seed}")
         print(f"=== seed {seed}: genuine neural ===", flush=True)
         eg = encode_adapter(genuine_adapter, texts, device)
+        completed += 1
+        write_progress(completed, total_encodings, "encode", f"completed genuine-neural encoding for seed {seed}")
         print(f"=== seed {seed}: MPNet surrogate ===", flush=True)
         es = encode_adapter(surrogate_adapter, texts, device)
+        completed += 1
+        write_progress(completed, total_encodings, "encode", f"completed MPNet-surrogate encoding for seed {seed}")
         if et.shape != eg.shape or et.shape != es.shape or et.shape[0] != len(texts):
             raise RuntimeError(f"seed {seed}: embedding shape mismatch")
 
@@ -186,6 +223,7 @@ def main() -> int:
         "No retraining or external neural outcome was used.\n",
         encoding="utf-8",
     )
+    write_progress(total_encodings, total_encodings, "complete", "model-space comparison complete")
     print(json.dumps(payload, indent=2))
     return 0
 
