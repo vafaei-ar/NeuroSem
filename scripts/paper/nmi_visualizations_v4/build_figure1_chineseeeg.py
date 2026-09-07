@@ -7,11 +7,18 @@ from pathlib import Path
 import numpy as np
 import nmi_style as S
 
+# Demo-only defaults. Non-demo builds must load all scientific values from artifacts.
 RUNS = np.array([0.0057, 0.0034, 0.0145, 0.0045, 0.0174, 0.0056])
 RUN07 = {"Base": [0.0319, 0.0319], "Text-only": [0.0354, 0.0341], "Neural-guided": [0.0371, 0.0375], "Shuffled-neural": [0.0353, 0.0338]}
 SEM = {"Base": [0.283464, 0.283464], "Text-only": [0.308486, 0.305020], "Neural-guided": [0.308575, 0.301607], "Shuffled-neural": [0.307943, 0.305266]}
 RELIABILITY = {"Raw LOO": 0.220, "Residual LOO": 0.121}
 ARM_SHORT = ["base", "text-only", "neural-\nguided", "shuffled-\nneural"]
+STS_ARM_MAP = {
+    "Base": "base",
+    "Text-only": "text_only",
+    "Neural-guided": "neural",
+    "Shuffled-neural": "shuffled_neural",
+}
 
 
 def panel_a(ax):
@@ -20,7 +27,7 @@ def panel_a(ax):
     S.flowbox(ax, 0.55, 0.80, 0.45, 0.16, "Language-model\npairwise geometry")
     S.flowbox(ax, 0.06, 0.44, 0.88, 0.17, "Auxiliary neural relational objective\n+ matched text-learning objective", fc="#eef3f8")
     S.arrow(ax, (0.225, 0.795), (0.35, 0.615)); S.arrow(ax, (0.775, 0.795), (0.65, 0.615))
-    S.flowbox(ax, 0.06, 0.14, 0.88, 0.15, "Sealed development test $\\rightarrow$\nfrozen external transfer")
+    S.flowbox(ax, 0.06, 0.14, 0.88, 0.15, "Reserved development test $\\rightarrow$\nfixed external transfer")
     S.arrow(ax, (0.50, 0.435), (0.50, 0.295))
 
 
@@ -49,21 +56,70 @@ def _arm_dots(ax, table, ylabel, ylim):
     ax.tick_params(axis="x", length=0); ax.grid(axis="y", zorder=0); S.offset_ticks(ax, "y")
 
 
+def load_sts(seed1_path: Path, seed2_path: Path) -> dict[str, list[float]]:
+    summaries = [
+        json.loads(seed1_path.read_text(encoding="utf-8")),
+        json.loads(seed2_path.read_text(encoding="utf-8")),
+    ]
+    out: dict[str, list[float]] = {}
+    for display, key in STS_ARM_MAP.items():
+        vals = []
+        for summary in summaries:
+            result = summary["results"][key]
+            task_scores = result.get("task_scores", {})
+            if len(task_scores) != 8:
+                raise RuntimeError(f"{key}: expected 8 STS task scores, found {len(task_scores)}")
+            mean_from_tasks = float(np.mean([float(v) for v in task_scores.values()]))
+            reported = float(result["mean_spearman"])
+            if not np.isclose(mean_from_tasks, reported, rtol=0.0, atol=5e-13):
+                raise RuntimeError(f"{key}: task-level STS mean does not match reported mean")
+            vals.append(reported)
+        out[display] = vals
+    return out
+
+
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--development-json", type=Path); ap.add_argument("--out-prefix", type=Path, required=True); ap.add_argument("--demo", action="store_true"); args = ap.parse_args()
-    global RUNS, RUN07, RELIABILITY
-    if args.development_json is not None:
-        dev = json.loads(args.development_json.read_text(encoding="utf-8")); RUNS = np.asarray(dev["heldout_residual_correspondence"], float)
-        RELIABILITY = {"Raw LOO": float(dev["reliability"]["raw_loo"]), "Residual LOO": float(dev["reliability"]["residual_loo"])}
-        sealed = dev["sealed_run07"]; RUN07 = {arm: [float(sealed["seed_1"][i]), float(sealed["seed_2"][i])] for i, arm in enumerate(sealed["arms"])}
-    elif not args.demo: ap.error("--development-json required unless --demo")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--development-json", type=Path)
+    ap.add_argument("--reliability-summary", type=Path)
+    ap.add_argument("--sts-seed1-summary", type=Path)
+    ap.add_argument("--sts-seed2-summary", type=Path)
+    ap.add_argument("--out-prefix", type=Path, required=True)
+    ap.add_argument("--demo", action="store_true")
+    args = ap.parse_args()
+    global RUNS, RUN07, RELIABILITY, SEM
+
+    if args.demo:
+        pass
+    else:
+        required = {
+            "--development-json": args.development_json,
+            "--reliability-summary": args.reliability_summary,
+            "--sts-seed1-summary": args.sts_seed1_summary,
+            "--sts-seed2-summary": args.sts_seed2_summary,
+        }
+        missing = [name for name, value in required.items() if value is None]
+        if missing:
+            ap.error("required for non-demo build: " + ", ".join(missing))
+        dev = json.loads(args.development_json.read_text(encoding="utf-8"))
+        RUNS = np.asarray(dev["heldout_residual_correspondence"], float)
+        reserved = dev["sealed_run07"]
+        RUN07 = {arm: [float(reserved["seed_1"][i]), float(reserved["seed_2"][i])] for i, arm in enumerate(reserved["arms"])}
+        reliability = json.loads(args.reliability_summary.read_text(encoding="utf-8"))
+        RELIABILITY = {
+            "Raw LOO": float(reliability["raw_loo_mean"]),
+            "Residual LOO": float(reliability["residual_loo_mean"]),
+        }
+        SEM = load_sts(args.sts_seed1_summary, args.sts_seed2_summary)
+
     S.apply(); fig = S.figure(S.W2, 100); gs = fig.add_gridspec(2, 6)
     ax_a = fig.add_subplot(gs[0, 0:2]); ax_b = fig.add_subplot(gs[0, 2:4]); ax_c = fig.add_subplot(gs[0, 4:6]); ax_d = fig.add_subplot(gs[1, 0:3]); ax_e = fig.add_subplot(gs[1, 3:6])
     panel_a(ax_a); panel_b(ax_b); panel_c(ax_c); _arm_dots(ax_d, RUN07, "Residual neural alignment (run 07)", (0.0305, 0.0385)); _arm_dots(ax_e, SEM, "Eight-task mean Spearman", (0.278, 0.313))
     S.panel(ax_a, "a", dx=-0.06)
     for ax, letter in ((ax_b, "b"), (ax_c, "c")): S.panel(ax, letter, dx=-0.26)
     for ax, letter in ((ax_d, "d"), (ax_e, "e")): S.panel(ax, letter, dx=-0.15)
-    written = S.save(fig, args.out_prefix); print(json.dumps({"status":"ok","run_mean":float(RUNS.mean()), **written}, indent=2))
+    written = S.save(fig, args.out_prefix)
+    print(json.dumps({"status":"ok","run_mean":float(RUNS.mean()), "reliability": RELIABILITY, "semantic": SEM, **written}, indent=2))
 
 
 if __name__ == "__main__": main()
