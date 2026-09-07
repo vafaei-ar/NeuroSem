@@ -313,3 +313,33 @@ tasks:
       - outputs/publication_figures_tables_v2/latest/reproducibility_report.txt
       - outputs/nmi_main_figures_v3/latest/source_manifest.json
       - outputs/nmi_main_figures_v3/latest/figure1.png
+
+  recover_nmi_v118_shipping_gate_v1:
+    description: >-
+      Recover the final v1.18 shipping gate after F8K2V7M4 completed the publication
+      rebuild and fresh bundle but failed only because the final audit still expected
+      the pre-rebuild spatial presentation hash. Do not rebuild publication or scientific
+      outputs; regenerate the bundle with the corrected overlay and rerun the final audit.
+    command:
+      - .venv/bin/python
+      - scripts/audit/recover_nmi_v118_shipping_gate_v1.py
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 8
+      wait_minutes: 30
+    working_directory: .
+    artifacts:
+      - outputs/nmi_v118_submission_bundle_v1/latest/NeuroSem_NMI_v1.18_safe_derived_bundle.zip
+      - outputs/nmi_v118_submission_bundle_v1/latest/bundle_manifest.json
+      - outputs/nmi_v118_submission_bundle_v1/latest/report.txt
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/summary.json
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/report.txt
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/claim_to_source.csv
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/source_manifest.csv
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/exceptions.csv
+      - outputs/publication_figures_tables_v2/latest/reproducibility_manifest.json
+      - outputs/nmi_main_figures_v3/latest/source_manifest.json
+      - outputs/nmi_main_figures_v3/latest/figure1.png
