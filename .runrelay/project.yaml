@@ -103,3 +103,30 @@ tasks:
       - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/summary.json
       - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/report.txt
       - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/target_manifest.csv
+
+  run_nmi_alternative_signal_e5_v1:
+    description: >-
+      Train the single frozen structured non-neural MPNet-guided multilingual-E5
+      lambda-0.10 arm at seeds 20260829, 20260830 and 20260831, reusing the completed
+      seed-matched text-only controls. All three surrogate adapters must finish before
+      any surrogate external outcome is opened; then evaluate every retained seed once
+      on the unchanged ZuCo EEG and SMN4Lang fMRI pipelines, with no dose, checkpoint,
+      seed, target or surrogate rescue after outcomes.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_nmi_alternative_signal_e5_v1.py
+    approval: manual
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 24
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/nmi_alternative_signal_e5_v1/latest/summary.json
+      - outputs/nmi_alternative_signal_e5_v1/latest/report.txt
+      - outputs/nmi_alternative_signal_e5_v1/latest/seed_target_results.csv
+      - outputs/nmi_alternative_signal_e5_v1/latest/training_manifest.json
