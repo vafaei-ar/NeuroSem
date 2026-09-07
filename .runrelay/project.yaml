@@ -159,3 +159,54 @@ tasks:
       - outputs/nmi_alternative_signal_e5_v1/latest/seed_target_results.csv
       - outputs/nmi_alternative_signal_e5_v1/latest/recovery_manifest.json
       - outputs/nmi_alternative_signal_e5_v1/latest/recovery_execution.csv
+
+  reproduce_nmi_chineseeeg_reliability_v1:
+    description: >-
+      Reproduce the historical pre-RunRelay ChineseEEG whole-row temporal-mean
+      reliability values under the existing 19-Aug-2026 model-blind definition and
+      write exact script and input hashes. This is a reproducibility replay only: it
+      performs no semantic/model evaluation, representation selection, external
+      transfer test, retraining, or manuscript editing.
+    command:
+      - .venv/bin/python
+      - scripts/audit/reproduce_nmi_chineseeeg_reliability_v1.py
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    resources:
+      cpu_cores: 4
+      min_ram_gb: 8
+      wait_minutes: 60
+    working_directory: .
+    artifacts:
+      - outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/summary.json
+      - outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/report.txt
+      - outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/input_manifest.csv
+      - outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/subject_summary.csv
+
+  run_nmi_mpnet_model_space_comparison_v1:
+    description: >-
+      Quantify representation-space displacement for the three already-trained frozen
+      MPNet-surrogate adapters relative to seed-matched text-only controls and compare
+      it with the already-trained genuine-neural adapters using the same frozen 349
+      ZuCo items and established cosine, RDM, CKA and kNN metrics. Also report intrinsic
+      effective-rank, anisotropy, distance-variance and norm diagnostics. No retraining,
+      external neural outcomes, target selection, checkpoint selection or rescue tuning.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_nmi_mpnet_model_space_comparison_v1.py
+    approval: manual
+    timeout_minutes: 240
+    requires_gpu: true
+    resources:
+      cpu_cores: 4
+      min_ram_gb: 16
+      gpu_count: 1
+      min_vram_gb: 16
+      wait_minutes: 240
+    working_directory: .
+    artifacts:
+      - outputs/nmi_mpnet_model_space_comparison_v1/latest/summary.json
+      - outputs/nmi_mpnet_model_space_comparison_v1/latest/report.txt
+      - outputs/nmi_mpnet_model_space_comparison_v1/latest/seed_comparison_metrics.csv
+      - outputs/nmi_mpnet_model_space_comparison_v1/latest/representation_metrics.csv
