@@ -1,24 +1,37 @@
 {
-  "schema_version": 1,
-  "status": "frozen derived summary values for figure assembly",
+  "schema_version": 2,
+  "status": "legacy development summary with independently replayed reliability provenance",
   "provenance": {
-    "reliability": "docs/3_RESULTS_AND_COMPARISONS.md",
+    "reliability": {
+      "status": "historical value independently reproduced",
+      "replay_job": "S0YJMCMF",
+      "summary": "outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/summary.json",
+      "input_manifest": "outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/input_manifest.csv",
+      "analysis_script": "scripts/analysis/assess_chineseeeg_rowmean_residual_reliability.py",
+      "analysis_script_sha256": "1f8ec3ae5b8a18858699a8526a565009c4f41f83c3c236907e5e6221823176ea",
+      "note": "This replay reproduces the historical pre-RunRelay 19 Aug 2026 model-blind checkpoint; it is not represented as the original execution artifact."
+    },
     "heldout_runs": "ChineseEEG Little Prince held-out runs 01-06",
-    "sealed_run07": "sealed BERT run-07 evaluation; development evidence only"
+    "reserved_run07": "BERT run-07 reserved development evaluation; development evidence only"
   },
   "reliability": {
-    "raw_loo": 0.220,
-    "residual_loo": 0.121
+    "raw_loo": 0.22000048082892687,
+    "residual_loo": 0.12049445312285981,
+    "n_subjects": 9,
+    "n_rows": 391,
+    "n_channels": 128
   },
   "heldout_residual_correspondence": [0.0057, 0.0034, 0.0145, 0.0045, 0.0174, 0.0056],
   "sealed_run07": {
+    "legacy_key_note": "Key retained for backward compatibility; manuscript terminology is reserved development run 07.",
     "arms": ["Base", "Text-only", "Neural-guided", "Shuffled-neural"],
     "seed_1": [0.0319, 0.0354, 0.0371, 0.0353],
     "seed_2": [0.0319, 0.0341, 0.0375, 0.0338]
   },
   "guardrails": [
-    "These are already-reported derived summary values; no raw EEG is stored here.",
-    "The sealed run-07 analysis is development evidence and is not reclassified as external validation.",
+    "No raw EEG is stored here.",
+    "The run-07 analysis is development evidence and is not reclassified as external validation.",
+    "The reliability values are retained here for backward compatibility, but v1.18 figure generation must read the S0YJMCMF replay summary directly.",
     "Figure assembly must not perform representation, model, lambda, checkpoint, participant, or outcome selection."
   ]
 }
