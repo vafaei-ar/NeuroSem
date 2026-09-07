@@ -2,7 +2,20 @@
   "schema_version": 3,
   "base_overlay": "docs/NMI_V118_PROVENANCE_OVERLAY_V2.json",
   "document_manifest": "docs/NMI_V118_DOCUMENT_MANIFEST_V1.json",
-  "purpose": "Final v1.18 provenance/shipping overlay. It closes the historical run-07 cohort-state lineage using R7K3M8V2, updates the one rounded Figure 1 claim to the edited v1.18 value, and records completion of manuscript corrections while requiring a fresh September-inclusive runtime bundle before the shipping gate can pass.",
+  "purpose": "Final v1.18 provenance/shipping overlay. It closes the historical run-07 cohort-state lineage using R7K3M8V2, updates the one rounded Figure 1 claim to the edited v1.18 value, records completion of manuscript corrections, and binds the final spatial-publication source family to the presentation-only reproducibility manifest actually produced during F8K2V7M4 before that wrapper's downstream stale-hash gate failure.",
+  "source_overrides": {
+    "spatial_publication": {
+      "path": "outputs/publication_figures_tables_v2/latest/reproducibility_manifest.json",
+      "sha256": "207345d8ac4c2beba81392bf90e96b8131b0bcd6bbac296650963d8f4a57ce66",
+      "job_id": "F8K2V7M4",
+      "job_status": "failed",
+      "project_commit": "8a517c748017d3b61012ac123ffcd53e82d1d85e",
+      "task": "finalize_nmi_v118_submission_v1",
+      "provenance_class": "presentation_only_rebuild_completed_before_downstream_gate_failure",
+      "disposition": "Final spatial publication assets; F8K2V7M4 completed the publication rebuild and emitted the declared reproducibility manifest before the final audit failed solely because the ledger still expected the pre-rebuild spatial source-manifest hash.",
+      "lineage_note": "The failed wrapper status is retained rather than relabelled. Its declared publication reproducibility manifest was safely collected by RunRelay and is hash-pinned here; the 129 scientific claims do not depend on this presentation-only source family."
+    }
+  },
   "source_additions": {
     "run07_history_audit": {
       "path": "outputs/nmi_v118_run07_history_audit_v1/latest/summary.json",
