@@ -282,3 +282,34 @@ tasks:
       - outputs/nmi_v118_run07_history_audit_v1/latest/summary.json
       - outputs/nmi_v118_run07_history_audit_v1/latest/report.txt
       - outputs/nmi_v118_run07_history_audit_v1/latest/history.csv
+
+  finalize_nmi_v118_submission_v1:
+    description: >-
+      Rebuild the complete publication figure/table package with canonical Figure 1
+      byte-linked to the pinned provenance artifact, build the fresh September-inclusive
+      safe derived v1.18 bundle, and run the final document-linked provenance/shipping audit.
+      Presentation/provenance only: no training, model evaluation, neural analysis or new inference.
+    command:
+      - .venv/bin/python
+      - scripts/audit/run_nmi_v118_finalization_v1.py
+    approval: manual
+    timeout_minutes: 60
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 8
+      wait_minutes: 60
+    working_directory: .
+    artifacts:
+      - outputs/nmi_v118_submission_bundle_v1/latest/NeuroSem_NMI_v1.18_safe_derived_bundle.zip
+      - outputs/nmi_v118_submission_bundle_v1/latest/bundle_manifest.json
+      - outputs/nmi_v118_submission_bundle_v1/latest/report.txt
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/summary.json
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/report.txt
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/claim_to_source.csv
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/source_manifest.csv
+      - outputs/nmi_v118_final_shipping_audit_v1/latest/exceptions.csv
+      - outputs/publication_figures_tables_v2/latest/reproducibility_manifest.json
+      - outputs/publication_figures_tables_v2/latest/reproducibility_report.txt
+      - outputs/nmi_main_figures_v3/latest/source_manifest.json
+      - outputs/nmi_main_figures_v3/latest/figure1.png
