@@ -19,6 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PANEL_RESOLVED_MODELS = REPO_ROOT / "outputs/nmi_bidirectional_model_family_panel_v1/latest/resolved_models.json"
 MATERIALIZER = REPO_ROOT / "scripts/robustness/materialize_nmi_alternative_signal_mpnet_v1.py"
 MODEL_ID = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+PREFLIGHT = REPO_ROOT / "outputs/nmi_alternative_signal_mpnet_targets_v1/latest/preflight.txt"
 
 
 def frozen_panel_revision() -> tuple[str, str]:
@@ -33,16 +34,36 @@ def frozen_panel_revision() -> tuple[str, str]:
     return model_id, revision
 
 
+def note(text: str) -> None:
+    PREFLIGHT.parent.mkdir(parents=True, exist_ok=True)
+    with PREFLIGHT.open("a", encoding="utf-8") as f:
+        f.write(text.rstrip() + "\n")
+
+
 def main() -> int:
+    PREFLIGHT.parent.mkdir(parents=True, exist_ok=True)
+    PREFLIGHT.write_text("MPNet alternative-signal preflight\n", encoding="utf-8")
     model_id, revision = frozen_panel_revision()
+    note(f"model_id={model_id}")
+    note(f"revision={revision}")
     print(f"Prefetching exact frozen model: {model_id}@{revision}", flush=True)
-    snapshot_download(
-        repo_id=model_id,
-        revision=revision,
-        repo_type="model",
-        local_files_only=False,
-    )
-    subprocess.run([sys.executable, str(MATERIALIZER)], cwd=REPO_ROOT, check=True)
+    try:
+        snapshot_download(
+            repo_id=model_id,
+            revision=revision,
+            repo_type="model",
+            local_files_only=False,
+        )
+        note("snapshot_download=ok")
+    except Exception as exc:
+        note(f"snapshot_download=failed:{type(exc).__name__}:{exc}")
+        raise
+    try:
+        subprocess.run([sys.executable, str(MATERIALIZER)], cwd=REPO_ROOT, check=True)
+        note("materializer=ok")
+    except Exception as exc:
+        note(f"materializer=failed:{type(exc).__name__}:{exc}")
+        raise
     return 0
 
 
