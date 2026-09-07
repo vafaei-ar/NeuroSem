@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Prefetch the exact frozen MPNet revision, then materialize the fixed surrogate targets.
 
-Implementation-only wrapper for the alternative-signal control. The scientific target
-is defined in materialize_nmi_alternative_signal_mpnet_v1.py. This wrapper reads the
-already-frozen immutable model revision directly from the completed model-family panel,
-downloads only that exact revision if needed, then executes the unchanged materializer.
+Implementation-only launcher for the alternative-signal control. It reads the already-
+frozen immutable model revision from the completed model-family panel, downloads only
+that exact revision if needed, then executes the participant-specific nuisance
+materializer fixed before any surrogate transfer outcome was observed.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from huggingface_hub import snapshot_download
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PANEL_RESOLVED_MODELS = REPO_ROOT / "outputs/nmi_bidirectional_model_family_panel_v1/latest/resolved_models.json"
-MATERIALIZER = REPO_ROOT / "scripts/robustness/materialize_nmi_alternative_signal_mpnet_v1.py"
+MATERIALIZER = REPO_ROOT / "scripts/robustness/materialize_nmi_alternative_signal_mpnet_v2.py"
 MODEL_ID = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 PREFLIGHT = REPO_ROOT / "outputs/nmi_alternative_signal_mpnet_targets_v1/latest/preflight.txt"
 MAX_DIAGNOSTIC_CHARS = 12000
@@ -54,6 +54,7 @@ def main() -> int:
     model_id, revision = frozen_panel_revision()
     note(f"model_id={model_id}")
     note(f"revision={revision}")
+    note("materializer=subject_specific_nuisance_v2")
     print(f"Prefetching exact frozen model: {model_id}@{revision}", flush=True)
     try:
         snapshot_download(
