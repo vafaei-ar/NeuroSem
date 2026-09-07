@@ -22,6 +22,7 @@ from scipy.stats import rankdata
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL = "docs/NMI_ALTERNATIVE_SIGNAL_SURROGATE_V1.md"
 SOURCE_TARGET_ROOT = REPO_ROOT / "outputs/bert_neural_tuning_targets_v1"
+PANEL_RESOLVED_MODELS = REPO_ROOT / "outputs/nmi_bidirectional_model_family_panel_v1/latest/resolved_models.json"
 OUT = REPO_ROOT / "outputs/nmi_alternative_signal_mpnet_targets_v1/latest"
 MODEL_ID = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 RUNS = [1, 2, 3, 4, 5, 6]
@@ -230,20 +231,36 @@ def encode(model, tokenizer, texts: list[str], device: str) -> np.ndarray:
     return np.concatenate(chunks, axis=0)
 
 
+def frozen_panel_revision() -> tuple[str, str]:
+    if not PANEL_RESOLVED_MODELS.is_file():
+        raise FileNotFoundError(f"Missing prior model-family revision freeze: {PANEL_RESOLVED_MODELS}")
+    payload = json.loads(PANEL_RESOLVED_MODELS.read_text(encoding="utf-8"))
+    rec = payload.get("multilingual_mpnet") if isinstance(payload, dict) else None
+    if not isinstance(rec, dict):
+        raise RuntimeError("Prior model-family revision freeze lacks multilingual_mpnet")
+    model_id = str(rec.get("model_id") or "")
+    revision = str(rec.get("revision") or "")
+    if model_id != MODEL_ID or len(revision) < 20:
+        raise RuntimeError(f"Unexpected frozen MPNet identity: model_id={model_id!r}, revision={revision!r}")
+    return model_id, revision
+
+
 def main() -> int:
     import torch
-    from huggingface_hub import HfApi
     from transformers import AutoModel, AutoTokenizer
 
     OUT.mkdir(parents=True, exist_ok=True)
-    atomic_progress(0, len(RUNS), "resolve-model", "resolving immutable MPNet revision")
+    atomic_progress(0, len(RUNS), "load-model", "loading exact MPNet revision from prior model-family freeze")
 
-    info = HfApi().model_info(MODEL_ID, revision="main")
-    if not info.sha:
-        raise RuntimeError("Could not resolve immutable MPNet revision")
-    revision = str(info.sha)
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=revision)
-    model = AutoModel.from_pretrained(MODEL_ID, revision=revision)
+    model_id, revision = frozen_panel_revision()
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision, local_files_only=True)
+        model = AutoModel.from_pretrained(model_id, revision=revision, local_files_only=True)
+    except Exception as exc:
+        raise RuntimeError(
+            "Exact prior-panel MPNet revision is not available in the local Hugging Face cache; "
+            "refusing to fall back to a mutable network revision"
+        ) from exc
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
 
@@ -271,8 +288,9 @@ def main() -> int:
             "run_number": run_number,
             "n_rows": len(texts),
             "n_edges": int(len(target)),
-            "alternative_target_model_id": MODEL_ID,
+            "alternative_target_model_id": model_id,
             "alternative_target_model_revision": revision,
+            "revision_source": str(PANEL_RESOLVED_MODELS),
             "pooling": "attention-mask mean final hidden state; L2-normalized",
             "max_length": MAX_LENGTH,
             "model_rdm": "cosine distance",
@@ -303,8 +321,9 @@ def main() -> int:
         "analysis_stage": "post-confirmatory alternative-signal target materialization",
         "protocol": PROTOCOL,
         "alternative_signal_type": "structured item-linked non-neural multilingual-MPNet geometry",
-        "model_id": MODEL_ID,
+        "model_id": model_id,
         "model_revision": revision,
+        "revision_source": str(PANEL_RESOLVED_MODELS),
         "runs": RUNS,
         "guardrails": {
             "eeg_feature_arrays_read": False,
@@ -320,7 +339,8 @@ def main() -> int:
     write_csv(OUT / "target_manifest.csv", manifest_rows)
     (OUT / "report.txt").write_text(
         "NeuroSem alternative-signal MPNet target materialization v1\n\n"
-        f"Model: {MODEL_ID}\nRevision: {revision}\n"
+        f"Model: {model_id}\nRevision: {revision}\n"
+        f"Revision source: {PANEL_RESOLVED_MODELS}\n"
         "Runs: 01-06\n"
         "Target: nuisance-residualized item-linked MPNet relational geometry\n"
         "No EEG feature arrays, neural target values, external outcomes, E5 training or external evaluation were read/performed.\n",
