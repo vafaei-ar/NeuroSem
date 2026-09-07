@@ -260,3 +260,25 @@ tasks:
       - outputs/nmi_v118_provenance_ledger_v1/latest/source_manifest.csv
       - outputs/nmi_v118_provenance_ledger_v1/latest/summary.json
       - outputs/nmi_v118_provenance_ledger_v1/latest/report.txt
+
+  audit_nmi_v118_run07_history_v1:
+    description: >-
+      Reconstruct the historical ChineseEEG run-07 derived-output chronology from
+      machine-readable safe outputs, recording timestamps, artifact hashes and only
+      aggregate cohort-count metadata. Read-only provenance work: no raw EEG access,
+      model scoring, neural analysis, participant-identifier export or manuscript edit.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_nmi_run07_history_v1.py
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 30
+    working_directory: .
+    artifacts:
+      - outputs/nmi_v118_run07_history_audit_v1/latest/summary.json
+      - outputs/nmi_v118_run07_history_audit_v1/latest/report.txt
+      - outputs/nmi_v118_run07_history_audit_v1/latest/history.csv
