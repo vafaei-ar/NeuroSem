@@ -234,3 +234,29 @@ tasks:
       - outputs/nmi_v118_figure1_provenance_v1/latest/figure1.png
       - outputs/nmi_v118_figure1_provenance_v1/latest/source_manifest.json
       - outputs/nmi_v118_figure1_provenance_v1/latest/report.txt
+
+  audit_nmi_v118_bidirectional_provenance_v1:
+    description: >-
+      Build the first machine-verifiable v1.18 bidirectional provenance ledger from
+      the committed v1.17 claim manifest and already-completed safe derived outputs.
+      Verify exact artifact hashes and claim selectors, emit claim-to-source and
+      output-to-manuscript tables, and preserve all unresolved lineage/coverage cases.
+      No model training, model evaluation, neural analysis or manuscript editing.
+    command:
+      - .venv/bin/python
+      - scripts/audit/audit_nmi_v118_bidirectional_provenance_v1.py
+    approval: manual
+    timeout_minutes: 30
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 30
+    working_directory: .
+    artifacts:
+      - outputs/nmi_v118_provenance_ledger_v1/latest/claim_to_source.csv
+      - outputs/nmi_v118_provenance_ledger_v1/latest/output_to_manuscript.csv
+      - outputs/nmi_v118_provenance_ledger_v1/latest/exceptions.csv
+      - outputs/nmi_v118_provenance_ledger_v1/latest/source_manifest.csv
+      - outputs/nmi_v118_provenance_ledger_v1/latest/summary.json
+      - outputs/nmi_v118_provenance_ledger_v1/latest/report.txt
