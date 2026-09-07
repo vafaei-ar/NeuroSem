@@ -81,11 +81,13 @@ tasks:
     description: >-
       Materialize the frozen structured item-linked non-neural MPNet relational
       targets for ChineseEEG source runs 01-06 using source text and nuisance metadata
-      only, before any E5 training or external evaluation. This task must not read EEG
-      feature arrays, neural target values, external targets, or transfer outcomes.
+      only, before any E5 training or external evaluation. The exact immutable MPNet
+      revision from the completed model-family panel may be downloaded if absent from
+      the local cache. This task must not read EEG feature arrays, neural target values,
+      external targets, or transfer outcomes.
     command:
       - .venv/bin/python
-      - scripts/robustness/materialize_nmi_alternative_signal_mpnet_v1.py
+      - scripts/robustness/materialize_nmi_alternative_signal_mpnet_exact_prefetch_v1.py
     approval: manual
     timeout_minutes: 120
     requires_gpu: true
