@@ -18,9 +18,13 @@ For ChineseEEG runs 01-06:
 2. Encode each row with the frozen multilingual MPNet model using the final hidden state, attention-mask mean pooling, L2 normalization, no prefix, maximum length 64.
 3. Form the pairwise cosine-distance RDM.
 4. Residualize the ranked MPNet RDM against the same six source-side nuisance RDMs used when constructing the neural target: run-position lag, duration difference, character-count difference, chapter mismatch, character-set Jaccard distance and punctuation-count difference.
-5. Rank-standardize the residual target to zero mean and unit variance.
+5. Match the neural-target construction at the participant-metadata level: because some nuisance metadata are participant-specific, residualize the same MPNet RDM separately using each contributing participant's six nuisance RDMs, average those participant-specific residuals, then z-standardize the run-level mean target to zero mean and unit variance.
 
 The target-materialization stage must not read EEG feature arrays, neural target values, ZuCo outcomes, SMN4Lang outcomes, transfer results or manuscript conclusions. It may read source-row metadata required to reconstruct the nuisance RDMs and canonical source text identities.
+
+### Pre-outcome implementation clarification
+
+The participant-specific residualization rule in step 5 was made after the first materialization attempts failed before producing any surrogate target or external outcome. The failure showed that nuisance metadata such as duration are not identical across contributing source participants. The original neural-target builder residualizes each participant separately before averaging. This clarification therefore makes the alternative-signal control mirror the already-fixed neural-target nuisance procedure rather than imposing an invalid cross-participant metadata-identity assumption. No surrogate target, E5 adapter, ZuCo result or SMN4Lang result had been produced when this clarification was committed.
 
 ## Downstream E5 comparison
 
