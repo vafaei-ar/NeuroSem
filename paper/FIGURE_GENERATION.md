@@ -1,65 +1,71 @@
 # Manuscript figure generation
 
-This stage turns already-locked NeuroSem outputs into manuscript-facing figures and compact tables. It does not rerun scientific analyses or introduce new hypothesis tests.
+Publication figures are assembled from completed derived artifacts. Figure-generation code does not retrain models, select representations, redefine cohorts, or introduce new hypothesis tests.
 
-## Main-figure builders
+## Canonical main-figure build
 
-- `scripts/paper/build_figure1_chineseeeg.py` builds Figure 1 from locked ChineseEEG development/sealed-validation summaries.
-- `scripts/paper/build_figure2_zuco.py` builds Figure 2 from the completed ZuCo reliability and transfer participant tables/summaries.
-- `scripts/paper/build_figure3_smn4lang.py` builds Figure 3 from the completed SMN4Lang fMRI reliability and transfer participant tables/summaries.
-- `scripts/paper/build_figure4_boundaries.py` builds Figure 4 from the locked external-outcome summaries, completed MEG reliability table and generic semantic benchmark values.
+The current entry point is:
 
-## Main-figure architecture
+```text
+scripts/paper/build_nmi_main_figures_v3_4.py
+```
+
+It writes Figures 1-4 to `outputs/nmi_main_figures_v3/latest/` and records exact output hashes in `source_manifest.json`.
 
 ### Figure 1
-- **a** relational neural-constraint concept;
-- **b** reliability-led ChineseEEG target;
-- **c** held-out BERT residual correspondence across runs 01–06;
-- **d** sealed run-07 BERT comparison;
-- **e** multilingual-E5 replication context and generic semantic-benchmark dissociation.
 
-### Figure 2
-- **a** frozen ChineseEEG-to-ZuCo cross-language validation design;
-- **b** participant-level ZuCo primary EEG reliability;
-- **c** paired text-only λ=0 versus neural-guided λ=0.10 participant RSA;
-- **d** participant-level transfer deltas and locked mean confidence interval.
+Figure 1 has an additional provenance layer because its panels combine several development-era sources. The canonical chain is:
 
-### Figure 3
-- **a** prospective ChineseEEG-to-SMN4Lang design and model-blind reliability gate;
-- **b** participant-level SMN4Lang fMRI reliability;
-- **c** frozen causal word-onset → prefix-E5 → HRF → TR-level mapping;
-- **d** paired participant residual RSA;
-- **e** participant-level neural-guided-minus-text-only deltas and locked mean confidence interval.
+```text
+scripts/paper/build_nmi_figure1_provenance_v1.py
+  -> scripts/paper/nmi_visualizations_v4/build_figure1_chineseeeg.py
+  -> outputs/nmi_v118_figure1_provenance_v1/latest/
+  -> scripts/paper/build_nmi_main_figures_v3_4.py
+```
 
-### Figure 4
-- **a** harmonized external generalization map without a common raw RSA effect-size axis;
-- **b** SMN4Lang MEG reliability boundary, including prospective 32-bin and separately frozen post-confirmatory 4/8/16-bin results;
-- **c** independence/design matrix;
-- **d** generic semantic-benchmark dissociation and conceptual conclusion.
+The non-demo Figure 1 builder requires four machine-readable inputs:
 
-## Existing v1/v2 supporting outputs
+1. `paper/figure_data/chineseeeg_development_v1.json`
+2. `outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/summary.json`
+3. `outputs/bert_neurosem_cmteb_sts_v1/20260823_122332/summary.json`
+4. `outputs/bert_neurosem_cmteb_sts_v1_seed2/20260823_123910/summary.json`
 
-The earlier versioned builders remain available:
+Reliability is loaded from the independent replay summary rather than from a figure literal. Semantic panel values are loaded from the two frozen task-level STS summaries and checked against their eight-task means. The development JSON supplies the held-out-run and reserved run-07 summaries.
 
-- `scripts/paper/build_manuscript_figures_v1.py` builds the reading-reliability overview, AHBA molecular-null panel and normalized source tables.
-- `scripts/paper/build_manuscript_figures_v2.py` retains those outputs and adds the final standalone SMN4Lang MEG reliability-boundary panel.
+`build_nmi_main_figures_v3_4.py` accepts Figure 1 only when its provenance manifest matches the pinned SHA-256 recorded in the builder, then copies the verified PDF, SVG, and PNG into the canonical main-figure directory.
 
-These supporting outputs are not substitutes for the final Figure 2 or Figure 4 composites.
+### Figures 2-4
+
+Figures 2-4 are assembled from already-completed frozen participant-level and summary artifacts through the NMI submission figure/table builders called by `build_nmi_main_figures_v3_4.py`. The source manifest records the resulting hashes.
+
+## Spatial and Extended Data figures
+
+The current spatial-validation publication entry point is:
+
+```text
+scripts/paper/build_nmi_spatial_validation_publication_v1_2.py
+```
+
+The consolidated publication verification wrapper is:
+
+```text
+scripts/paper/build_publication_figures_tables_v2.py
+```
+
+Earlier versioned builders are retained because they are part of the execution history. They are not the preferred entry points for the current submission package.
 
 ## Scientific guardrails
 
-All manuscript builders are presentation-only. They must not select participants, representations, datasets, stories, genes, gene sets or plotting subsets from manuscript outcomes. Required locked artifacts must be supplied explicitly; missing artifacts should cause failure rather than silent substitution with newly calculated results.
+Figure assembly must fail when a required frozen source is missing or has an unexpected identity. It must not replace missing evidence with newly calculated values. Participant-level inference, optimization-seed robustness, and presentation-only rebuilding remain distinct stages.
 
-For ZuCo and SMN4Lang fMRI, participant is the inferential unit and plotted confidence intervals are the already-locked participant-bootstrap intervals. No target-dataset model retuning is performed.
+For SMN4Lang MEG, the reliability failure is a representation-level boundary and no transfer test is implied. Across EEG and fMRI, raw RSA deltas are not treated as a common cross-modality effect-size scale.
 
-For SMN4Lang fMRI, the small absolute λ=0.10 − λ=0 RSA increment is shown as a representational shift, not a large gain in explained neural variance. The main value is prospective independence, model-blind reliability gating and 12/12 directional consistency.
+## Final verification
 
-For SMN4Lang MEG, the failed reliability gate is a representation-level reliability boundary, not negative model transfer. No model evaluation was performed.
+The final manuscript shipping gate is implemented in:
 
-Raw RSA deltas across EEG and fMRI are not treated as a common cross-modality effect-size scale.
+```text
+scripts/audit/audit_nmi_v118_final_shipping_v1.py
+```
 
-For AHBA, the frozen primary mechanistic conclusion remains null; AHBA is secondary/Extended Data material.
-
-## Submission-production state
-
-All four main-figure composites have now been assembled and visually inspected. The next step is packaging: replace the obsolete figure placeholders/supporting-only artwork in the author-edited Word manuscript with Figures 1–4, preserve Zotero fields and manuscript text, and render the complete DOCX for final visual QA.
+It verifies the manuscript claim ledger, exact source hashes, document manifest, Figure 1 provenance link, and freshness of the safe derived submission bundle.
