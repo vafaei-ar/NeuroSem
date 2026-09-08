@@ -9,15 +9,15 @@ The current Word masters are maintained outside the Git working tree during fina
 ### Clean
 
 - File: `NeuroSem_Nature_Manuscript_v1.18.1_clean.docx`
-- SHA-256: `72ae3f34206f60ebf312db2c3b630b4ef8ba758e7e0657d21b732de3e5e50883`
-- Size: 3,372,397 bytes
+- SHA-256: `a05159bf2345c4ff73b7f8fc7bc5c31152b2676ef6b2b3e31f7702ff85d3830c`
+- Size: 3,372,396 bytes
 - Rendered length: 33 pages
 
 ### Tracked changes
 
 - File: `NeuroSem_Nature_Manuscript_v1.18.1_tracked.docx`
-- SHA-256: `ce0044d9b93803361f6780d76b7f184849dbafc51c3e2a2914cfc5a50103f3c2`
-- Size: 3,373,742 bytes
+- SHA-256: `85bcc79dde4086926a0f602c8dcda06da970cf6812d7a33f0103898cc92ab056`
+- Size: 3,373,740 bytes
 - Rendered length: 35 pages
 
 Current title: **External transfer of brain-derived relational constraints depends on dose, target and model backbone**
@@ -42,6 +42,6 @@ Current title: **External transfer of brain-derived relational constraints depen
 
 v1.18.1 is a delivery-only refinement of the scientifically locked v1.18 manuscript. It adds the explicit Figure 1b reliability-provenance clause and the immutable code-availability pointer; it does not add or reinterpret a scientific result. The clean files are the submission-facing masters and the tracked files are retained for author review.
 
-The Code Availability statement points to the immutable submission code snapshot at commit `6f9bf6da7ba6cb96ef109a0d7b0fc14b9eeb0e5a`. This document-fingerprint record may therefore appear in a later metadata-only commit without changing the referenced code snapshot.
+The Code Availability statement points to the immutable submission code snapshot at commit `54843026f092cfc84c0123dff9fd6e28f3eba1be`. This document-fingerprint record may therefore appear in a later metadata-only commit without changing the referenced code snapshot.
 
 The repository intentionally does not commit `.docx` masters. Frozen protocol and result documents remain authoritative for analysis chronology, while these Word files are authoritative for current submission wording and layout.
