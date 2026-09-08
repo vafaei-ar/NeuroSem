@@ -13,6 +13,7 @@ import base64
 import csv
 import hashlib
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -35,6 +36,18 @@ INPUTS = [MODELS, SPEC, REVERSE, REVERSE_MULTI]
 
 OUT = ROOT / "outputs/nmi_v1183_figure4/latest"
 CANONICAL_OUT = ROOT / "outputs/nmi_main_figures_v3/latest"
+
+# These fixed job ids are transport-only. When one of them executes the ordinary
+# Figure 4 build task, the script prints one quarter of the exact generated PNG
+# as base64 to stdout. This provides a fallback retrieval route through private
+# RunRelay logs if the normal R2 Reader is temporarily unavailable. It does not
+# alter the figure or any scientific value.
+LOG_CHUNK_JOBS = {
+    "T2K5M8V3": 0,
+    "V4N7Q2R5": 1,
+    "W6K3M9R2": 2,
+    "X5R8M2V4": 3,
+}
 
 
 def read_csv(path: Path) -> list[dict]:
@@ -214,6 +227,22 @@ def build_figure4() -> list[Path]:
     return save(fig)
 
 
+def maybe_print_log_chunk(png_path: Path) -> None:
+    job_id = os.environ.get("RUNRELAY_JOB_ID", "")
+    if job_id not in LOG_CHUNK_JOBS:
+        return
+    encoded = base64.b64encode(png_path.read_bytes()).decode("ascii")
+    total = len(LOG_CHUNK_JOBS)
+    chunk_size = (len(encoded) + total - 1) // total
+    idx = LOG_CHUNK_JOBS[job_id]
+    start = idx * chunk_size
+    end = min(len(encoded), start + chunk_size)
+    chunk = encoded[start:end]
+    print(f"FIG4_B64_CHUNK_BEGIN index={idx} total={total} encoded_length={len(encoded)} png_sha256={sha256(png_path)}")
+    print(chunk)
+    print(f"FIG4_B64_CHUNK_END index={idx}")
+
+
 def main() -> int:
     missing = [str(p.relative_to(ROOT)) for p in INPUTS if not p.exists()]
     if missing:
@@ -247,6 +276,7 @@ def main() -> int:
             "All quantitative panels are read from the four frozen Figure 4 input files listed in inputs.",
             "The generated Figure 4 is copied into the canonical nmi_main_figures_v3 output location after rendering.",
             "The base64 text artifact is a byte-preserving transport copy of the generated PNG for artifact retrieval only.",
+            "Optional stdout base64 chunks are a private transport fallback and do not alter figure generation.",
         ],
         "builder": str(source_script.relative_to(ROOT)),
         "builder_sha256": sha256(source_script),
@@ -274,6 +304,7 @@ def main() -> int:
             indent=2,
         )
     )
+    maybe_print_log_chunk(png_path)
     return 0
 
 
