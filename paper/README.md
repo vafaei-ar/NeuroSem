@@ -4,18 +4,20 @@ This directory contains submission-facing documentation for the scientifically l
 
 ## Current master
 
-The current author-review package is **v1.18.1**:
+The current author-review package is **v1.18.2**:
 
-- `NeuroSem_Nature_Manuscript_v1.18.1_clean.docx`
-- `NeuroSem_Nature_Manuscript_v1.18.1_tracked.docx`
-- `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.1_clean.docx`
-- `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.1_tracked.docx`
+- `NeuroSem_Nature_Manuscript_v1.18.2_clean.docx`
+- `NeuroSem_Nature_Manuscript_v1.18.2_tracked.docx`
+- `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.2_clean.docx`
+- `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.2_tracked.docx`
 
-The Word files are maintained outside Git. Exact SHA-256 fingerprints, sizes, and page counts are recorded in [`CURRENT_MANUSCRIPT.md`](CURRENT_MANUSCRIPT.md).
+The Word files are maintained outside Git. Exact SHA-256 fingerprints, sizes, rendered page counts and submission-length checks are recorded in [`CURRENT_MANUSCRIPT.md`](CURRENT_MANUSCRIPT.md).
 
 Current title:
 
 > **External transfer of brain-derived relational constraints depends on dose, target and model backbone**
+
+v1.18.2 is a delivery-only submission-format revision. It does not add a scientific analysis or result.
 
 ## Evidence architecture
 
