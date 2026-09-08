@@ -343,3 +343,26 @@ tasks:
       - outputs/publication_figures_tables_v2/latest/reproducibility_manifest.json
       - outputs/nmi_main_figures_v3/latest/source_manifest.json
       - outputs/nmi_main_figures_v3/latest/figure1.png
+
+  build_nmi_figure4_v1183:
+    description: >-
+      Rebuild NeuroSem manuscript Figure 4 from the already-completed frozen model-family,
+      specificity and reverse-transfer outputs, changing only the Figure 4c wording from
+      seed robustness to directional consistency across the tested optimization seeds.
+      Presentation-only: no model fitting, model evaluation, neural analysis or new inference.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_nmi_figure4_v1183.py
+    approval: automatic
+    timeout_minutes: 15
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 15
+    working_directory: .
+    artifacts:
+      - outputs/nmi_v1183_figure4/latest/figure4.pdf
+      - outputs/nmi_v1183_figure4/latest/figure4.svg
+      - outputs/nmi_v1183_figure4/latest/figure4.png
+      - outputs/nmi_v1183_figure4/latest/source_manifest.json
