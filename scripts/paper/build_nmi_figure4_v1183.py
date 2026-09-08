@@ -259,6 +259,8 @@ def main() -> int:
     png_path = OUT / "figure4.png"
     png_transport = OUT / "figure4_png_base64.txt"
     png_transport.write_text(base64.encodebytes(png_path.read_bytes()).decode("ascii"), encoding="ascii")
+    svg_path = OUT / "figure4.svg"
+    svg_transport_base64 = base64.b64encode(svg_path.read_bytes()).decode("ascii")
 
     source_script = Path(__file__)
     manifest = {
@@ -276,6 +278,7 @@ def main() -> int:
             "All quantitative panels are read from the four frozen Figure 4 input files listed in inputs.",
             "The generated Figure 4 is copied into the canonical nmi_main_figures_v3 output location after rendering.",
             "The base64 text artifact is a byte-preserving transport copy of the generated PNG for artifact retrieval only.",
+            "The manifest embeds a byte-preserving base64 copy of the generated SVG for safe direct-text retrieval only.",
             "Optional stdout base64 chunks are a private transport fallback and do not alter figure generation.",
         ],
         "builder": str(source_script.relative_to(ROOT)),
@@ -287,6 +290,12 @@ def main() -> int:
             "path": str(png_transport.relative_to(ROOT)),
             "decoded_sha256": sha256(png_path),
             "encoding": "base64",
+        },
+        "svg_transport": {
+            "source_path": str(svg_path.relative_to(ROOT)),
+            "decoded_sha256": sha256(svg_path),
+            "encoding": "base64",
+            "base64": svg_transport_base64,
         },
     }
     manifest_path = OUT / "source_manifest.json"
@@ -300,6 +309,7 @@ def main() -> int:
                 "output_dir": str(OUT.relative_to(ROOT)),
                 "canonical_output_dir": str(CANONICAL_OUT.relative_to(ROOT)),
                 "png_sha256": sha256(png_path),
+                "svg_sha256": sha256(svg_path),
             },
             indent=2,
         )
