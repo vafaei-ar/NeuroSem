@@ -365,4 +365,5 @@ tasks:
       - outputs/nmi_v1183_figure4/latest/figure4.pdf
       - outputs/nmi_v1183_figure4/latest/figure4.svg
       - outputs/nmi_v1183_figure4/latest/figure4.png
+      - outputs/nmi_v1183_figure4/latest/figure4_png_base64.txt
       - outputs/nmi_v1183_figure4/latest/source_manifest.json
