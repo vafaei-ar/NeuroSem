@@ -1,12 +1,12 @@
 # 5. Current Roadmap
 
-**Last updated:** 2026-09-07
+**Last updated:** 2026-09-08
 
 NeuroSem is in a completed-evidence, submission-production phase for the current Nature Machine Intelligence manuscript. The prospective evidential chain and the planned post-confirmatory specificity, robustness, dose, reverse-transfer, model-family, model-space, boundary, regional, and spatial analyses are complete. No outcome-bearing analysis is currently active.
 
 ## Current manuscript
 
-The author-review package is **v1.18.1**. Exact external Word filenames and SHA-256 fingerprints are recorded in `paper/CURRENT_MANUSCRIPT.md`.
+The author-review package is **v1.18.2**. Exact external Word filenames, SHA-256 fingerprints, rendered page counts and submission-length checks are recorded in `paper/CURRENT_MANUSCRIPT.md`.
 
 Current title:
 
@@ -36,13 +36,13 @@ The manuscript now includes or dispositions the following post-confirmatory evid
 - the failed SMN4Lang MEG reliability gate;
 - prespecified AHBA molecular nulls and bounded exploratory sensitivities.
 
-These analyses remain secondary or post-confirmatory exactly as described in the manuscript and provenance ledger.
+These analyses remain secondary or post-confirmatory exactly as described in the manuscript and provenance records.
 
 ## Provenance and shipping state
 
-The final claim-to-source audit verifies the manuscript against hash-pinned derived artifacts, including the independently replayed ChineseEEG reliability values used in Figure 1 and the structured-surrogate diagnostic. The submission package is required to include the accompanying provenance ledger rather than relying on the older chronological experiment log.
+The final claim-to-source audit verifies the scientifically locked v1.18 evidence against hash-pinned derived artifacts, including the independently replayed ChineseEEG reliability values used in Figure 1 and the structured-surrogate diagnostic. The v1.18.2 manuscript no longer states that a provenance ledger physically accompanies the journal upload. Instead, its AI disclosure points to the versioned provenance-ledger specification and final shipping-audit workflow available through the immutable code snapshot identified under Code availability.
 
-The current provenance contract is `docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md`. The final shipping code is `scripts/audit/audit_nmi_v118_final_shipping_v1.py`, with the safe bundle assembled by `scripts/audit/build_nmi_v118_shipping_bundle_v1.py`.
+The current provenance contract is `docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md`. The final shipping code is `scripts/audit/audit_nmi_v118_final_shipping_v1.py`, with the safe derived evidence bundle assembled by `scripts/audit/build_nmi_v118_shipping_bundle_v1.py`.
 
 ## Stopping rules
 
@@ -56,4 +56,4 @@ The current provenance contract is `docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md`. Th
 
 ## Remaining production work
 
-Only submission administration and archival production remain: author order and affiliations, contributions, funding and acknowledgements, competing interests, reporting-summary completion, citation-manager refresh if needed, and final archival release preparation.
+Only submission administration and archival production remain: author order and affiliations, contributions, funding and acknowledgements, competing interests, reporting-summary completion, citation-manager refresh if needed, a final native Microsoft Word save of the submission files if document-property normalization is desired, and final archival release preparation.
