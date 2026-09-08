@@ -9,6 +9,7 @@ than population-level seed robustness.
 """
 from __future__ import annotations
 
+import base64
 import csv
 import hashlib
 import json
@@ -226,6 +227,10 @@ def main() -> int:
         shutil.copy2(src, dst)
         canonical.append(dst)
 
+    png_path = OUT / "figure4.png"
+    png_transport = OUT / "figure4_png_base64.txt"
+    png_transport.write_text(base64.encodebytes(png_path.read_bytes()).decode("ascii"), encoding="ascii")
+
     source_script = Path(__file__)
     manifest = {
         "schema_version": 1,
@@ -241,12 +246,18 @@ def main() -> int:
             "No model fitting, model evaluation, neural analysis, target selection, dose selection or hypothesis testing is performed.",
             "All quantitative panels are read from the four frozen Figure 4 input files listed in inputs.",
             "The generated Figure 4 is copied into the canonical nmi_main_figures_v3 output location after rendering.",
+            "The base64 text artifact is a byte-preserving transport copy of the generated PNG for artifact retrieval only.",
         ],
         "builder": str(source_script.relative_to(ROOT)),
         "builder_sha256": sha256(source_script),
         "inputs": {str(p.relative_to(ROOT)): sha256(p) for p in INPUTS},
         "outputs": {str(p.relative_to(ROOT)): sha256(p) for p in outputs},
         "canonical_outputs": {str(p.relative_to(ROOT)): sha256(p) for p in canonical},
+        "png_transport": {
+            "path": str(png_transport.relative_to(ROOT)),
+            "decoded_sha256": sha256(png_path),
+            "encoding": "base64",
+        },
     }
     manifest_path = OUT / "source_manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
@@ -258,6 +269,7 @@ def main() -> int:
                 "panel_4c_title": manifest["wording_change"]["new_title"],
                 "output_dir": str(OUT.relative_to(ROOT)),
                 "canonical_output_dir": str(CANONICAL_OUT.relative_to(ROOT)),
+                "png_sha256": sha256(png_path),
             },
             indent=2,
         )
