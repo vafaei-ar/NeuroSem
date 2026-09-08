@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "manuscript_version": "v1.18",
+  "purpose": "Compact authoring-environment manifest for the final v1.18 Word files. The DOCX bytes are not committed to the public repository; this file records their exact hashes, structural checks and completed visual-QA state for linkage to the final provenance/shipping audit.",
+  "verification_scope": "Hashes and structural/visual QA were computed in the manuscript-authoring environment. RunRelay can verify this manifest and the scientific/source bundle but cannot independently re-hash uncommitted DOCX bytes.",
+  "documents": [
+    {
+      "name": "NeuroSem_Nature_Manuscript_v1.18_clean.docx",
+      "sha256": "5fadd572152393a8ce346db13b395b0b2650f12371fff7ae6de2f4efc382bd2b",
+      "pages_rendered_and_inspected": 33,
+      "tracked_insertions": 0,
+      "tracked_deletions": 0,
+      "zotero_item_fields": 22,
+      "zotero_bibliography_fields": 1,
+      "omml_math_objects": 4,
+      "zip_integrity": "passed",
+      "comments_xml_present": false
+    },
+    {
+      "name": "NeuroSem_Nature_Manuscript_v1.18_tracked.docx",
+      "sha256": "2bb07f44c2c6ece700a82280af2f4eedd22cccaa6fe06d92e03cfc105757bcf9",
+      "pages_rendered_and_inspected": 35,
+      "tracked_insertions": 21,
+      "tracked_deletions": 20,
+      "zotero_item_fields": 22,
+      "zotero_bibliography_fields": 1,
+      "omml_math_objects": 4,
+      "zip_integrity": "passed",
+      "comments_xml_present": false
+    },
+    {
+      "name": "NeuroSem_NMI_Supplementary_Technical_Tables_v1.18_clean.docx",
+      "sha256": "b3ac2dea79ec009170156ce08df099ec803be7949a18338a2ff03875e4cd8aba",
+      "pages_rendered_and_inspected": 13,
+      "tracked_insertions": 0,
+      "tracked_deletions": 0,
+      "zip_integrity": "passed",
+      "comments_xml_present": false
+    },
+    {
+      "name": "NeuroSem_NMI_Supplementary_Technical_Tables_v1.18_tracked.docx",
+      "sha256": "80c8d0c18491a8a6b005cb5b4411b7ead29cf68018e6610bf27a436d12de5845",
+      "pages_rendered_and_inspected": 13,
+      "tracked_insertions": 55,
+      "tracked_deletions": 6,
+      "zip_integrity": "passed",
+      "comments_xml_present": false
+    }
+  ],
+  "embedded_figure1": {
+    "manuscript_png_sha256": "cb26b164a9c08c31f56be5024e0ad03461d730eb7ad696bf138084e42b201662",
+    "manuscript_svg_wrapper_sha256": "067440aa295a2f9d5ec97baf15642ab35ddb76922dabec7d3038402be35e9d11",
+    "note": "The manuscript-embedded Figure 1 was locally regenerated from the same frozen provenance-linked values as the canonical M4V8K2R6 Figure 1. The SVG wrapper embeds the PNG raster to avoid LibreOffice rotated-text displacement during DOCX QA; it is not represented as byte-identical to the canonical RunRelay Figure 1."
+  },
+  "required_v118_corrections": {
+    "figure1_residual_reliability_0p1205": true,
+    "mpnet_zuco_inference_calibrated": true,
+    "mpnet_displacement_magnitude_caveat_present": true,
+    "ai_disclosure_expanded": true,
+    "reverse_transfer_wording_calibrated": true,
+    "run07_two_cohort_state_disclosure_present": true,
+    "legacy_mbert_protocol_caveat_present": true,
+    "supplement_model_space_surrogate_diagnostics_added": true
+  },
+  "negative_text_checks": {
+    "old_mpnet_both_targets_negative_overclaim_absent": true,
+    "old_reverse_seed_robustness_wording_absent": true,
+    "old_figure1_residual_approximately_0p121_absent": true
+  },
+  "visual_qa": {
+    "all_final_pages_inspected": true,
+    "no_clipping_or_overlap_detected": true,
+    "figure1_docx_render_checked_after_svg_raster_wrapper_fix": true,
+    "supplement_expanded_table6_checked_at_full_page": true
+  }
+}
