@@ -9,15 +9,15 @@ The current Word masters are maintained outside the Git working tree during fina
 ### Clean
 
 - File: `NeuroSem_Nature_Manuscript_v1.18.1_clean.docx`
-- SHA-256: `7fdd119a26bd3e2948155db9b972359f58da098792252802afa74a0c81cb4b04`
-- Size: 1,228,954 bytes
+- SHA-256: `72ae3f34206f60ebf312db2c3b630b4ef8ba758e7e0657d21b732de3e5e50883`
+- Size: 3,372,397 bytes
 - Rendered length: 33 pages
 
 ### Tracked changes
 
 - File: `NeuroSem_Nature_Manuscript_v1.18.1_tracked.docx`
-- SHA-256: `42b7befa1f1af9fd0af79ece64298cf6e496f45cd73d30b759f815719f2ae572`
-- Size: 1,230,783 bytes
+- SHA-256: `ce0044d9b93803361f6780d76b7f184849dbafc51c3e2a2914cfc5a50103f3c2`
+- Size: 3,373,742 bytes
 - Rendered length: 35 pages
 
 Current title: **External transfer of brain-derived relational constraints depends on dose, target and model backbone**
@@ -41,5 +41,7 @@ Current title: **External transfer of brain-derived relational constraints depen
 ## Status
 
 v1.18.1 is a delivery-only refinement of the scientifically locked v1.18 manuscript. It adds the explicit Figure 1b reliability-provenance clause and the immutable code-availability pointer; it does not add or reinterpret a scientific result. The clean files are the submission-facing masters and the tracked files are retained for author review.
+
+The Code Availability statement points to the immutable submission code snapshot at commit `6f9bf6da7ba6cb96ef109a0d7b0fc14b9eeb0e5a`. This document-fingerprint record may therefore appear in a later metadata-only commit without changing the referenced code snapshot.
 
 The repository intentionally does not commit `.docx` masters. Frozen protocol and result documents remain authoritative for analysis chronology, while these Word files are authoritative for current submission wording and layout.
