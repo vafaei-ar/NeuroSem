@@ -27,15 +27,15 @@ Current title: **External transfer of brain-derived relational constraints depen
 ### Clean
 
 - File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.1_clean.docx`
-- SHA-256: `b3ac2dea79ec009170156ce08df099ec803be7949a18338a2ff03875e4cd8aba`
-- Size: 72,876 bytes
+- SHA-256: `6150e9603fec04a35051345dc244c0ac1f3ec6ae119b0396153e9eea9860de5a`
+- Size: 60,946 bytes
 - Rendered length: 13 pages
 
 ### Tracked changes
 
 - File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.1_tracked.docx`
-- SHA-256: `80c8d0c18491a8a6b005cb5b4411b7ead29cf68018e6610bf27a436d12de5845`
-- Size: 75,018 bytes
+- SHA-256: `7a375ea2d4187cb9ebdf6490b60f9b831d66747948bed0b2582fd652479b0287`
+- Size: 61,374 bytes
 - Rendered length: 13 pages
 
 ## Status
