@@ -367,3 +367,30 @@ tasks:
       - outputs/nmi_v1183_figure4/latest/figure4.png
       - outputs/nmi_v1183_figure4/latest/figure4_png_base64.txt
       - outputs/nmi_v1183_figure4/latest/source_manifest.json
+
+  build_nmi_figure2_redesign_v1:
+    description: >-
+      Rebuild NeuroSem manuscript Figure 2 from frozen ZuCo and SMN4Lang participant-level
+      reliability/transfer outputs plus the completed E5 optimization-seed robustness summary.
+      Presentation-only: expose participant-level evidence, the frozen intervention chronology,
+      and the distinction between the prospective primary run and post-confirmatory seed checks;
+      perform no model fitting, model evaluation, neural analysis or new inference.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_nmi_figure2_redesign_v1.py
+    approval: automatic
+    timeout_minutes: 15
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 15
+    working_directory: .
+    artifacts:
+      - outputs/nmi_figure2_redesign_v1/latest/figure2.pdf
+      - outputs/nmi_figure2_redesign_v1/latest/figure2.svg
+      - outputs/nmi_figure2_redesign_v1/latest/figure2.png
+      - outputs/nmi_figure2_redesign_v1/latest/figure2_reliability_source.csv
+      - outputs/nmi_figure2_redesign_v1/latest/figure2_primary_transfer_source.csv
+      - outputs/nmi_figure2_redesign_v1/latest/figure2_seed_robustness_source.csv
+      - outputs/nmi_figure2_redesign_v1/latest/source_manifest.json
