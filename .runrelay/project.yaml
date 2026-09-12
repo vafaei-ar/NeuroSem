@@ -181,6 +181,18 @@ tasks:
       - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part02.txt
       - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part03.txt
       - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part04.txt
+      - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part05.txt
+      - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part06.txt
+      - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part07.txt
+      - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part08.txt
+      - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part09.txt
+      - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part10.txt
+      - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part11.txt
+      - outputs/nmi_redesign_transport_v1/latest/figure5_docx_png_base64_part12.txt
       - outputs/nmi_redesign_transport_v1/latest/extended_data_figure1_docx_png_base64_part01.txt
       - outputs/nmi_redesign_transport_v1/latest/extended_data_figure1_docx_png_base64_part02.txt
+      - outputs/nmi_redesign_transport_v1/latest/extended_data_figure1_docx_png_base64_part03.txt
+      - outputs/nmi_redesign_transport_v1/latest/extended_data_figure1_docx_png_base64_part04.txt
+      - outputs/nmi_redesign_transport_v1/latest/extended_data_figure1_docx_png_base64_part05.txt
+      - outputs/nmi_redesign_transport_v1/latest/extended_data_figure1_docx_png_base64_part06.txt
       - outputs/nmi_redesign_transport_v1/latest/manifest.json
