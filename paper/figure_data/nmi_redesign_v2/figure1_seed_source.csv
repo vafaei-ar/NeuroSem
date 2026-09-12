@@ -1,0 +1,9 @@
+dataset,training_run,mean_delta_rsa,positive_participants,n_participants,evidence_status
+zuco,Primary,0.00166369855122,17,17,prospective primary
+zuco,29,0.00125091991775,17,17,post-confirmatory optimization robustness
+zuco,30,0.00195189412033,17,17,post-confirmatory optimization robustness
+zuco,31,0.000596499450869,15,17,post-confirmatory optimization robustness
+fmri,Primary,0.00085249596961,12,12,prospective primary
+fmri,29,0.000695872857217,12,12,post-confirmatory optimization robustness
+fmri,30,0.000897097995343,12,12,post-confirmatory optimization robustness
+fmri,31,0.000445255852114,12,12,post-confirmatory optimization robustness
