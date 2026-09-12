@@ -5,6 +5,7 @@ import base64
 import gzip
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "outputs" / "publication_figures_tables_v2" / "latest"
 OLD_BUILDER = ROOT / "scripts" / "paper" / "build_publication_figures_tables_v1.py"
 NEW_BUILDER = ROOT / "scripts" / "paper" / "build_nmi_spatial_validation_publication_v1_2.py"
+REDESIGN_BUILDER = ROOT / "scripts" / "paper" / "build_nmi_figure5_redesign_v1.py"
+REDESIGN_OUT = ROOT / "outputs" / "nmi_figure5_redesign_v1" / "latest"
 SPATIAL_OUT = ROOT / "outputs" / "nmi_spatial_validation_publication_v1" / "latest"
 
 EXPECTED = [
@@ -67,6 +70,33 @@ def run(path: Path, *, final_visual_builder: bool = False) -> None:
             raise RuntimeError("Final spatial-validation builder emitted a constrained-layout warning")
 
 
+def install_redesigned_figure5() -> None:
+    for ext in ("pdf", "svg", "png"):
+        src = REDESIGN_OUT / f"figure5.{ext}"
+        dst = SPATIAL_OUT / f"figure5_spatial_validation.{ext}"
+        if not src.exists():
+            raise FileNotFoundError(src)
+        shutil.copy2(src, dst)
+    caption = (
+        "Figure 5 | Post-confirmatory spatial expression of fMRI transfer. "
+        "a, Complete bilateral DK68 mean neural-guided minus text-only residual-RSA phenotype at lambda=0.10 "
+        "rendered on the standard fsaverage inflated cortical surface. All 68 parcel means were positive. The map "
+        "is unthresholded and is a spatial characterization, not a 68-region significance screen. "
+        "b, Participant-level mean DeltaRSA for the six predefined functional language parcels and fixed "
+        "left-hemisphere sensorimotor and visual controls. Thin lines connect the same participant; large markers "
+        "show group means. The two predefined language-versus-control contrasts use exact max-statistic family-wise "
+        "correction. c, Participant-level functional frontal and temporal language-system DeltaRSA; the temporal-minus-"
+        "frontal contrast uses the frozen five-test spatial-extension family. d, Null distribution from 10,000 "
+        "centroid-distance, variogram-matched left-DK spatial surrogates for the reliability-adjusted language "
+        "coefficient. The orange line marks the observed coefficient and the dashed line its negative magnitude; "
+        "this is a spatial-autocorrelation-aware surrogate test, not a surface-sphere spin test. e, Participant-level "
+        "language specificity after averaging the three prespecified reviewer seeds for genuine and shuffled neural-"
+        "target guidance. Genuine guidance exceeded shuffled guidance under the frozen two-test family. All spatial "
+        "analyses are post-confirmatory."
+    )
+    (SPATIAL_OUT / "figure5_spatial_validation_caption.txt").write_text(caption + "\n", encoding="utf-8")
+
+
 def visual_qa_payload() -> str:
     png_hashes = {
         name: sha256(SPATIAL_OUT / name)
@@ -92,23 +122,25 @@ def visual_qa_payload() -> str:
 def main() -> int:
     run(OLD_BUILDER)
     run(NEW_BUILDER, final_visual_builder=True)
+    run(REDESIGN_BUILDER)
+    install_redesigned_figure5()
 
     missing = [str(p.relative_to(ROOT)) for p in EXPECTED if not p.exists()]
     if missing:
         raise RuntimeError("Missing expected publication outputs after v2 rebuild: " + ", ".join(missing))
 
     OUT.mkdir(parents=True, exist_ok=True)
+    builders = [OLD_BUILDER, NEW_BUILDER, REDESIGN_BUILDER]
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": "ok",
-        "purpose": "single-command reproducibility audit for the complete current NeuroSem NMI figure/table package after final visual QA fixes",
-        "builders": [str(OLD_BUILDER.relative_to(ROOT)), str(NEW_BUILDER.relative_to(ROOT))],
-        "builder_sha256": {
-            str(OLD_BUILDER.relative_to(ROOT)): sha256(OLD_BUILDER),
-            str(NEW_BUILDER.relative_to(ROOT)): sha256(NEW_BUILDER),
-        },
+        "purpose": "single-command reproducibility audit for the complete current NeuroSem NMI figure/table package, including the anatomically rendered Figure 5 redesign",
+        "builders": [str(p.relative_to(ROOT)) for p in builders],
+        "builder_sha256": {str(p.relative_to(ROOT)): sha256(p) for p in builders},
         "outputs_verified": {str(p.relative_to(ROOT)): sha256(p) for p in EXPECTED},
         "n_outputs_verified": len(EXPECTED),
+        "redesigned_figure5_source_manifest": str((REDESIGN_OUT / "source_manifest.json").relative_to(ROOT)),
+        "redesigned_figure5_source_manifest_sha256": sha256(REDESIGN_OUT / "source_manifest.json"),
         "guardrails": {
             "presentation_only": True,
             "no_model_training": True,
@@ -116,15 +148,12 @@ def main() -> int:
             "no_new_neural_analysis": True,
             "no_new_hypothesis_testing": True,
             "uses_completed_frozen_derived_outputs": True,
-            "spatial_validation_target_width_mm": 180,
-            "spatial_validation_ordinary_text_pt": "6-7",
+            "dk68_surface_complete_unthresholded": True,
+            "fsaverage_used_as_visualization_scaffold_only": True,
+            "spatial_validation_target_width_mm": 183,
+            "spatial_validation_ordinary_text_pt": "5.4-7",
             "spatial_validation_panel_label_pt": 8,
-            "spatial_validation_font_family": "DejaVu Sans",
-            "required_scientific_glyphs_preflight": "passed",
-            "missing_glyph_warning_preflight": "passed",
-            "constrained_layout_warning_preflight_for_new_figures": "passed",
             "supplementary_table12_neural_target_n_total": 12,
-            "manuscript_captions_preserved": True,
         },
     }
     manifest = OUT / "reproducibility_manifest.json"
@@ -135,14 +164,10 @@ def main() -> int:
     txt.write_text(
         "NeuroSem publication figure/table reproducibility report v2\n"
         "Status: ok\n"
-        f"Builders executed: 2\nOutputs verified: {len(EXPECTED)}\n"
-        "Includes final-size spatial-validation main, Extended Data, and supplementary table assets.\n"
-        "Spatial-validation target width: 180 mm; ordinary text: 6-7 pt; panel labels: 8 pt.\n"
-        "Final spatial figure font: DejaVu Sans with required scientific glyph coverage verified.\n"
-        "Missing-glyph warnings from final spatial builder: 0\n"
-        "Constrained-layout warnings from final spatial builder: 0\n"
+        f"Builders executed: {len(builders)}\nOutputs verified: {len(EXPECTED)}\n"
+        "Includes the cortical Figure 5 redesign plus the existing frozen Extended Data and supplementary assets.\n"
         "New scientific analyses performed by this build: 0\n\n"
-        "Visual QA transport payload (gzip+base64 SVG; manuscript captions are unchanged):\n"
+        "Visual QA transport payload (gzip+base64 SVG):\n"
         + qa_payload,
         encoding="utf-8",
     )
@@ -150,7 +175,7 @@ def main() -> int:
         "status": "ok",
         "outputs_verified": len(EXPECTED),
         "manifest": str(manifest),
-        "final_visual_qa": "passed mechanical preflight; SVG payload staged in reproducibility report",
+        "figure5_redesign_installed": True,
     }, indent=2))
     return 0
 
