@@ -18,7 +18,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "outputs/nmi_redesign_transport_v1/latest"
-CHUNK = 420_000
+CHUNK = 120_000
 
 
 def sha256(path: Path) -> str:
@@ -54,6 +54,8 @@ def docx_png(stem: str, path: Path, manifest: dict) -> None:
     if not path.is_file():
         raise FileNotFoundError(path)
     OUT.mkdir(parents=True, exist_ok=True)
+    for old in OUT.glob(f"{stem}_docx_png_base64_part*.txt"):
+        old.unlink()
     with Image.open(path) as im:
         im.load()
         if im.width > 2200:
