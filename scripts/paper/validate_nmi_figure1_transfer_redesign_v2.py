@@ -36,7 +36,7 @@ def main() -> int:
     assert manifest["status"] == "ok"
     assert manifest["scientific_values_changed"] is False
 
-    for section in ("inputs", "source_data", "outputs"):
+    for section in ("committed_inputs", "copied_source_data", "outputs"):
         for rel, expected in manifest[section].items():
             path = ROOT / rel
             assert path.exists(), f"Missing {section} file: {rel}"
@@ -46,36 +46,58 @@ def main() -> int:
     builder = ROOT / manifest["builder"]
     assert sha256(builder) == manifest["builder_sha256"], "Builder hash mismatch"
 
-    transfer_path = OUT / "figure1_transfer_source.csv"
-    rows = read_csv(transfer_path)
+    source_job = manifest["source_runrelay_job"]
+    assert source_job["job_id"] == "4N8R2K7C"
+    assert source_job["exact_commit"] == "0ff001b37f17d91600035cab6c523676d3823d81"
+    assert source_job["status"] == "completed"
+    assert len(manifest["source_artifacts"]) == 4
+    assert len(manifest["original_upstream_input_hashes"]) == 9
+
+    reliability_rows = read_csv(OUT / "figure1_reliability_source.csv")
+    transfer_rows = read_csv(OUT / "figure1_transfer_source.csv")
+    seed_rows = read_csv(OUT / "figure1_seed_source.csv")
+
     for dataset, expected_n in (("zuco", 17), ("fmri", 12)):
-        subset = [r for r in rows if r["dataset"] == dataset]
-        assert len(subset) == expected_n
-        a0 = np.asarray([float(r["text_only_residual_rsa"]) for r in subset], float)
-        a1 = np.asarray([float(r["neural_guided_residual_rsa"]) for r in subset], float)
-        delta = np.asarray([float(r["delta_rsa"]) for r in subset], float)
+        rr = [r for r in reliability_rows if r["dataset"] == dataset]
+        tr = [r for r in transfer_rows if r["dataset"] == dataset]
+        sr = [r for r in seed_rows if r["dataset"] == dataset]
+        assert len(rr) == len(tr) == expected_n
+        assert [int(r["participant_index"]) for r in rr] == list(range(1, expected_n + 1))
+        assert [int(r["participant_index"]) for r in tr] == list(range(1, expected_n + 1))
+
+        rel = np.asarray([float(r["residual_loo_reliability"]) for r in rr], float)
+        a0 = np.asarray([float(r["text_only_residual_rsa"]) for r in tr], float)
+        a1 = np.asarray([float(r["neural_guided_residual_rsa"]) for r in tr], float)
+        delta = np.asarray([float(r["delta_rsa"]) for r in tr], float)
         assert np.allclose(a1 - a0, delta, atol=5e-12)
+        assert np.all(delta > 0)
+
         summary = manifest["displayed_summary"][dataset]
         assert int(summary["n"]) == expected_n
-        assert int(summary["positive_participants"]) == int(np.sum(delta > 0))
-        assert np.isclose(float(summary["mean_delta_rsa"]), float(delta.mean()), atol=5e-12)
-        lo, hi = [float(x) for x in summary["bootstrap_95ci"]]
-        assert lo <= float(summary["mean_delta_rsa"]) <= hi
+        assert np.isclose(float(summary["reliability_mean"]), float(rel.mean()), atol=5e-12)
+        assert int(summary["primary_positive"]) == int(np.sum(delta > 0)) == expected_n
+        assert np.isclose(float(summary["primary_mean_delta"]), float(delta.mean()), atol=5e-12)
+        lo, hi = [float(x) for x in summary["primary_bootstrap_95ci"]]
+        assert lo <= float(summary["primary_mean_delta"]) <= hi
 
-    seed_rows = read_csv(OUT / "figure1_seed_source.csv")
-    for dataset, expected_n in (("zuco", 17), ("fmri", 12)):
-        subset = [r for r in seed_rows if r["dataset"] == dataset]
-        assert [r["training_run"] for r in subset] == ["Primary", "29", "30", "31"]
-        assert all(int(r["n_participants"]) == expected_n for r in subset)
-        assert all(float(r["mean_delta_rsa"]) > 0 for r in subset)
-        assert all(0 <= int(r["positive_participants"]) <= expected_n for r in subset)
+        assert [r["training_run"] for r in sr] == ["Primary", "29", "30", "31"]
+        assert all(int(r["n_participants"]) == expected_n for r in sr)
+        means = np.asarray([float(r["mean_delta_rsa"]) for r in sr], float)
+        counts = [int(r["positive_participants"]) for r in sr]
+        assert np.all(means > 0)
+        assert np.allclose(means, np.asarray(summary["four_run_means"], float), atol=5e-12)
+        assert counts == [int(x) for x in summary["four_run_positive_counts"]]
+        assert sr[0]["evidence_status"] == "prospective primary"
+        assert all(r["evidence_status"] == "post-confirmatory optimization robustness" for r in sr[1:])
 
     result = {
         "status": "ok",
         "manifest": str(MANIFEST.relative_to(ROOT)),
+        "source_runrelay_job": source_job["job_id"],
         "figure_png_sha256": manifest["outputs"]["outputs/nmi_figure1_transfer_redesign_v2/latest/figure1.png"],
-        "checked_inputs": len(manifest["inputs"]),
-        "checked_source_tables": len(manifest["source_data"]),
+        "checked_committed_inputs": len(manifest["committed_inputs"]),
+        "checked_source_artifacts": len(manifest["source_artifacts"]),
+        "checked_upstream_hashes": len(manifest["original_upstream_input_hashes"]),
         "checked_outputs": len(manifest["outputs"]),
     }
     print(json.dumps(result, indent=2))
