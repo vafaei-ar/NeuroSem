@@ -26,333 +26,15 @@ monitoring:
   tmux_default: false
 
 tasks:
-  audit_nmi_v116_provenance_v1:
+  build_nmi_figure1_redesign_v1:
     description: >-
-      Run a read-only provenance audit for NMI manuscript v1.16, prioritizing STS
-      reconstructibility and an inventory of manuscript-relevant completed derived
-      outputs for the bidirectional claim-to-output and output-to-claim reconciliation.
-      This task performs no model training, model evaluation, neural analysis,
-      hypothesis testing, raw-data export, or manuscript editing.
+      Rebuild NeuroSem Figure 1 from frozen ChineseEEG development, participant-level
+      reliability and C-MTEB summaries using the final scientific-graphic layout.
+      Presentation-only: no model fitting, neural analysis, representation selection,
+      target selection or new inference.
     command:
       - .venv/bin/python
-      - scripts/audit/audit_nmi_v116_provenance_v1.py
-    approval: manual
-    timeout_minutes: 30
-    requires_gpu: false
-    resources:
-      cpu_cores: 2
-      min_ram_gb: 4
-      wait_minutes: 30
-    working_directory: .
-    artifacts:
-      - outputs/nmi_v116_provenance_audit_v1/latest/summary.json
-      - outputs/nmi_v116_provenance_audit_v1/latest/report.txt
-      - outputs/nmi_v116_provenance_audit_v1/latest/sts_source_hits.csv
-      - outputs/nmi_v116_provenance_audit_v1/latest/output_inventory.csv
-      - outputs/nmi_v116_provenance_audit_v1/latest/candidate_sts_files.csv
-
-  audit_nmi_v116_reconciliation_v1:
-    description: >-
-      Reconcile the key NMI v1.16 provenance disputes using only already-completed
-      safe derived outputs and historical committed code: DERCo, E5 optimization-seed
-      robustness, the two mBERT protocols, and the ZuCo cohort/exclusion metadata.
-      This task performs no model training, model evaluation, neural analysis,
-      hypothesis testing, raw-data export, or manuscript editing.
-    command:
-      - .venv/bin/python
-      - scripts/audit/audit_nmi_v116_reconciliation_v1.py
-    approval: manual
-    timeout_minutes: 15
-    requires_gpu: false
-    resources:
-      cpu_cores: 2
-      min_ram_gb: 4
-      wait_minutes: 30
-    working_directory: .
-    artifacts:
-      - outputs/nmi_v116_reconciliation_v1/latest/summary.json
-      - outputs/nmi_v116_reconciliation_v1/latest/report.txt
-      - outputs/nmi_v116_reconciliation_v1/latest/source_summaries.json
-      - outputs/nmi_v116_reconciliation_v1/latest/mbert_protocol_comparison.csv
-      - outputs/nmi_v116_reconciliation_v1/latest/key_reconciliation_rows.csv
-      - outputs/nmi_v116_reconciliation_v1/latest/multiseed_primary_table.csv
-
-  materialize_nmi_alternative_signal_mpnet_v1:
-    description: >-
-      Materialize the frozen structured item-linked non-neural MPNet relational
-      targets for ChineseEEG source runs 01-06 using source text and nuisance metadata
-      only, before any E5 training or external evaluation. The exact immutable MPNet
-      revision from the completed model-family panel may be downloaded if absent from
-      the local cache. This task must not read EEG feature arrays, neural target values,
-      external targets, or transfer outcomes.
-    command:
-      - .venv/bin/python
-      - scripts/robustness/materialize_nmi_alternative_signal_mpnet_exact_prefetch_v1.py
-    approval: manual
-    timeout_minutes: 120
-    requires_gpu: true
-    resources:
-      cpu_cores: 4
-      min_ram_gb: 12
-      gpu_count: 1
-      min_vram_gb: 8
-      wait_minutes: 240
-    working_directory: .
-    artifacts:
-      - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/preflight.txt
-      - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/summary.json
-      - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/report.txt
-      - outputs/nmi_alternative_signal_mpnet_targets_v1/latest/target_manifest.csv
-
-  run_nmi_alternative_signal_e5_v1:
-    description: >-
-      Train the single frozen structured non-neural MPNet-guided multilingual-E5
-      lambda-0.10 arm at seeds 20260829, 20260830 and 20260831, reusing the completed
-      seed-matched text-only controls. All three surrogate adapters must finish before
-      any surrogate external outcome is opened; then evaluate every retained seed once
-      on the unchanged ZuCo EEG and SMN4Lang fMRI pipelines, with no dose, checkpoint,
-      seed, target or surrogate rescue after outcomes.
-    command:
-      - .venv/bin/python
-      - scripts/robustness/run_nmi_alternative_signal_e5_v1.py
-    approval: manual
-    timeout_minutes: 1440
-    requires_gpu: true
-    resources:
-      cpu_cores: 8
-      min_ram_gb: 24
-      gpu_count: 1
-      min_vram_gb: 24
-      wait_minutes: 720
-    working_directory: .
-    artifacts:
-      - outputs/nmi_alternative_signal_e5_v1/latest/summary.json
-      - outputs/nmi_alternative_signal_e5_v1/latest/report.txt
-      - outputs/nmi_alternative_signal_e5_v1/latest/seed_target_results.csv
-      - outputs/nmi_alternative_signal_e5_v1/latest/training_manifest.json
-
-  resume_nmi_alternative_signal_e5_v1:
-    description: >-
-      Recover the frozen MPNet alternative-signal control after parent job H7M4K9R2
-      completed all three surrogate trainings and both seed-20260829 external
-      evaluations but failed only while parsing the fMRI summary. Verify exact adapter
-      provenance, reuse already-complete seed-20260829 outputs without recomputation,
-      run only missing ZuCo and SMN4Lang evaluations for seeds 20260830 and 20260831,
-      and consolidate all six frozen results. No retraining, dose search, checkpoint
-      selection, seed exclusion, target change or surrogate substitution is allowed.
-    command:
-      - .venv/bin/python
-      - scripts/robustness/resume_nmi_alternative_signal_e5_v1.py
-    approval: manual
-    timeout_minutes: 1440
-    requires_gpu: true
-    resources:
-      cpu_cores: 8
-      min_ram_gb: 24
-      gpu_count: 1
-      min_vram_gb: 24
-      wait_minutes: 720
-    working_directory: .
-    artifacts:
-      - outputs/nmi_alternative_signal_e5_v1/latest/summary.json
-      - outputs/nmi_alternative_signal_e5_v1/latest/report.txt
-      - outputs/nmi_alternative_signal_e5_v1/latest/seed_target_results.csv
-      - outputs/nmi_alternative_signal_e5_v1/latest/recovery_manifest.json
-      - outputs/nmi_alternative_signal_e5_v1/latest/recovery_execution.csv
-
-  reproduce_nmi_chineseeeg_reliability_v1:
-    description: >-
-      Reproduce the historical pre-RunRelay ChineseEEG whole-row temporal-mean
-      reliability values under the existing 19-Aug-2026 model-blind definition and
-      write exact script and input hashes. This is a reproducibility replay only: it
-      performs no semantic/model evaluation, representation selection, external
-      transfer test, retraining, or manuscript editing.
-    command:
-      - .venv/bin/python
-      - scripts/audit/reproduce_nmi_chineseeeg_reliability_v1.py
-    approval: manual
-    timeout_minutes: 60
-    requires_gpu: false
-    resources:
-      cpu_cores: 4
-      min_ram_gb: 8
-      wait_minutes: 60
-    working_directory: .
-    artifacts:
-      - outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/summary.json
-      - outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/report.txt
-      - outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/input_manifest.csv
-      - outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/subject_summary.csv
-
-  run_nmi_mpnet_model_space_comparison_v1:
-    description: >-
-      Quantify representation-space displacement for the three already-trained frozen
-      MPNet-surrogate adapters relative to seed-matched text-only controls and compare
-      it with the already-trained genuine-neural adapters using the same frozen 349
-      ZuCo items and established cosine, RDM, CKA and kNN metrics. Also report intrinsic
-      effective-rank, anisotropy, distance-variance and norm diagnostics. No retraining,
-      external neural outcomes, target selection, checkpoint selection or rescue tuning.
-    command:
-      - .venv/bin/python
-      - scripts/robustness/run_nmi_mpnet_model_space_comparison_v1.py
-    approval: manual
-    timeout_minutes: 240
-    requires_gpu: true
-    resources:
-      cpu_cores: 4
-      min_ram_gb: 16
-      gpu_count: 1
-      min_vram_gb: 16
-      wait_minutes: 240
-    working_directory: .
-    artifacts:
-      - outputs/nmi_mpnet_model_space_comparison_v1/latest/summary.json
-      - outputs/nmi_mpnet_model_space_comparison_v1/latest/report.txt
-      - outputs/nmi_mpnet_model_space_comparison_v1/latest/seed_comparison_metrics.csv
-      - outputs/nmi_mpnet_model_space_comparison_v1/latest/representation_metrics.csv
-
-  build_nmi_v118_figure1_provenance_v1:
-    description: >-
-      Rebuild NeuroSem Figure 1 from the historical development summary, the
-      S0YJMCMF ChineseEEG reliability replay and the two frozen task-level C-MTEB STS
-      summaries, while recording exact source and output hashes. Presentation-only:
-      no model fitting, neural analysis, representation selection or hypothesis test.
-    command:
-      - .venv/bin/python
-      - scripts/paper/build_nmi_figure1_provenance_v1.py
-    approval: manual
-    timeout_minutes: 30
-    requires_gpu: false
-    resources:
-      cpu_cores: 2
-      min_ram_gb: 4
-      wait_minutes: 30
-    working_directory: .
-    artifacts:
-      - outputs/nmi_v118_figure1_provenance_v1/latest/figure1.pdf
-      - outputs/nmi_v118_figure1_provenance_v1/latest/figure1.svg
-      - outputs/nmi_v118_figure1_provenance_v1/latest/figure1.png
-      - outputs/nmi_v118_figure1_provenance_v1/latest/source_manifest.json
-      - outputs/nmi_v118_figure1_provenance_v1/latest/report.txt
-
-  audit_nmi_v118_bidirectional_provenance_v1:
-    description: >-
-      Build the first machine-verifiable v1.18 bidirectional provenance ledger from
-      the committed v1.17 claim manifest and already-completed safe derived outputs.
-      Verify exact artifact hashes and claim selectors, emit claim-to-source and
-      output-to-manuscript tables, and preserve all unresolved lineage/coverage cases.
-      No model training, model evaluation, neural analysis or manuscript editing.
-    command:
-      - .venv/bin/python
-      - scripts/audit/audit_nmi_v118_bidirectional_provenance_v1.py
-    approval: manual
-    timeout_minutes: 30
-    requires_gpu: false
-    resources:
-      cpu_cores: 2
-      min_ram_gb: 4
-      wait_minutes: 30
-    working_directory: .
-    artifacts:
-      - outputs/nmi_v118_provenance_ledger_v1/latest/claim_to_source.csv
-      - outputs/nmi_v118_provenance_ledger_v1/latest/output_to_manuscript.csv
-      - outputs/nmi_v118_provenance_ledger_v1/latest/exceptions.csv
-      - outputs/nmi_v118_provenance_ledger_v1/latest/source_manifest.csv
-      - outputs/nmi_v118_provenance_ledger_v1/latest/summary.json
-      - outputs/nmi_v118_provenance_ledger_v1/latest/report.txt
-
-  audit_nmi_v118_run07_history_v1:
-    description: >-
-      Reconstruct the historical ChineseEEG run-07 derived-output chronology from
-      machine-readable safe outputs, recording timestamps, artifact hashes and only
-      aggregate cohort-count metadata. Read-only provenance work: no raw EEG access,
-      model scoring, neural analysis, participant-identifier export or manuscript edit.
-    command:
-      - .venv/bin/python
-      - scripts/audit/audit_nmi_run07_history_v1.py
-    approval: manual
-    timeout_minutes: 30
-    requires_gpu: false
-    resources:
-      cpu_cores: 2
-      min_ram_gb: 4
-      wait_minutes: 30
-    working_directory: .
-    artifacts:
-      - outputs/nmi_v118_run07_history_audit_v1/latest/summary.json
-      - outputs/nmi_v118_run07_history_audit_v1/latest/report.txt
-      - outputs/nmi_v118_run07_history_audit_v1/latest/history.csv
-
-  finalize_nmi_v118_submission_v1:
-    description: >-
-      Rebuild the complete publication figure/table package with canonical Figure 1
-      byte-linked to the pinned provenance artifact, build the fresh September-inclusive
-      safe derived v1.18 bundle, and run the final document-linked provenance/shipping audit.
-      Presentation/provenance only: no training, model evaluation, neural analysis or new inference.
-    command:
-      - .venv/bin/python
-      - scripts/audit/run_nmi_v118_finalization_v1.py
-    approval: manual
-    timeout_minutes: 60
-    requires_gpu: false
-    resources:
-      cpu_cores: 2
-      min_ram_gb: 8
-      wait_minutes: 60
-    working_directory: .
-    artifacts:
-      - outputs/nmi_v118_submission_bundle_v1/latest/NeuroSem_NMI_v1.18_safe_derived_bundle.zip
-      - outputs/nmi_v118_submission_bundle_v1/latest/bundle_manifest.json
-      - outputs/nmi_v118_submission_bundle_v1/latest/report.txt
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/summary.json
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/report.txt
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/claim_to_source.csv
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/source_manifest.csv
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/exceptions.csv
-      - outputs/publication_figures_tables_v2/latest/reproducibility_manifest.json
-      - outputs/publication_figures_tables_v2/latest/reproducibility_report.txt
-      - outputs/nmi_main_figures_v3/latest/source_manifest.json
-      - outputs/nmi_main_figures_v3/latest/figure1.png
-
-  recover_nmi_v118_shipping_gate_v1:
-    description: >-
-      Recover the final v1.18 shipping gate after F8K2V7M4 completed the publication
-      rebuild and fresh bundle but failed only because the final audit still expected
-      the pre-rebuild spatial presentation hash. Do not rebuild publication or scientific
-      outputs; regenerate the bundle with the corrected overlay and rerun the final audit.
-    command:
-      - .venv/bin/python
-      - scripts/audit/recover_nmi_v118_shipping_gate_v1.py
-    approval: manual
-    timeout_minutes: 30
-    requires_gpu: false
-    resources:
-      cpu_cores: 2
-      min_ram_gb: 8
-      wait_minutes: 30
-    working_directory: .
-    artifacts:
-      - outputs/nmi_v118_submission_bundle_v1/latest/NeuroSem_NMI_v1.18_safe_derived_bundle.zip
-      - outputs/nmi_v118_submission_bundle_v1/latest/bundle_manifest.json
-      - outputs/nmi_v118_submission_bundle_v1/latest/report.txt
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/summary.json
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/report.txt
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/claim_to_source.csv
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/source_manifest.csv
-      - outputs/nmi_v118_final_shipping_audit_v1/latest/exceptions.csv
-      - outputs/publication_figures_tables_v2/latest/reproducibility_manifest.json
-      - outputs/nmi_main_figures_v3/latest/source_manifest.json
-      - outputs/nmi_main_figures_v3/latest/figure1.png
-
-  build_nmi_figure4_v1183:
-    description: >-
-      Rebuild NeuroSem manuscript Figure 4 from the already-completed frozen model-family,
-      specificity and reverse-transfer outputs, changing only the Figure 4c wording from
-      seed robustness to directional consistency across the tested optimization seeds.
-      Presentation-only: no model fitting, model evaluation, neural analysis or new inference.
-    command:
-      - .venv/bin/python
-      - scripts/paper/build_nmi_figure4_v1183.py
+      - scripts/paper/build_nmi_figure1_redesign_v1.py
     approval: automatic
     timeout_minutes: 15
     requires_gpu: false
@@ -362,19 +44,18 @@ tasks:
       wait_minutes: 15
     working_directory: .
     artifacts:
-      - outputs/nmi_v1183_figure4/latest/figure4.pdf
-      - outputs/nmi_v1183_figure4/latest/figure4.svg
-      - outputs/nmi_v1183_figure4/latest/figure4.png
-      - outputs/nmi_v1183_figure4/latest/figure4_png_base64.txt
-      - outputs/nmi_v1183_figure4/latest/source_manifest.json
+      - outputs/nmi_figure1_redesign_v1/latest/figure1.pdf
+      - outputs/nmi_figure1_redesign_v1/latest/figure1.svg
+      - outputs/nmi_figure1_redesign_v1/latest/figure1.png
+      - outputs/nmi_figure1_redesign_v1/latest/figure1_reliability_source.csv
+      - outputs/nmi_figure1_redesign_v1/latest/figure1_development_source.csv
+      - outputs/nmi_figure1_redesign_v1/latest/source_manifest.json
 
   build_nmi_figure2_redesign_v1:
     description: >-
-      Rebuild NeuroSem manuscript Figure 2 from frozen ZuCo and SMN4Lang participant-level
-      reliability/transfer outputs plus the completed E5 optimization-seed robustness summary.
-      Presentation-only: expose participant-level evidence, the frozen intervention chronology,
-      and the distinction between the prospective primary run and post-confirmatory seed checks;
-      perform no model fitting, model evaluation, neural analysis or new inference.
+      Rebuild NeuroSem Figure 2 from frozen ZuCo and SMN4Lang participant-level
+      reliability/transfer outputs plus completed E5 optimization-seed robustness.
+      Presentation-only: no model fitting, model evaluation, neural analysis or new inference.
     command:
       - .venv/bin/python
       - scripts/paper/build_nmi_figure2_redesign_v1.py
@@ -395,37 +76,11 @@ tasks:
       - outputs/nmi_figure2_redesign_v1/latest/figure2_seed_robustness_source.csv
       - outputs/nmi_figure2_redesign_v1/latest/source_manifest.json
 
-  build_nmi_figure1_redesign_v1:
-    description: >-
-      Rebuild NeuroSem manuscript Figure 1 from the frozen ChineseEEG development summary,
-      participant-level reliability replay and task-level C-MTEB summaries. Presentation-only:
-      show source reliability, held-out correspondence and the development neural/semantic trade-off;
-      perform no model fitting, neural analysis, representation selection or new inference.
-    command:
-      - .venv/bin/python
-      - scripts/paper/build_nmi_figure1_redesign_v1.py
-    approval: automatic
-    timeout_minutes: 15
-    requires_gpu: false
-    resources:
-      cpu_cores: 2
-      min_ram_gb: 4
-      wait_minutes: 15
-    working_directory: .
-    artifacts:
-      - outputs/nmi_figure1_redesign_v1/latest/figure1.pdf
-      - outputs/nmi_figure1_redesign_v1/latest/figure1.svg
-      - outputs/nmi_figure1_redesign_v1/latest/figure1.png
-      - outputs/nmi_figure1_redesign_v1/latest/figure1_reliability_source.csv
-      - outputs/nmi_figure1_redesign_v1/latest/figure1_development_source.csv
-      - outputs/nmi_figure1_redesign_v1/latest/source_manifest.json
-
   build_nmi_figure3_redesign_v1:
     description: >-
-      Rebuild NeuroSem manuscript Figure 3 from the frozen forward-dose and model-space
-      characterization outputs. Presentation-only: show target-specific dose response,
-      transfer-versus-generic-STS trade-off and representational displacement without
-      new evaluation, target selection, dose selection or inference.
+      Rebuild NeuroSem Figure 3 from frozen forward-dose and model-space outputs using
+      the final target-specific dose, transfer-utility and displacement layout.
+      Presentation-only: no new evaluation, target selection, dose selection or inference.
     command:
       - .venv/bin/python
       - scripts/paper/build_nmi_figure3_redesign_v1.py
@@ -447,10 +102,9 @@ tasks:
 
   build_nmi_figure4_redesign_v1:
     description: >-
-      Rebuild NeuroSem manuscript Figure 4 from frozen model-family, specificity,
-      structured-surrogate, model-space and reverse-transfer outputs. Presentation-only:
-      expose seed-level heterogeneity, target-structure controls, perturbation-magnitude
-      caveat and reverse-direction consistency without new training or inference.
+      Rebuild NeuroSem Figure 4 from frozen model-family, specificity, structured-surrogate,
+      model-space and reverse-transfer outputs using the final seed-aware layout.
+      Presentation-only: no new training, model evaluation, neural analysis or inference.
     command:
       - .venv/bin/python
       - scripts/paper/build_nmi_figure4_redesign_v1.py
@@ -469,3 +123,35 @@ tasks:
       - outputs/nmi_figure4_redesign_v1/latest/figure4_model_family_source.csv
       - outputs/nmi_figure4_redesign_v1/latest/figure4_signal_source.csv
       - outputs/nmi_figure4_redesign_v1/latest/source_manifest.json
+
+  build_nmi_figure5_redesign_v1:
+    description: >-
+      Rebuild NeuroSem Figure 5 and Extended Data Figure 1 from frozen SMN4Lang spatial,
+      regional, shuffled-control and spatial-surrogate outputs. Render the complete unthresholded
+      DK68 phenotype on the standard FreeSurfer fsaverage inflated surface. The atlas is a
+      visualization scaffold only. Presentation-only: no model fitting, neural analysis,
+      region selection, thresholding, hypothesis testing or new inference.
+    command:
+      - .venv/bin/python
+      - scripts/paper/build_nmi_figure5_redesign_v1.py
+    approval: automatic
+    timeout_minutes: 90
+    requires_gpu: false
+    resources:
+      cpu_cores: 4
+      min_ram_gb: 8
+      wait_minutes: 90
+    working_directory: .
+    artifacts:
+      - outputs/nmi_figure5_redesign_v1/latest/figure5.pdf
+      - outputs/nmi_figure5_redesign_v1/latest/figure5.svg
+      - outputs/nmi_figure5_redesign_v1/latest/figure5.png
+      - outputs/nmi_figure5_redesign_v1/latest/extended_data_figure1.pdf
+      - outputs/nmi_figure5_redesign_v1/latest/extended_data_figure1.svg
+      - outputs/nmi_figure5_redesign_v1/latest/extended_data_figure1.png
+      - outputs/nmi_figure5_redesign_v1/latest/figure5_participant_source.csv
+      - outputs/nmi_figure5_redesign_v1/latest/figure5_shuffled_control_source.csv
+      - outputs/nmi_figure5_redesign_v1/latest/figure5_spatial_null_source.csv
+      - outputs/nmi_figure5_redesign_v1/latest/extended_data_figure1_region_source.csv
+      - outputs/nmi_figure5_redesign_v1/latest/atlas_manifest.json
+      - outputs/nmi_figure5_redesign_v1/latest/source_manifest.json
