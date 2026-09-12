@@ -10,6 +10,12 @@ Builder:
 .venv/bin/python scripts/paper/build_nmi_figure1_transfer_redesign_v2.py
 ```
 
+Validator:
+
+```bash
+.venv/bin/python scripts/paper/validate_nmi_figure1_transfer_redesign_v2.py
+```
+
 Outputs:
 
 ```text
@@ -27,7 +33,9 @@ The builder is presentation-only. It reads the frozen ZuCo and SMN4Lang reliabil
 
 ### Validation
 
-The builder fails if expected cohort sizes, participant-level deltas, frozen summary means, confidence intervals, or optimization-seed identities are inconsistent. On success it writes:
+The builder fails if expected cohort sizes, participant-level deltas, frozen summary means, confidence intervals, or optimization-seed identities are inconsistent. The separate validator then rechecks file hashes, source-table arithmetic, cohort sizes, sign counts, seed labels, and displayed headline summaries against the generated provenance manifest.
+
+On success the workflow provides:
 
 - exact SHA-256 hashes for every input and figure output;
 - source-data CSVs containing the values actually displayed;
