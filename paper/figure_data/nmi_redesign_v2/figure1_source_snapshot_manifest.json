@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "figure": "NeuroSem NMI Figure 1 transfer-first redesign v2",
+  "snapshot_purpose": "Commit the safe participant-level and run-level values needed to regenerate Figure 1 from a fresh clone without requiring workstation-only outputs.",
+  "scientific_values_changed": false,
+  "source_runrelay_job": {
+    "job_id": "4N8R2K7C",
+    "project_id": "neurosem",
+    "exact_commit": "0ff001b37f17d91600035cab6c523676d3823d81",
+    "task": "build_nmi_figure2_redesign_v1",
+    "status": "completed"
+  },
+  "source_artifacts": {
+    "outputs/nmi_figure2_redesign_v1/latest/figure2_reliability_source.csv": "977fa61b326b6a9a58a27941c70c4159b048704840e6da831fa496d4ba179ccb",
+    "outputs/nmi_figure2_redesign_v1/latest/figure2_primary_transfer_source.csv": "ffaaf3da1ec0586c75534355c1b4fdb2a1809651afb01003e81b2f2cee249d8b",
+    "outputs/nmi_figure2_redesign_v1/latest/figure2_seed_robustness_source.csv": "8c0377daea559c7dd8aefae8226ac8339fc8a2c3431701d8e043154981462165",
+    "outputs/nmi_figure2_redesign_v1/latest/source_manifest.json": "655ab98d8076a4ae2ff9eb212dff2ef77cbf1bc71db8b610d0b4989c56360aa7"
+  },
+  "original_upstream_input_hashes": {
+    "outputs/zuco2_nr_primary_representation_reliability/latest/subject_metrics.csv": "c88f13e150574a30263cfa647bd357759719c14cc84cc2af005c096349a1f08c",
+    "outputs/zuco2_nr_primary_representation_reliability/latest/summary.json": "148d504d3bd22a6b5f76af34628357302db54d91d7b912b8f49717b47443df14",
+    "outputs/zuco2_nr_e5_transfer_v1/latest/subject_results.csv": "9cb895a2d3b9205b758902b08fc1f64465dcfe98f7ce29ecfbf47085bb5baa7e",
+    "outputs/zuco2_nr_e5_transfer_v1/latest/summary.json": "cc947e6caa0e56a5bd1a30588521b4ed49132bee8a66358c0255aa0d65e539fc",
+    "outputs/smn4lang_fmri_reliability/latest/participant_results.csv": "e90b7e4307d32516654f76dbb3f42e27679a32bfb5d6598ce56ada3e1672efb9",
+    "outputs/smn4lang_fmri_reliability/latest/summary.json": "e21f48f6399d40bfaf708472757c6c3a3c4e1154684533b8a22d59ed862c55d4",
+    "outputs/smn4lang_fmri_e5_transfer_v1/latest/participant_results.csv": "7122ed4e94377480f0baf29ee54723875e105cac3a088742f62e81da4a56694d",
+    "outputs/smn4lang_fmri_e5_transfer_v1/latest/summary.json": "91698cf50afe4a0fa50f4828fe2068d70c79317a5215e6a9182a059124e4b812",
+    "outputs/nmi_multiseed_e5_v1/latest/summary.json": "24beb253dc6ec882a4e9f53bc00b1a1c498504edb1e1dfbff26967cea26f3bca"
+  },
+  "committed_snapshots": {
+    "reliability": "paper/figure_data/nmi_redesign_v2/figure1_reliability_source.csv",
+    "primary_transfer": "paper/figure_data/nmi_redesign_v2/figure1_transfer_source.csv",
+    "optimization_runs": "paper/figure_data/nmi_redesign_v2/figure1_seed_source.csv"
+  },
+  "displayed_summary": {
+    "zuco": {
+      "n": 17,
+      "reliability_mean": 0.06741933838822738,
+      "primary_mean_delta": 0.001663698551217173,
+      "primary_bootstrap_95ci": [0.0012294332298586478, 0.0021452226927818735],
+      "primary_positive": 17,
+      "four_run_means": [0.001663698551217173, 0.0012509199177505401, 0.0019518941203323897, 0.0005964994508690111],
+      "four_run_positive_counts": [17, 17, 17, 15]
+    },
+    "fmri": {
+      "n": 12,
+      "reliability_mean": 0.6532650432068453,
+      "primary_mean_delta": 0.0008524959696097218,
+      "primary_bootstrap_95ci": [0.0007896596683625307, 0.0009139762724753116],
+      "primary_positive": 12,
+      "four_run_means": [0.0008524959696097218, 0.00069587285721745, 0.0008970979953426481, 0.0004452558521139613],
+      "four_run_positive_counts": [12, 12, 12, 12]
+    }
+  },
+  "notes": [
+    "The committed CSVs are value-preserving text snapshots of already-declared safe RunRelay source-data artifacts. Git line-ending normalization can change file bytes, so provenance to the original R2 artifacts is recorded by their SHA-256 hashes above.",
+    "The reliability panels use raw participant observations plus the arithmetic mean from the committed snapshot. No new reliability confidence interval is computed.",
+    "The transfer delta panels use the participant-bootstrap 95% confidence intervals already frozen in the source manifest from job 4N8R2K7C.",
+    "The optimization-run panel shows frozen run-level means and positive-participant counts only; no confidence interval is invented for added runs."
+  ]
+}
