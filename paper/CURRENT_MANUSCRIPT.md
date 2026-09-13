@@ -1,6 +1,6 @@
 # Current publication master
 
-**Recorded:** 2026-09-08
+**Recorded:** 2026-09-13
 
 The current Word masters are maintained outside the Git working tree during final author review. This file records the exact binaries used for submission preparation.
 
@@ -8,42 +8,45 @@ The current Word masters are maintained outside the Git working tree during fina
 
 ### Clean
 
-- File: `NeuroSem_Nature_Manuscript_v1.18.2_clean.docx`
-- SHA-256: `c05f875bb843b4ced7e91056ea2c5358bc980fc874d37fc082b2dfafd67a79a3`
-- Size: 3,371,943 bytes
+- File: `NeuroSem_Nature_Manuscript_v1.19.1_submission_figures_clean.docx`
+- SHA-256: `102833df47ce25aed49554022e4ca1d710ae342d9cbd78745ca3ef2583993c60`
+- Size: 2,765,410 bytes
 - Rendered length: 32 pages
 
 ### Tracked changes
 
-- File: `NeuroSem_Nature_Manuscript_v1.18.2_tracked.docx`
-- SHA-256: `01b61d3f7ba77802ffd2fabe46207c3563d5673435780983acc467e5779f7420`
-- Size: 3,373,343 bytes
-- Rendered length: 34 pages
+- File: `NeuroSem_Nature_Manuscript_v1.19.1_submission_figures_tracked.docx`
+- SHA-256: `8948cb9ee67f4034c4e1d1cb0cbe9795cd0d9380c3c866994dc45e59278150a1`
+- Size: 2,767,951 bytes
+- Rendered length: 33 pages
 
-Current title: **External transfer of brain-derived relational constraints depends on dose, target and model backbone**
+Current title: **Brain-derived relational supervision transfers language-model representations across independent neural datasets**
 
-The submission-format abstract is 144 words and the Article main text is approximately 3,249 words under the project counting rule, excluding abstract, Methods, references and figure legends.
+The manuscript now uses the submission-ready figure architecture: 4 main figures plus 4 Extended Data figures. The embedded PNGs are byte-identical to the approved outputs from the canonical figure pipeline.
 
 ## Supplementary Information
 
-### Clean
+The technical Supplementary Information remains scientifically unchanged in this figure-architecture revision.
 
-- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.2_clean.docx`
-- SHA-256: `6150e9603fec04a35051345dc244c0ac1f3ec6ae119b0396153e9eea9860de5a`
-- Size: 60,946 bytes
-- Rendered length: 13 pages
+- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.6.docx`
+- SHA-256: `fc8938c6c38742f14323499e402bc9ffacc28656888f7b5e2882eb1da305bffd`
+- Size: 70,356 bytes
+- Rendered length: 12 pages
 
-### Tracked changes
+## Figure code snapshot
 
-- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.2_tracked.docx`
-- SHA-256: `7a375ea2d4187cb9ebdf6490b60f9b831d66747948bed0b2582fd652479b0287`
-- Size: 61,374 bytes
-- Rendered length: 13 pages
+The immutable code snapshot cited by the v1.19.1 manuscript is commit `a7d2eaa81d5d5e59521b03fb75d7219aca3e29be`.
+
+The canonical submission-facing figure entry point is:
+
+```text
+scripts/paper/final_figures/build_all_figures.py
+```
+
+It builds and validates exactly Main Figures 1-4 and Extended Data Figures 1-4 into `outputs/paper_figures_final/`. Exact-commit RunRelay job `K4T9M2VR` completed successfully at this snapshot with exit code 0.
 
 ## Status
 
-v1.18.2 is a submission-formatting and delivery refinement of the scientifically locked v1.18 manuscript. It shortens the abstract and main text for Nature Machine Intelligence Article limits, replaces the misleading statement that a provenance ledger physically accompanies the submission with a pointer to the versioned provenance specification and shipping-audit workflow, and preserves the corrected spacing in the forward-dose result. It adds no scientific result, analysis or interpretation. The Supplementary Information is scientifically unchanged from v1.18.1 and is renamed only to keep the submission package synchronized.
-
-The Code Availability statement continues to point to the immutable submission code snapshot at commit `54843026f092cfc84c0123dff9fd6e28f3eba1be`. This document-fingerprint record is therefore a later metadata-only update and does not change the cited code snapshot.
+v1.19.1 is a presentation and manuscript-integration revision of the scientifically locked analysis. It replaces the earlier five-main-figure organization with the approved four-main plus four-Extended-Data architecture, updates in-text figure citations and legends, embeds the final code-generated figures, and updates Code Availability to the verified figure-code snapshot. It adds no new outcome-bearing analysis or scientific inference.
 
 The repository intentionally does not commit `.docx` masters. Frozen protocol and result documents remain authoritative for analysis chronology, while these Word files are authoritative for current submission wording and layout.
