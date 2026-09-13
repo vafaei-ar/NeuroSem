@@ -469,3 +469,39 @@ tasks:
       - outputs/nmi_figure4_redesign_v1/latest/figure4_model_family_source.csv
       - outputs/nmi_figure4_redesign_v1/latest/figure4_signal_source.csv
       - outputs/nmi_figure4_redesign_v1/latest/source_manifest.json
+
+  build_nmi_submission_figures_v1:
+    description: >-
+      Build and validate the complete frozen NeuroSem submission figure package:
+      Main Figures 1-4 and Extended Data Figures 1-4. Presentation-only from
+      completed frozen outputs; no model fitting, model evaluation, neural analysis,
+      participant or region selection, dose search, or new inference.
+    command:
+      - .venv/bin/python
+      - scripts/paper/final_figures/build_all_figures.py
+    approval: automatic
+    timeout_minutes: 45
+    requires_gpu: false
+    resources:
+      cpu_cores: 4
+      min_ram_gb: 8
+      wait_minutes: 45
+    working_directory: .
+    artifacts:
+      - outputs/paper_figures_final/submission_figure_manifest.json
+      - outputs/paper_figures_final/figure1.png
+      - outputs/paper_figures_final/figure2.png
+      - outputs/paper_figures_final/figure3.png
+      - outputs/paper_figures_final/figure4.png
+      - outputs/paper_figures_final/extended_data_figure1.png
+      - outputs/paper_figures_final/extended_data_figure2.png
+      - outputs/paper_figures_final/extended_data_figure3.png
+      - outputs/paper_figures_final/extended_data_figure4.png
+      - outputs/paper_figures_final/figure1_manifest.json
+      - outputs/paper_figures_final/figure2_manifest.json
+      - outputs/paper_figures_final/figure3_manifest.json
+      - outputs/paper_figures_final/figure4_manifest.json
+      - outputs/paper_figures_final/extended_data_figure1_manifest.json
+      - outputs/paper_figures_final/extended_data_figure2_manifest.json
+      - outputs/paper_figures_final/extended_data_figure3_manifest.json
+      - outputs/paper_figures_final/extended_data_figure4_manifest.json
