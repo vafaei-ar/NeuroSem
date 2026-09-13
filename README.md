@@ -6,7 +6,7 @@ The project is in a submission freeze. The primary prospective analyses and the 
 
 ## Current submission
 
-The current author-review package is **v1.18.2**. Word masters are maintained outside Git during final review; their filenames, SHA-256 fingerprints, rendered page counts and submission-length checks are recorded in [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md).
+The current author-review package is **v1.19.1**. Word masters are maintained outside Git during final review; their filenames, SHA-256 fingerprints and rendered page counts are recorded in [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md).
 
 The primary evidential chain is unchanged:
 
@@ -21,18 +21,19 @@ Post-confirmatory analyses define the scope and limits of that result. These inc
 Start with:
 
 1. [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md) for the current external Word masters.
-2. [`paper/FIGURE_GENERATION.md`](paper/FIGURE_GENERATION.md) for the canonical figure-build chain.
-3. [`docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md`](docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md) for the manuscript claim-to-artifact verification contract.
-4. [`scripts/audit/audit_nmi_v118_final_shipping_v1.py`](scripts/audit/audit_nmi_v118_final_shipping_v1.py) for the final shipping gate.
-5. [`scripts/audit/build_nmi_v118_shipping_bundle_v1.py`](scripts/audit/build_nmi_v118_shipping_bundle_v1.py) for the safe derived evidence bundle.
-6. [`scripts/paper/build_nmi_figure1_provenance_v1.py`](scripts/paper/build_nmi_figure1_provenance_v1.py) and [`scripts/paper/build_nmi_main_figures_v3_4.py`](scripts/paper/build_nmi_main_figures_v3_4.py) for the provenance-linked main-figure path.
+2. [`paper/FIGURE_GENERATION.md`](paper/FIGURE_GENERATION.md) for the canonical 4-main plus 4-Extended-Data figure-build chain.
+3. [`scripts/paper/final_figures/build_all_figures.py`](scripts/paper/final_figures/build_all_figures.py) for the only active submission-facing figure entry point.
+4. [`docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md`](docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md) for the manuscript claim-to-artifact verification contract.
+5. [`scripts/audit/audit_nmi_v118_final_shipping_v1.py`](scripts/audit/audit_nmi_v118_final_shipping_v1.py) for the final shipping gate.
+6. [`scripts/audit/build_nmi_v118_shipping_bundle_v1.py`](scripts/audit/build_nmi_v118_shipping_bundle_v1.py) for the safe derived evidence bundle.
 
-Frozen protocols and result documents under `docs/` preserve the analysis chronology. Historical implementations needed to interpret earlier runs are retained when they form part of the provenance record; current entry points are identified in the documentation above.
+Frozen protocols and result documents under `docs/` preserve the analysis chronology. Historical figure implementations remain part of the provenance history, but `scripts/paper/final_figures/` is the canonical visualization pipeline for the current submission.
 
 ## Repository layout
 
 - `docs/`: frozen protocols, result summaries, provenance specifications, and publication-state records.
 - `scripts/`: analysis, robustness, audit, and publication code.
+- `scripts/paper/final_figures/`: canonical submission figure code.
 - `configs/`: frozen model and dataset configuration.
 - `paper/`: submission-facing documentation and figure workflow.
 - `.runrelay/project.yaml`: versioned task definitions used for exact-commit workstation execution.
