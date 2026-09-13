@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -28,6 +29,10 @@ def use():
 
 def fig_title(fig, number, text, y=.98, size=15):
     fig.text(.5,y,f'Figure {number}. {text}',ha='center',va='top',family='serif',fontweight='bold',fontsize=size,color=INK)
+
+
+def ed_title(fig, number, text, y=.978, size=13.5):
+    fig.text(.5,y,f'Extended Data Figure {number}. {text}',ha='center',va='top',family='serif',fontweight='bold',fontsize=size,color=INK)
 
 
 def panel_letter(fig,x,y,letter,size=15):
@@ -70,7 +75,8 @@ def point_with_ci(ax,x,mean,lo,hi,color,ms=7,lw=1.3,capsize=2.5,vertical=True,mf
 def half_violin(ax,x,values,color,side='right',width=.30,bw=.35,alpha=.55):
     from scipy.stats import gaussian_kde
     v=np.asarray(values,float)
-    if len(v)<4 or np.unique(v).size<2 or np.std(v)<=0: return
+    if len(v)<4 or np.unique(v).size<2 or np.std(v)<=0:
+        return
     pad=max(np.std(v)*2.5, np.ptp(v)*.15)
     grid=np.linspace(v.min()-pad,v.max()+pad,256)
     dens=gaussian_kde(v,bw_method=bw)(grid); dens=dens/dens.max()*width
@@ -79,7 +85,6 @@ def half_violin(ax,x,values,color,side='right',width=.30,bw=.35,alpha=.55):
 
 
 def ci_cloud(ax,x,mean,lo,hi,color,side='right',width=.28,alpha=.32):
-    # visual uncertainty cloud derived only from the frozen 95% CI; not a participant distribution
     sigma=max((hi-lo)/3.92,1e-12)
     grid=np.linspace(mean-3*sigma,mean+3*sigma,220)
     dens=np.exp(-.5*((grid-mean)/sigma)**2); dens=dens/dens.max()*width
@@ -97,12 +102,3 @@ def facet_strip(ax,label,color,fontsize=9):
     ax.annotate(label,xy=(.5,1),xytext=(0,5),xycoords='axes fraction',textcoords='offset points',
                 ha='center',va='bottom',fontsize=fontsize,color=INK,
                 bbox=dict(boxstyle='square,pad=.45',facecolor=color,edgecolor='none'))
-
-
-def save3(fig,outdir,stem):
-    from pathlib import Path
-    outdir=Path(outdir); outdir.mkdir(parents=True,exist_ok=True)
-    paths=[]
-    for ext,kw in [('png',{'dpi':300}),('pdf',{}),('svg',{})]:
-        p=outdir/f'{stem}.{ext}'; fig.savefig(p,bbox_inches=None,**kw); paths.append(p)
-    plt.close(fig); return paths

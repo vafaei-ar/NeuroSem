@@ -1,71 +1,75 @@
 # Manuscript figure generation
 
-Publication figures are assembled from completed derived artifacts. Figure-generation code does not retrain models, select representations, redefine cohorts, or introduce new hypothesis tests.
+## Canonical submission architecture
 
-## Canonical main-figure build
+The submission-ready NeuroSem figure package contains exactly:
 
-The current entry point is:
+- Main Figures 1-4
+- Extended Data Figures 1-4
+- no separate Supplementary Figures
 
-```text
-scripts/paper/build_nmi_main_figures_v3_4.py
-```
-
-It writes Figures 1-4 to `outputs/nmi_main_figures_v3/latest/` and records exact output hashes in `source_manifest.json`.
-
-### Figure 1
-
-Figure 1 has an additional provenance layer because its panels combine several development-era sources. The canonical chain is:
+The only active submission-facing entry point is:
 
 ```text
-scripts/paper/build_nmi_figure1_provenance_v1.py
-  -> scripts/paper/nmi_visualizations_v4/build_figure1_chineseeeg.py
-  -> outputs/nmi_v118_figure1_provenance_v1/latest/
-  -> scripts/paper/build_nmi_main_figures_v3_4.py
+scripts/paper/final_figures/build_all_figures.py
 ```
 
-The non-demo Figure 1 builder requires four machine-readable inputs:
+Run from the repository root with:
 
-1. `paper/figure_data/chineseeeg_development_v1.json`
-2. `outputs/nmi_v118_chineseeeg_reliability_reproduction_v1/latest/summary.json`
-3. `outputs/bert_neurosem_cmteb_sts_v1/20260823_122332/summary.json`
-4. `outputs/bert_neurosem_cmteb_sts_v1_seed2/20260823_123910/summary.json`
+```bash
+.venv/bin/python scripts/paper/final_figures/build_all_figures.py
+```
 
-Reliability is loaded from the independent replay summary rather than from a figure literal. Semantic panel values are loaded from the two frozen task-level STS summaries and checked against their eight-task means. The development JSON supplies the held-out-run and reserved run-07 summaries.
-
-`build_nmi_main_figures_v3_4.py` accepts Figure 1 only when its provenance manifest matches the pinned SHA-256 recorded in the builder, then copies the verified PDF, SVG, and PNG into the canonical main-figure directory.
-
-### Figures 2-4
-
-Figures 2-4 are assembled from already-completed frozen participant-level and summary artifacts through the NMI submission figure/table builders called by `build_nmi_main_figures_v3_4.py`. The source manifest records the resulting hashes.
-
-## Spatial and Extended Data figures
-
-The current spatial-validation publication entry point is:
+All PNG, PDF and SVG assets, per-figure provenance manifests, and the package-level manifest are written to:
 
 ```text
-scripts/paper/build_nmi_spatial_validation_publication_v1_2.py
+outputs/paper_figures_final/
 ```
 
-The consolidated publication verification wrapper is:
+`validate_all_figures.py` requires all 8 figures, verifies `status=ok` and `scientific_values_changed=false` for each manifest, checks that the final builders do not import deprecated visualization modules, and writes `submission_figure_manifest.json` containing final SHA-256 hashes.
 
-```text
-scripts/paper/build_publication_figures_tables_v2.py
-```
+## Main figures
 
-Earlier versioned builders are retained because they are part of the execution history. They are not the preferred entry points for the current submission package.
+### Figure 1. Frozen brain-derived supervision transfers across independent neural datasets
+
+Uses committed safe snapshots under `paper/figure_data/nmi_redesign_v2/` for target reliability, participant-level ZuCo/SMN4Lang transfer, and optimization-run consistency. The snapshot manifest preserves upstream RunRelay/artifact hashes. This is the prospective transfer figure.
+
+### Figure 2. Transfer depends on supervision strength and model displacement
+
+Uses the frozen forward external dose characterization and the λ=0.10/λ=1.0 model-space characterization outputs. CI clouds represent uncertainty in the frozen mean estimates and are not synthetic participant distributions.
+
+### Figure 3. Target structure and model architecture determine transfer
+
+Uses the completed shuffled-target specificity control, genuine-neural multiseed results, structured MPNet alternative-signal control, six-backbone bidirectional panel, and seed-matched model-space comparison.
+
+### Figure 4. fMRI transfer is cortex-wide with modest language-associated enrichment
+
+Uses the completed language-specificity, spatial-extension, final spatial-validation, and full regional fMRI outputs. The complete DK68 phenotype is rendered on standard fsaverage Desikan-Killiany surfaces without effect-based parcel selection or thresholding.
+
+## Extended Data figures
+
+### Extended Data Figure 1. Source measurability and development-stage learnability
+
+Uses the ChineseEEG reliability replay, six held-out source runs, reserved run-07 development arms, and frozen C-MTEB semantic summaries.
+
+### Extended Data Figure 2. Story robustness and reverse-transfer boundary conditions
+
+Uses all 60 leave-one-story-out spatial estimates plus the frozen primary and three added fMRI-to-ZuCo optimization runs.
+
+### Extended Data Figure 3. Complete regional fMRI characterization
+
+Shows the six prespecified functional language parcels, all 68 DK cortical parcels, and the same complete unthresholded DK68 phenotype on fsaverage cortex.
+
+### Extended Data Figure 4. Dose and architecture reshape cortical specificity
+
+Uses the frozen dose-by-system, backbone-by-system, forward external dose, and hierarchical synthesis outputs. Condition-level trajectories are descriptive and do not select a dose or model.
 
 ## Scientific guardrails
 
-Figure assembly must fail when a required frozen source is missing or has an unexpected identity. It must not replace missing evidence with newly calculated values. Participant-level inference, optimization-seed robustness, and presentation-only rebuilding remain distinct stages.
+Figure assembly must fail when a required frozen source is missing, when an expected cohort/family size changes, or when a provenance manifest is inconsistent. The plotting code must not replace missing evidence with fabricated values or simulated observations.
 
-For SMN4Lang MEG, the reliability failure is a representation-level boundary and no transfer test is implied. Across EEG and fMRI, raw RSA deltas are not treated as a common cross-modality effect-size scale.
+Participant-level inference, optimization-seed robustness, and presentation-only rebuilding remain distinct stages. Raw RSA differences are not treated as a common standardized effect-size scale across EEG and fMRI.
 
-## Final verification
+## Historical figure code
 
-The final manuscript shipping gate is implemented in:
-
-```text
-scripts/audit/audit_nmi_v118_final_shipping_v1.py
-```
-
-It verifies the manuscript claim ledger, exact source hashes, document manifest, Figure 1 provenance link, and freshness of the safe derived submission bundle.
+Earlier `mockup`, `redesign`, and pre-final submission builders are superseded by `scripts/paper/final_figures/`. Their historical implementations remain available in Git history and exact historical commits for provenance. They are not canonical entry points for the current submission.

@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 OUT = ROOT / "outputs" / "paper_figures_final"
+PIPELINE = "neurosem_submission_figures_v1"
 
 
 def sha256(path: Path) -> str:
@@ -27,7 +28,8 @@ def legacy_status_ok(payload: dict) -> bool:
 def write_manifest(name: str, builder: Path, inputs: list[Path], outputs: list[Path], extra: dict | None = None) -> Path:
     OUT.mkdir(parents=True, exist_ok=True)
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "pipeline": PIPELINE,
         "status": "ok",
         "scientific_values_changed": False,
         "builder": str(builder.resolve().relative_to(ROOT)),
