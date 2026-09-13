@@ -6,7 +6,7 @@ The project is in a submission freeze. The primary prospective analyses and the 
 
 ## Current submission
 
-The current author-review package is **v1.19.1**. Word masters are maintained outside Git during final review; their filenames, SHA-256 fingerprints and rendered page counts are recorded in [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md).
+The current author-review package is **v1.19.2**. Word masters are maintained outside Git during final review; their filenames, SHA-256 fingerprints, rendered page counts and submission-readiness checks are recorded in [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md).
 
 The primary evidential chain is unchanged:
 
@@ -20,7 +20,7 @@ Post-confirmatory analyses define the scope and limits of that result. These inc
 
 Start with:
 
-1. [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md) for the current external Word masters.
+1. [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md) for the current external Word masters and submission-readiness record.
 2. [`paper/FIGURE_GENERATION.md`](paper/FIGURE_GENERATION.md) for the canonical 4-main plus 4-Extended-Data figure-build chain.
 3. [`scripts/paper/final_figures/build_all_figures.py`](scripts/paper/final_figures/build_all_figures.py) for the only active submission-facing figure entry point.
 4. [`docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md`](docs/NMI_V118_PROVENANCE_LEDGER_SPEC.md) for the manuscript claim-to-artifact verification contract.
