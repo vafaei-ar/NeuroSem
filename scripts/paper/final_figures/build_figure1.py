@@ -27,6 +27,8 @@ TRANSFER_SNAPSHOT = SNAPSHOT_DIR / "figure1_transfer_source.csv"
 SEED_SNAPSHOT = SNAPSHOT_DIR / "figure1_seed_source.csv"
 PROVENANCE = SNAPSHOT_DIR / "figure1_source_snapshot_manifest.json"
 INPUTS = [REL_SNAPSHOT, TRANSFER_SNAPSHOT, SEED_SNAPSHOT, PROVENANCE]
+APPROVED_BLUE = "#356AC3"
+APPROVED_ORANGE = "#E76F00"
 
 
 def read_csv(path: Path) -> list[dict]:
@@ -38,7 +40,7 @@ def load_data() -> tuple[dict, dict]:
     meta = json.loads(PROVENANCE.read_text(encoding="utf-8"))
     rel_rows = read_csv(REL_SNAPSHOT); transfer_rows = read_csv(TRANSFER_SNAPSHOT); seed_rows = read_csv(SEED_SNAPSHOT)
     data = {}
-    definitions = {"zuco": ("ZuCo EEG", ns.BLUE, 17), "fmri": ("SMN4Lang fMRI", ns.ORANGE, 12)}
+    definitions = {"zuco": ("ZuCo EEG", APPROVED_BLUE, 17), "fmri": ("SMN4Lang fMRI", APPROVED_ORANGE, 12)}
     for key, (label, color, expected_n) in definitions.items():
         rr=[r for r in rel_rows if r["dataset"]==key]; tr=[r for r in transfer_rows if r["dataset"]==key]; sr=[r for r in seed_rows if r["dataset"]==key]
         if len(rr)!=expected_n or len(tr)!=expected_n: raise RuntimeError(f"{key}: unexpected participant count")
