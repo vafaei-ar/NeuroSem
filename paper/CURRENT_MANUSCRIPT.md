@@ -26,9 +26,9 @@ The manuscript now uses the submission-ready figure architecture: 4 main figures
 
 ## Supplementary Information
 
-The technical Supplementary Information remains scientifically unchanged in this figure-architecture revision.
+The technical Supplementary Information is synchronized to v1.19.1. No textual or scientific changes were required for the figure-architecture revision because the Supplement contains technical tables and notes rather than numbered main/Extended Data figure references. The v1.19.1 file is therefore byte-identical to the reviewed v1.18.6 Supplement, with only the external filename version synchronized.
 
-- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.18.6.docx`
+- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.19.1.docx`
 - SHA-256: `fc8938c6c38742f14323499e402bc9ffacc28656888f7b5e2882eb1da305bffd`
 - Size: 70,356 bytes
 - Rendered length: 12 pages
@@ -47,6 +47,6 @@ It builds and validates exactly Main Figures 1-4 and Extended Data Figures 1-4 i
 
 ## Status
 
-v1.19.1 is a presentation and manuscript-integration revision of the scientifically locked analysis. It replaces the earlier five-main-figure organization with the approved four-main plus four-Extended-Data architecture, updates in-text figure citations and legends, embeds the final code-generated figures, and updates Code Availability to the verified figure-code snapshot. It adds no new outcome-bearing analysis or scientific inference.
+v1.19.1 is a presentation and manuscript-integration revision of the scientifically locked analysis. It replaces the earlier five-main-figure organization with the approved four-main plus four-Extended-Data architecture, updates in-text figure citations and legends, embeds the final code-generated figures, and updates Code Availability to the verified figure-code snapshot. It adds no new outcome-bearing analysis or scientific inference. The Supplementary Information is scientifically unchanged and is version-synchronized only.
 
 The repository intentionally does not commit `.docx` masters. Frozen protocol and result documents remain authoritative for analysis chronology, while these Word files are authoritative for current submission wording and layout.
