@@ -610,3 +610,37 @@ tasks:
       - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part04.txt
       - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part05.txt
 
+  export_nmi_submission_compact_transports_v1193:
+    description: >-
+      Export compact exact transports for v1.19.3 manuscript assembly: gzip+base64
+      canonical SVGs for vector figures and bounded base64 canonical PNGs for the
+      two surface figures. Transport only; no scientific analysis or rendering.
+    command:
+      - .venv/bin/python
+      - scripts/paper/final_figures/export_compact_transports_v1193.py
+    approval: automatic
+    timeout_minutes: 15
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 15
+    working_directory: .
+    artifacts:
+      - outputs/paper_figures_transport_v1193_compact/latest/manifest.json
+      - outputs/paper_figures_transport_v1193_compact/latest/figure1_svg_gzip_base64.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure2_svg_gzip_base64.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure3_svg_gzip_base64.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure2_svg_gzip_base64.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure4_svg_gzip_base64.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure4_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure4_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure4_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure4_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure4_png_base64_part05.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure4_png_base64_part06.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure3_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure3_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure3_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure3_png_base64_part04.txt
+
