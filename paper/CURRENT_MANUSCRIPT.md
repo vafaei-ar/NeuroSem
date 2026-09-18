@@ -8,24 +8,24 @@ The current Word masters are maintained outside the Git working tree during fina
 
 ### Clean
 
-- File: `NeuroSem_Nature_Manuscript_v1.19.4_clean.docx`
-- SHA-256: `c4f2656f164567c03ff051626f47a7ef09e91ff8d1c22956969ee9d467ecb1c0`
-- Size: 2,880,219 bytes
+- File: `NeuroSem_Nature_Manuscript_v1.19.5_clean.docx`
+- SHA-256: `ff2e2ba5582f47329c1ba9395e06366e97ae1f4960454be69d1d81c410857008`
+- Size: 2,880,129 bytes
 - Rendered length: 33 pages
 
 ### Tracked changes
 
-- File: `NeuroSem_Nature_Manuscript_v1.19.4_tracked.docx`
-- SHA-256: `7f5101ba0633d9c77624036c4fa03da26c14774a670dab63c38c629d27cb213f`
-- Size: 2,881,016 bytes
-- Rendered length: 34 pages
-- Tracked revisions: 27 insertions and 13 deletions
+- File: `NeuroSem_Nature_Manuscript_v1.19.5_tracked.docx`
+- SHA-256: `cae51481630619605d09dc1a0a1f465fb3f06577dc7347948c21b7f183d70e72`
+- Size: 2,881,333 bytes
+- Rendered length: 35 pages
+- Tracked revisions: 26 insertions and 26 deletions
 
-Current title: **Brain-derived relational supervision transfers language-model representations across independent neural datasets**
+Current title: **Brain-derived relational supervision transfers language-model representations across EEG and fMRI**
 
-v1.19.4 is a narrowly scoped presentation, inferential-labeling, documentation, and citation pass over the scientifically locked v1.19.3 package. It introduces no new model training, neural analysis, target definition, dose/model selection, statistical family, or outcome-bearing inference.
+v1.19.5 is a language-only readability pass over the scientifically locked v1.19.4 package. It introduces no new model training, neural analysis, target definition, dose/model selection, statistical family, figure change, or outcome-bearing inference.
 
-The revision removes the Figure 1 participant occlusion and the potentially misleading delta-to-LOO ratio, restores explicit paired connectors and labels the delta marginal, makes Figure 3 uncertainty encoding symmetric without new inference, fills the exact ZuCo RDM/nuisance definition in Extended Data Table 5, marks the lambda=1 high-dose boundary in Extended Data Figure 4, reports the two regional FWER values in the Results, explicitly separates the frozen two-contrast family from the post-confirmatory five-dose family, repairs remaining plotting collisions, and adds seven canonical methods references as Zotero-compatible fields.
+The revision shortens and clarifies the title, reduces repetitive framing in the Abstract and Introduction, defines lambda before the primary Results, removes low-value development-stage number lists from the narrative, makes the reverse-transfer transition explicit, simplifies regional and boundary wording, and tightens the Discussion. The Supplement and all scientific figures are unchanged.
 
 ## Supplementary Information
 
@@ -69,12 +69,12 @@ The file-based workflow preserves existing Zotero fields but cannot know the ite
 - DOCX ZIP/package integrity passes for all four Word files.
 - The main manuscript retains 29 `ZOTERO_ITEM` citation fields plus one `ZOTERO_BIBL` bibliography field.
 - Clean files contain no tracked revisions and have Track Changes disabled.
-- The tracked manuscript contains 27 insertions / 13 deletions; the tracked Supplement contains 1 insertion / 0 deletions.
+- The tracked manuscript contains 26 insertions / 26 deletions; the tracked Supplement remains the unchanged v1.19.4 file with 1 insertion / 0 deletions.
 - Accepting all tracked changes yields the same final visible text as the corresponding clean file for both manuscript and Supplement.
 - The manuscript retains eight native Word math objects.
 - No comments remain.
 - Accessibility audit: 0 high and 0 medium findings in all four Word files. The main manuscript has 11 low findings from intentionally displayed raw URLs in Data/Code Availability; the Supplement has 0 findings.
-- Final embedded figure bytes match the canonical v1.19.4 RunRelay build exactly.
+- Final embedded figure bytes are byte-identical to v1.19.4 and match the canonical RunRelay build exactly.
 - References total 27.
 
 ## Figure code snapshot
@@ -104,8 +104,8 @@ Embedded PNG SHA-256 fingerprints:
 
 ## Status
 
-v1.19.4 closes the remaining presentation and documentation items identified in the latest external review without reopening the scientific analysis.
+v1.19.5 is the final reader-friction pass on the main manuscript. It improves narrative clarity without reopening the scientific analysis; the Supplement remains unchanged from v1.19.4.
 
-The remaining author-level submission decisions are whether the initial submission is double-anonymized, which determines author/affiliation/contribution/competing-interest metadata in the manuscript file, and whether to shorten the current title.
+The remaining author-level submission decision is whether the initial submission is double-anonymized, which determines author/affiliation/contribution/competing-interest metadata in the manuscript file.
 
 The repository intentionally does not commit `.docx` masters. Frozen protocol/result documents remain authoritative for analysis chronology, while the Word files recorded here are authoritative for current submission wording and layout.
