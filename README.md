@@ -6,7 +6,7 @@ The project is in a submission freeze. The primary prospective analyses and the 
 
 ## Current submission
 
-The current author-review package is **v1.19.3**. Word masters are maintained outside Git during final review; their filenames, SHA-256 fingerprints, rendered page counts and submission-readiness checks are recorded in [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md).
+The current author-review package is **v1.19.4**. Word masters are maintained outside Git during final review; their filenames, SHA-256 fingerprints, rendered page counts and submission-readiness checks are recorded in [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md).
 
 The primary evidential chain is unchanged:
 
