@@ -28,7 +28,7 @@ def main():
         canvas.paste(im, (x,y))
         boxes[name] = {"cell":[cell_x,cell_y,CELL_W,CELL_H], "paste":[x,y,im.width,im.height]}
     webp = OUT / "submission_figures_contact.webp"
-    canvas.save(webp, "WEBP", quality=84, method=6)
+    canvas.save(webp, "WEBP", quality=55, method=6)
     raw = webp.read_bytes()
     encoded = base64.b64encode(raw).decode("ascii")
     (OUT / "submission_figures_contact_webp_base64.txt").write_text(encoded, encoding="ascii")
