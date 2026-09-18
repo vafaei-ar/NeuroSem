@@ -551,3 +551,62 @@ tasks:
     artifacts:
       - outputs/paper_figures_contact_v1193/latest/manifest.json
       - outputs/paper_figures_contact_v1193/latest/submission_figures_contact_webp_base64.txt
+
+  export_nmi_submission_png_transports_v1193:
+    description: >-
+      Export the already-built canonical NeuroSem submission PNGs as bounded exact
+      base64 text chunks for manuscript assembly. Transport only: no resizing,
+      recompression, figure modification, scientific analysis, or new inference.
+    command:
+      - .venv/bin/python
+      - scripts/paper/final_figures/export_png_transports_v1193.py
+    approval: automatic
+    timeout_minutes: 15
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 15
+    working_directory: .
+    artifacts:
+      - outputs/paper_figures_transport_v1193/latest/manifest.json
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part05.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part06.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part05.txt
+      - outputs/paper_figures_transport_v1193/latest/figure3_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure3_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/figure3_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/figure3_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/figure4_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure4_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/figure4_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/figure4_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/figure4_png_base64_part05.txt
+      - outputs/paper_figures_transport_v1193/latest/figure4_png_base64_part06.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure1_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure1_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure1_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure1_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure1_png_base64_part05.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure3_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure3_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure3_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure3_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part05.txt
+
