@@ -8,11 +8,15 @@ bytes in bounded chunks. Transport only; no scientific computation or rendering.
 from __future__ import annotations
 import base64, gzip, hashlib, json
 from pathlib import Path
+from io import BytesIO
+from PIL import Image
 
 ROOT=Path(__file__).resolve().parents[3]
 SRC=ROOT/"outputs/paper_figures_final"
 OUT=ROOT/"outputs/paper_figures_transport_v1193_compact/latest"
 CHUNK=120_000
+WEBP_CHUNK=20_000
+DOCX_WEBP_WIDTH=1200
 VECTOR=["figure1","figure2","figure3","extended_data_figure2","extended_data_figure4"]
 RASTER=["figure4","extended_data_figure3"]
 
@@ -41,7 +45,19 @@ def main():
         parts=[]
         for i,ch in enumerate(chunks,1):
             p=OUT/f"{stem}_png_base64_part{i:02d}.txt"; p.write_text(ch,encoding="ascii"); parts.append(str(p.relative_to(ROOT)))
-        m["items"][stem]={"source":str(src.relative_to(ROOT)),"source_sha256":sha256(src),"encoding":"base64 concatenated in part order","parts":parts}
+        with Image.open(src) as im:
+            im=im.convert("RGB")
+            h=round(im.height*DOCX_WEBP_WIDTH/im.width)
+            im=im.resize((DOCX_WEBP_WIDTH,h),Image.Resampling.LANCZOS)
+            buf=BytesIO(); im.save(buf,format="WEBP",quality=90,method=6)
+            webp_raw=buf.getvalue()
+        webp_b64=base64.b64encode(webp_raw).decode("ascii")
+        webp_chunks=[webp_b64[i:i+WEBP_CHUNK] for i in range(0,len(webp_b64),WEBP_CHUNK)]
+        webp_parts=[]
+        for i,ch in enumerate(webp_chunks,1):
+            p=OUT/f"{stem}_docx_webp_base64_part{i:02d}.txt"; p.write_text(ch,encoding="ascii"); webp_parts.append(str(p.relative_to(ROOT)))
+        m["items"][stem]={"source":str(src.relative_to(ROOT)),"source_sha256":sha256(src),"encoding":"base64 concatenated in part order","parts":parts,
+                          "docx_webp":{"width_px":DOCX_WEBP_WIDTH,"quality":90,"bytes":len(webp_raw),"encoding":"base64 concatenated in part order","parts":webp_parts}}
     mp=OUT/"manifest.json"; mp.write_text(json.dumps(m,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(m,indent=2))
     return 0
