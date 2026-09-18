@@ -550,4 +550,4 @@ tasks:
     working_directory: .
     artifacts:
       - outputs/paper_figures_contact_v1193/latest/manifest.json
-      - outputs/paper_figures_contact_v1193/latest/submission_figures_contact_jpg_base64.txt
+      - outputs/paper_figures_contact_v1193/latest/submission_figures_contact_webp_base64.txt
