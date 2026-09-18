@@ -533,3 +533,21 @@ tasks:
       - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part01.txt
       - outputs/paper_figures_transport_v1193/latest/extended_data_figure3_png_base64_part01.txt
       - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part01.txt
+
+
+  export_nmi_submission_figures_contact_v1193:
+    description: Build a JPEG contact sheet from already-built submission figure PNG files for document placement only.
+    command:
+      - .venv/bin/python
+      - scripts/paper/final_figures/export_submission_contact_sheet_v1193.py
+    approval: automatic
+    timeout_minutes: 5
+    requires_gpu: false
+    resources:
+      cpu_cores: 1
+      min_ram_gb: 2
+      wait_minutes: 10
+    working_directory: .
+    artifacts:
+      - outputs/paper_figures_contact_v1193/latest/manifest.json
+      - outputs/paper_figures_contact_v1193/latest/submission_figures_contact_jpg_base64.txt
