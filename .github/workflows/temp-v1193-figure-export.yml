@@ -1,0 +1,19 @@
+name: Temporary v1.19.3 figure export
+on:
+  push:
+    branches:
+      - chatgpt-v1193-transport
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package exact figure PNGs
+        uses: actions/upload-artifact@v4
+        with:
+          name: v1193-exact-figures
+          path: transport/v1193_final/png/*.png
+          if-no-files-found: error
+          retention-days: 1
