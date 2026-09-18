@@ -1,6 +1,6 @@
 # Current publication master
 
-**Recorded:** 2026-09-13
+**Recorded:** 2026-09-18
 
 The current Word masters are maintained outside the Git working tree during final author review. This file records the exact binaries used for submission preparation.
 
@@ -8,72 +8,97 @@ The current Word masters are maintained outside the Git working tree during fina
 
 ### Clean
 
-- File: `NeuroSem_Nature_Manuscript_v1.19.2_submission_readiness_clean.docx`
-- SHA-256: `24cf248bf783f157376c4879360f801b0a8ee5d21f33599eaaaf16a7ac65fb0a`
-- Size: 3,185,341 bytes
-- Rendered length: 32 pages
+- File: `NeuroSem_Nature_Manuscript_v1.19.3_clean.docx`
+- SHA-256: `aea651a20f653c29ac28de61792864cda7d81293d2b7bc6f689f40c958587061`
+- Size: 2,848,688 bytes
+- Rendered length: 33 pages
 
 ### Tracked changes
 
-- File: `NeuroSem_Nature_Manuscript_v1.19.2_submission_readiness_tracked.docx`
-- SHA-256: `25c85cd930cbd8fe842806f2bdfe778782ec8c4d62a17d1b163362f58835e77b`
-- Size: 3,186,326 bytes
-- Rendered length: 33 pages
+- File: `NeuroSem_Nature_Manuscript_v1.19.3_tracked.docx`
+- SHA-256: `a3379306a94e9eccb48f109a13a5beb6407193cef58fdade2b3b542bbc61ddd1`
+- Size: 3,274,638 bytes
+- Rendered length: 35 pages
+- Tracked revisions: 54 insertions and 23 deletions
 
 Current title: **Brain-derived relational supervision transfers language-model representations across independent neural datasets**
 
-The manuscript uses the submission-ready figure architecture: 4 main figures plus 4 Extended Data figures. The embedded scientific figures remain the approved code-generated assets from the canonical figure pipeline.
+v1.19.3 is a reviewer-response and presentation-clarification pass over the scientifically locked v1.19.2 package. It adds no model training, target definition, dose/model selection, statistical family, or outcome-bearing inference.
 
-The v1.19.2 submission-readiness pass is editorial/provenance-only. It tightens prospective/post-confirmatory terminology, adds the exact primary sign-flip P values to the Results, improves statistical/sample-size detail in figure legends, adds an umbrella citation to Supplementary Tables 1-17 and Supplementary Notes 1-9, clarifies the generative-AI disclosure, and corrects three embedded Zotero given-name metadata records. It adds no outcome-bearing analysis or scientific inference.
+The revision makes the reliability/RSA distinction explicit, shows actual text-only and neural-guided residual RSA in Figure 1, clarifies that negative absolute ZuCo RSA is compatible with a positive paired displacement, distinguishes the structured non-neural surrogate from the MPNet backbone experiment, explicitly addresses a cortex-wide/global-offset alternative, interprets the high-dose spatial pattern as redistribution rather than language-selective sharpening, corrects the Extended Data versus Supplementary chronology cross-reference, and adds an Extended Data table summarizing dataset-specific RDM construction and nuisance families.
 
 ## Supplementary Information
 
 ### Clean Word master
 
-- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.19.2_clean.docx`
-- SHA-256: `c59e815ec5e4170eaf7d05f51ac41151f876b3f6091164345d5cffd7b196644e`
-- Size: 65,644 bytes
-- Rendered length: 12 pages
+- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.19.3_clean.docx`
+- SHA-256: `dc231f80a2390686b82efda00ffee6c039e507d13a61ef74a3c987b40e208830`
+- Size: 65,784 bytes
+- Rendered length: 13 pages
 
 ### Tracked changes
 
-- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.19.2_tracked.docx`
-- SHA-256: `c6c80175521a7576910d53132e3e237effe50b9aefb8ab73cde79a084f744e83`
-- Size: 66,289 bytes
-- Rendered length: 12 pages
+- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.19.3_tracked.docx`
+- SHA-256: `c0fd25bbf41ced34e0de0b951585319575abc2751d23becb9232ba7e26e2505a`
+- Size: 66,586 bytes
+- Rendered length: 13 pages
+- Tracked revisions: 20 insertions and 20 deletions
 
-### Combined submission PDF
+### Submission PDF
 
-- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.19.2.pdf`
-- SHA-256: `ec3f8e2cec130223de1a627198cd325a0bf02b64b814a9f581195ade37c0d555`
-- Rendered length: 12 pages
+- File: `NeuroSem_NMI_Supplementary_Technical_Tables_v1.19.3.pdf`
+- SHA-256: `7aa68654c70633c2f9529a2166bc389d0ccf3d9ad0d99cd104d94997a23dba54`
+- Size: 711,596 bytes
+- Rendered length: 13 pages
 
-The Supplement remains scientifically unchanged. The v1.19.2 edits standardize prospective/frozen terminology, `λ=0.10` notation, selected P-value spacing, and optimization-run wording without changing reported values.
+The Supplement now uses the same structured-surrogate terminology as the manuscript and explicitly states the high-dose spatial-redistribution caveat. Scientific values are unchanged.
 
 ## Quality checks
 
-- Every page of the clean and tracked manuscript and Supplement was rendered and visually inspected.
+- Every page of the clean and tracked manuscript and Supplement was rendered and visually inspected after the final layout patch.
 - DOCX ZIP/package integrity passes for all four Word files.
 - Main manuscript retains 22 `ZOTERO_ITEM` citation fields plus one `ZOTERO_BIBL` bibliography field.
-- Accessibility audit: 0 high and 0 medium findings in all four Word files. The 11 low findings in the manuscript are raw-URL display text in Data/Code Availability.
-- The tracked-change versions resolve to the same final visible text as the corresponding clean versions when changes are accepted.
+- Clean files contain no tracked revisions and have Track Changes disabled.
+- The tracked manuscript contains 54 insertions / 23 deletions; the tracked Supplement contains 20 insertions / 20 deletions.
+- Accepting all tracked changes yields the same final visible text as the corresponding clean file for both manuscript and Supplement.
+- The manuscript retains the native Word math objects used for the relational objective and estimand.
+- No comments remain.
+- Accessibility audit: 0 high and 0 medium findings in all four Word files. The main manuscript has 11 low findings from intentionally displayed raw URLs in Data/Code Availability; the Supplement has 0 findings.
+- Final embedded figure bytes match the canonical v1.19.3 figure-build artifacts exactly.
 
 ## Figure code snapshot
 
-The immutable figure-code snapshot cited by the v1.19.2 manuscript remains commit `a7d2eaa81d5d5e59521b03fb75d7219aca3e29be`.
+The immutable submission figure-code snapshot cited by the v1.19.3 manuscript is commit:
 
-The canonical submission-facing figure entry point is:
+`b122fdeea10b613188aec3a49884133ce3c2eb6b`
+
+The canonical submission-facing figure entry point remains:
 
 ```text
 scripts/paper/final_figures/build_all_figures.py
 ```
 
-It builds and validates exactly Main Figures 1-4 and Extended Data Figures 1-4 into `outputs/paper_figures_final/`. Exact-commit RunRelay job `K4T9M2VR` completed successfully at this snapshot with exit code 0.
+Exact-commit RunRelay job `T8M3V6K2` rebuilt and validated the 4-main plus 4-Extended-Data v1.19.3 figure package with exit code 0. The rebuild was presentation-only and recorded `scientific_values_changed: false`.
+
+Embedded PNG SHA-256 fingerprints:
+
+- Main Figure 1: `6dbeb36e49377c16e5b090e657b3c3da77a55e66b1eacc8959d388b35ad714da`
+- Main Figure 2: `833a1205f8d9e859059d0e9cf04f00961aff866c79bd37984ee00d033d3b228e`
+- Main Figure 3: `287cd0c72c604dc1f604f9049d31b1e5f26145462090d68c1b68d9d6b2f5dea7`
+- Main Figure 4: `282d6b3eda849c7ad13eda3cec05dc768c46c9f692ed226616787bf4e25c1dd6`
+- Extended Data Figure 1: `2248958b348c55e9f86f3822a75dc621984ee650d9e3236ef407d4da0731a873` (unchanged)
+- Extended Data Figure 2: `b09cd003652b9425433412439696cad8cf5c687c19e60d1c022c316868630f90`
+- Extended Data Figure 3: `3a9df74ab1932609812e9df32768e0c67f72a0848d496482f4276f0bb73626c0`
+- Extended Data Figure 4: `1e704f232b22f07b6fa68c085509ff57c2425e2da3323587d94a9c3b23bd6708`
+
+## Citation-management note
+
+No new bibliography entries were introduced in v1.19.3. The existing live Zotero fields were preserved unchanged. A reviewer suggestion to broaden citations for generic methodological components (for example LoRA/CKA/contrastive-learning background) remains an author-side Zotero-library update because the current ChatGPT workspace does not expose a Zotero connector. No unmanaged citation was inserted into the Word master.
 
 ## Status
 
-v1.19.2 is a final submission-readiness scientific/editorial pass over the scientifically locked v1.19.1 package. It does not reopen model training, target definition, dose selection, statistical families or any outcome-bearing analysis.
+v1.19.3 closes the substantive scientific/presentation issues identified in the latest review without reopening the scientific analysis. The only remaining manuscript-content task from that review is the optional Zotero-managed expansion of generic methods citations noted above.
 
-Two author-level submission decisions remain external to this document record: whether the initial submission will be double-anonymized, which determines whether author/affiliation/contribution/competing-interest metadata should be present in the manuscript file; and whether to shorten the current 112-character title to match the older Nature Machine Intelligence brief-guide recommendation of no more than 100 characters. The current live content-type page specifies the 150-word abstract and 3,500-word Article main-text limits but does not surface a title-length cap.
+Author-level submission decisions remain external to this document record: whether the initial submission is double-anonymized, which determines author/affiliation/contribution/competing-interest metadata in the manuscript file; and whether to shorten the 112-character title.
 
-The repository intentionally does not commit `.docx` masters. Frozen protocol and result documents remain authoritative for analysis chronology, while these Word files are authoritative for current submission wording and layout.
+The repository intentionally does not commit `.docx` masters. Frozen protocol/result documents remain authoritative for analysis chronology, while the Word files recorded here are authoritative for current submission wording and layout.
