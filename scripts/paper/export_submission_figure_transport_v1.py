@@ -11,6 +11,8 @@ import base64
 import hashlib
 import json
 from pathlib import Path
+from io import BytesIO
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "outputs" / "paper_figures_final"
@@ -25,6 +27,8 @@ STEMS = [
     "extended_data_figure4",
 ]
 CHUNK = 100_000
+DOCX_WIDTH_PX = 1400
+DOCX_JPEG_QUALITY = 92
 
 
 def sha256(path: Path) -> str:
@@ -53,12 +57,36 @@ def main() -> int:
             p = OUT / f"{stem}_png_base64_part{i:02d}.txt"
             p.write_text(part, encoding="ascii")
             paths.append(str(p.relative_to(ROOT)))
+
+        with Image.open(src) as im:
+            im = im.convert("RGB")
+            h = round(im.height * DOCX_WIDTH_PX / im.width)
+            im = im.resize((DOCX_WIDTH_PX, h), Image.Resampling.LANCZOS)
+            buf = BytesIO()
+            im.save(buf, format="JPEG", quality=DOCX_JPEG_QUALITY, optimize=True, subsampling=0)
+            docx_raw = buf.getvalue()
+        docx_enc = base64.b64encode(docx_raw).decode("ascii")
+        docx_parts = [docx_enc[i:i + CHUNK] for i in range(0, len(docx_enc), CHUNK)]
+        docx_paths = []
+        for i, part in enumerate(docx_parts, 1):
+            p = OUT / f"{stem}_docx_jpg_base64_part{i:02d}.txt"
+            p.write_text(part, encoding="ascii")
+            docx_paths.append(str(p.relative_to(ROOT)))
+
         manifest["assets"][stem] = {
             "source": str(src.relative_to(ROOT)),
             "source_sha256": sha256(src),
             "source_bytes": len(raw),
             "base64_chars": len(enc),
             "parts": paths,
+            "docx_derivative": {
+                "format": "JPEG",
+                "width_px": DOCX_WIDTH_PX,
+                "quality": DOCX_JPEG_QUALITY,
+                "bytes": len(docx_raw),
+                "base64_chars": len(docx_enc),
+                "parts": docx_paths,
+            },
         }
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"status": "ok", "output_dir": str(OUT.relative_to(ROOT)), "asset_count": len(STEMS)}, indent=2))
