@@ -36,7 +36,11 @@ def main():
         if not src.is_file(): raise FileNotFoundError(src)
         payload=base64.b64encode(gzip.compress(src.read_bytes(),compresslevel=9,mtime=0)).decode("ascii")
         out=OUT/f"{stem}_svg_gzip_base64.txt"; out.write_text(payload,encoding="ascii")
-        m["items"][stem]={"source":str(src.relative_to(ROOT)),"source_sha256":sha256(src),"transport":str(out.relative_to(ROOT)),"encoding":"gzip+base64"}
+        chunks=[payload[i:i+WEBP_CHUNK] for i in range(0,len(payload),WEBP_CHUNK)]
+        chunk_paths=[]
+        for i,ch in enumerate(chunks,1):
+            p=OUT/f"{stem}_svg_gzip_base64_part{i:02d}.txt"; p.write_text(ch,encoding="ascii"); chunk_paths.append(str(p.relative_to(ROOT)))
+        m["items"][stem]={"source":str(src.relative_to(ROOT)),"source_sha256":sha256(src),"transport":str(out.relative_to(ROOT)),"encoding":"gzip+base64","parts":chunk_paths}
     for stem in RASTER:
         src=SRC/f"{stem}.png"
         if not src.is_file(): raise FileNotFoundError(src)
