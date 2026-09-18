@@ -20,7 +20,7 @@ FIGURES = [
     "extended_data_figure1.png", "extended_data_figure2.png",
     "extended_data_figure3.png", "extended_data_figure4.png",
 ]
-CHUNK = 120_000
+CHUNK = 1_000_000
 
 
 def sha256(b: bytes) -> str:
