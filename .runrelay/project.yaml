@@ -505,3 +505,31 @@ tasks:
       - outputs/paper_figures_final/extended_data_figure2_manifest.json
       - outputs/paper_figures_final/extended_data_figure3_manifest.json
       - outputs/paper_figures_final/extended_data_figure4_manifest.json
+
+
+  export_nmi_submission_figures_transport_v1193:
+    description: >-
+      Export the already-built verified v1.19.3 submission figure PNGs as bounded
+      base64 text files for manuscript integration. Transport only; no scientific
+      analysis, model evaluation, selection, or inference.
+    command:
+      - .venv/bin/python
+      - scripts/paper/final_figures/export_submission_figures_transport_v1193.py
+    approval: automatic
+    timeout_minutes: 5
+    requires_gpu: false
+    resources:
+      cpu_cores: 1
+      min_ram_gb: 2
+      wait_minutes: 10
+    working_directory: .
+    artifacts:
+      - outputs/paper_figures_transport_v1193/latest/manifest.json
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure3_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure4_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure1_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure3_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part01.txt
