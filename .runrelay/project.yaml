@@ -645,7 +645,35 @@ tasks:
       - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure3_png_base64_part04.txt
 
   export_nmi_submission_figure_transport_v1:
-    description: >-
+    description: >-      - outputs/paper_figures_final_transport/latest/figure1_docx_jpg_base64_part01.txt
+      - outputs/paper_figures_final_transport/latest/figure1_docx_jpg_base64_part02.txt
+      - outputs/paper_figures_final_transport/latest/figure1_docx_jpg_base64_part03.txt
+      - outputs/paper_figures_final_transport/latest/figure1_docx_jpg_base64_part04.txt
+      - outputs/paper_figures_final_transport/latest/figure2_docx_jpg_base64_part01.txt
+      - outputs/paper_figures_final_transport/latest/figure2_docx_jpg_base64_part02.txt
+      - outputs/paper_figures_final_transport/latest/figure2_docx_jpg_base64_part03.txt
+      - outputs/paper_figures_final_transport/latest/figure2_docx_jpg_base64_part04.txt
+      - outputs/paper_figures_final_transport/latest/figure3_docx_jpg_base64_part01.txt
+      - outputs/paper_figures_final_transport/latest/figure3_docx_jpg_base64_part02.txt
+      - outputs/paper_figures_final_transport/latest/figure3_docx_jpg_base64_part03.txt
+      - outputs/paper_figures_final_transport/latest/figure3_docx_jpg_base64_part04.txt
+      - outputs/paper_figures_final_transport/latest/figure4_docx_jpg_base64_part01.txt
+      - outputs/paper_figures_final_transport/latest/figure4_docx_jpg_base64_part02.txt
+      - outputs/paper_figures_final_transport/latest/figure4_docx_jpg_base64_part03.txt
+      - outputs/paper_figures_final_transport/latest/figure4_docx_jpg_base64_part04.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure2_docx_jpg_base64_part01.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure2_docx_jpg_base64_part02.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure2_docx_jpg_base64_part03.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure2_docx_jpg_base64_part04.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure3_docx_jpg_base64_part01.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure3_docx_jpg_base64_part02.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure3_docx_jpg_base64_part03.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure3_docx_jpg_base64_part04.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure4_docx_jpg_base64_part01.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure4_docx_jpg_base64_part02.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure4_docx_jpg_base64_part03.txt
+      - outputs/paper_figures_final_transport/latest/extended_data_figure4_docx_jpg_base64_part04.txt
+
       Export the already-built canonical NeuroSem submission figure PNGs as bounded
       base64 text chunks for DOCX integration. Transport only: no plotting, model
       evaluation, neural analysis, participant/region selection, or new inference.
