@@ -633,6 +633,26 @@ tasks:
       - outputs/paper_figures_transport_v1193_compact/latest/figure3_svg_gzip_base64.txt
       - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure2_svg_gzip_base64.txt
       - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure4_svg_gzip_base64.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure1_svg_gzip_base64_part01.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure1_svg_gzip_base64_part02.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure1_svg_gzip_base64_part03.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure1_svg_gzip_base64_part04.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure2_svg_gzip_base64_part01.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure2_svg_gzip_base64_part02.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure2_svg_gzip_base64_part03.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure2_svg_gzip_base64_part04.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure3_svg_gzip_base64_part01.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure3_svg_gzip_base64_part02.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure3_svg_gzip_base64_part03.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/figure3_svg_gzip_base64_part04.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure2_svg_gzip_base64_part01.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure2_svg_gzip_base64_part02.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure2_svg_gzip_base64_part03.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure2_svg_gzip_base64_part04.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure4_svg_gzip_base64_part01.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure4_svg_gzip_base64_part02.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure4_svg_gzip_base64_part03.txt
+      - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure4_svg_gzip_base64_part04.txt
       - outputs/paper_figures_transport_v1193_compact/latest/figure4_png_base64_part01.txt
       - outputs/paper_figures_transport_v1193_compact/latest/figure4_png_base64_part02.txt
       - outputs/paper_figures_transport_v1193_compact/latest/figure4_png_base64_part03.txt
