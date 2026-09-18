@@ -687,3 +687,54 @@ tasks:
       - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure3_docx_webp_base64_part10.txt
       - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure3_docx_webp_base64_part11.txt
       - outputs/paper_figures_transport_v1193_compact/latest/extended_data_figure3_docx_webp_base64_part12.txt
+
+
+  build_and_export_nmi_submission_v1194:
+    description: >-
+      Rebuild and validate the complete frozen NeuroSem submission figure package and
+      immediately export exact PNG bytes as bounded base64 text chunks for v1.19.4
+      manuscript integration. Presentation/transport only; no model fitting, model
+      evaluation, neural analysis, participant or region selection, dose search, or new inference.
+    command:
+      - .venv/bin/python
+      - scripts/paper/final_figures/build_and_export_submission_v1194.py
+    approval: automatic
+    timeout_minutes: 45
+    requires_gpu: false
+    resources:
+      cpu_cores: 4
+      min_ram_gb: 8
+      wait_minutes: 45
+    working_directory: .
+    artifacts:
+      - outputs/paper_figures_final/submission_figure_manifest.json
+      - outputs/paper_figures_final/figure1.png
+      - outputs/paper_figures_final/figure2.png
+      - outputs/paper_figures_final/figure3.png
+      - outputs/paper_figures_final/extended_data_figure2.png
+      - outputs/paper_figures_final/extended_data_figure4.png
+      - outputs/paper_figures_transport_v1193/latest/manifest.json
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part05.txt
+      - outputs/paper_figures_transport_v1193/latest/figure1_png_base64_part06.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/figure2_png_base64_part05.txt
+      - outputs/paper_figures_transport_v1193/latest/figure3_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/figure3_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/figure3_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/figure3_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure2_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part01.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part02.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part03.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part04.txt
+      - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part05.txt
