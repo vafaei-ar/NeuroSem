@@ -304,7 +304,7 @@ def main() -> int:
             if any(math.isclose(ext_lambda, x, rel_tol=0, abs_tol=1e-15) for x in grid):
                 raise RuntimeError("extension duplicated an existing grid point")
             extension = {"lambda": ext_lambda, "reason": ext_reason}
-            total_ref[0] += len(seeds) * 2
+            total_ref[0] += len(seeds) * 3
             for seed in seeds:
                 adapters[(ext_lambda, seed)] = train_one(ext_lambda, seed, cfg0, protocol)
                 progress[0] += 1
