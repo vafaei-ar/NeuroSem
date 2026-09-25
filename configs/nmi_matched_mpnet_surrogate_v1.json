@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "protocol_document": "docs/NMI_MATCHED_MPNET_SURROGATE_V1.md",
+  "analysis_stage": "post-confirmatory matched-surrogate specificity",
+  "surrogate_model_id": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+  "surrogate_model_revision": "4328cf26390c98c5e3c738b4460a05b95f4911f5",
+  "model_id": "intfloat/multilingual-e5-large",
+  "model_revision": "3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3",
+  "seeds": [
+    20260829,
+    20260830,
+    20260831
+  ],
+  "calibration_stimulus_set": "ChineseEEG source runs 01-06 canonical texts",
+  "calibration_n_items": 2045,
+  "calibration_summary_sha256": "c9b9a8039068604629188153d29bcc236a9f32bcc2bb5f5e89a4d17f0d4855c1",
+  "primary_displacement_metric": "1-linear-centered-CKA",
+  "genuine_seed_delta_values": [
+    0.0017345938544773842,
+    0.002738781503764942,
+    0.0011724880535533
+  ],
+  "genuine_mean_delta": 0.001881954470598542,
+  "max_absolute_seed_deviation": 0.0008568270331664001,
+  "relative_floor_fraction": 0.25,
+  "relative_floor_value": 0.0004704886176496355,
+  "tolerance_half_width": 0.0008568270331664001,
+  "tolerance_low": 0.001025127437432142,
+  "tolerance_high": 0.002738781503764942,
+  "dose_grid": [
+    0.0025,
+    0.005,
+    0.0075,
+    0.01,
+    0.015,
+    0.02,
+    0.03,
+    0.05
+  ],
+  "one_extension": {
+    "allowed": true,
+    "all_below": "double-largest-lambda",
+    "all_above": "halve-smallest-lambda",
+    "bracketed": "geometric-midpoint-of-adjacent-bracketing-lambdas",
+    "max_additional_points": 1
+  },
+  "tie_break": {
+    "primary": "min-abs-log-surrogate-delta-over-genuine-delta",
+    "secondary": "lower-lambda"
+  },
+  "secondary_displacement_metrics": [
+    "corresponding-item-cosine-mean",
+    "pairwise-cosine-distance-RDM-Pearson",
+    "pairwise-cosine-distance-RDM-Spearman",
+    "linear-centered-CKA",
+    "k10-nearest-neighbour-Jaccard"
+  ],
+  "external_outcomes_permitted_during_selection": false,
+  "external_inference": {
+    "participant_is_inferential_unit": true,
+    "seed_aggregation": "average-within-participant-across-three-fixed-seeds",
+    "primary_contrast": "genuine-neural-minus-displacement-matched-surrogate",
+    "signflip": "exact-two-sided",
+    "multiplicity": "Holm-across-two-targets",
+    "bootstrap_n": 10000,
+    "bootstrap_seed_zuco": 20260925,
+    "bootstrap_seed_smn4lang": 20260926,
+    "interval": "percentile-95pct"
+  },
+  "interpretation_table": {
+    "nonpositive_surrogate_both_targets": "strengthens-specificity-relative-to-this-structured-target-only",
+    "positive_surrogate_any_target": "narrow-neural-origin-interpretation-for-that-target",
+    "positive_surrogate_and_positive_genuine_minus_surrogate": "partial-separation-not-uniqueness",
+    "no_match": "stop-without-external-evaluation"
+  }
+}
