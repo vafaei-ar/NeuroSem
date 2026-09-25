@@ -738,3 +738,30 @@ tasks:
       - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part03.txt
       - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part04.txt
       - outputs/paper_figures_transport_v1193/latest/extended_data_figure4_png_base64_part05.txt
+
+
+  calibrate_nmi_matched_mpnet_v1:
+    description: >-
+      Measure the genuine-neural multilingual-E5 representation-space displacement
+      relative to seed-matched text-only controls on the canonical ChineseEEG source
+      texts from runs 01-06. Calibration only: no surrogate grid training, no dose
+      selection, no ZuCo/SMN4Lang stimuli or neural data, and no external transfer
+      outcomes are read.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/calibrate_nmi_matched_mpnet_v1.py
+    approval: automatic
+    timeout_minutes: 240
+    requires_gpu: true
+    resources:
+      cpu_cores: 4
+      min_ram_gb: 16
+      gpu_count: 1
+      min_vram_gb: 16
+      wait_minutes: 240
+    working_directory: .
+    artifacts:
+      - outputs/nmi_matched_mpnet_calibration_v1/latest/summary.json
+      - outputs/nmi_matched_mpnet_calibration_v1/latest/report.txt
+      - outputs/nmi_matched_mpnet_calibration_v1/latest/seed_metrics.csv
+      - outputs/nmi_matched_mpnet_calibration_v1/latest/source_text_manifest.csv
