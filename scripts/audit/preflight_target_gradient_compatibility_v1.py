@@ -49,10 +49,13 @@ def main():
         checks["source_runs"]={}
         for run in common.SOURCE_RUNS:
             rec=common.load_target_run(common.SOURCE_TARGET_ROOT,run)
+            designs=common.source_designs_for_run(run,list(rec["texts"]))
             checks["source_runs"][str(run)]={
                 "dir":str(rec["dir"].relative_to(ROOT)),
                 "n_texts":len(rec["texts"]),
                 "n_target_edges":int(np.asarray(rec["neural"]).size),
+                "n_participant_nuisance_designs":len(designs),
+                "design_shape":list(designs[0].shape) if designs else None,
             }
         checks["targets"]=sorted(runner.TARGET_CLASS)
     except Exception:
