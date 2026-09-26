@@ -26,7 +26,9 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from scipy.stats import spearmanr
 
-ROOT = Path(__file__).resolve().parents[2]\nif str(ROOT) not in sys.path:\n    sys.path.insert(0, str(ROOT))
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 PROTOCOL = "docs/TARGET_COMPATIBILITY_MECHANISM_V1.md"
 OUT = ROOT / "outputs" / "target_compatibility_dose_v1" / "latest"
 FORWARD = ROOT / "outputs" / "nmi_forward_external_dose_characterization_v1" / "latest"
