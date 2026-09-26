@@ -864,3 +864,25 @@ tasks:
       - outputs/target_compatibility_preflight_v1/latest/dose_adapter_inventory.csv
       - outputs/target_compatibility_preflight_v1/latest/existing_target_payloads.json
       - outputs/target_compatibility_preflight_v1/latest/filesystem_inventory.json
+
+
+  probe_derco_target_compatibility_v1:
+    description: >-
+      Read-only DERCo structure/provenance probe for the target-compatibility project.
+      Inspect one representative preprocessed Epochs file, completed DERCo transfer
+      table schemas, and tracked git history for DERCo-related source paths. No model
+      weights are loaded and no neural-model RSA or new scientific outcome is computed.
+    command:
+      - .venv/bin/python
+      - scripts/audit/probe_derco_target_compatibility_v1.py
+    approval: automatic
+    timeout_minutes: 10
+    requires_gpu: false
+    resources:
+      cpu_cores: 1
+      min_ram_gb: 4
+      wait_minutes: 10
+    working_directory: .
+    artifacts:
+      - outputs/derco_target_compat_probe_v1/latest/summary.json
+      - outputs/derco_target_compat_probe_v1/latest/report.txt
