@@ -144,7 +144,16 @@ Therefore positive cosine means a small source-gradient descent step is locally 
 
 ### Reporting
 
-For each target report all participant cosines, mean, median, positive count/fraction, and a fixed 10,000-resample participant bootstrap 95% CI of the mean.
+For each target report all participant cosines, mean, median, positive count/fraction, and a fixed 10,000-resample participant bootstrap 95% CI of the mean. The bootstrap RNG seed is fixed at `20260926`.
+
+### Differentiable residualization implementation clarification
+
+This clarification is frozen before any Stage-2 gradient-compatibility value is computed.
+
+- For pipelines whose historical nuisance regression used ordinary linear residualization, construct the identical fixed nuisance design (including the intercept) and apply its linear projection to differentiable raw model cosine-distance edges.
+- For ChineseEEG, the frozen neural target was built by participant-specific regression on rank-z nuisance columns before participant averaging. The differentiable model side therefore uses the same participant-specific **rank-z nuisance design matrices**, residualizes the raw model cosine-distance edge vector separately for each contributing source participant, averages those residual model vectors, and then z-standardizes before correlation with the already-frozen group neural target.
+- For Garnett Dream, where the historical reliability/transfer pipeline rank-transformed the neural/model RDM and nuisance columns before regression, the fixed rank-z nuisance design is retained but the differentiable model edge vector itself is not rank-transformed. It is linearly residualized against that frozen rank-z nuisance design and z-standardized. The neural comparator remains the historical rank-residualized target. This is the prespecified differentiable approximation required for a valid parameter gradient.
+- No alternative differentiable ranking surrogate, nuisance parameterization, or source-participant aggregation may be introduced after Stage-2 outcomes are opened.
 
 Because the positive/null/negative transfer labels were already known when this analysis was designed, the association between gradient sign and historical transfer class is explicitly post-confirmatory mechanistic evidence, not a prospective prediction.
 
