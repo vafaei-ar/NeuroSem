@@ -935,3 +935,155 @@ tasks:
     artifacts:
       - outputs/target_compatibility_dose_preflight_v1/latest/summary.json
       - outputs/target_compatibility_dose_preflight_v1/latest/report.txt
+
+
+  preflight_target_gradient_compatibility_v1:
+    description: >-
+      Compile/import the frozen target-gradient compatibility implementation, verify
+      the fixed text-only E5 reference and ChineseEEG source targets, and numerically
+      validate the differentiable HRF convolution implementation. No neural-model
+      compatibility value or other scientific outcome is computed.
+    command:
+      - .venv/bin/python
+      - scripts/audit/preflight_target_gradient_compatibility_v1.py
+    approval: automatic
+    timeout_minutes: 15
+    requires_gpu: false
+    resources:
+      cpu_cores: 2
+      min_ram_gb: 4
+      wait_minutes: 15
+    working_directory: .
+    artifacts:
+      - outputs/target_gradient_compatibility_preflight_v1/latest/summary.json
+      - outputs/target_gradient_compatibility_preflight_v1/latest/report.txt
+
+  run_target_gradient_zuco_v1:
+    description: >-
+      Compute the frozen post-confirmatory ChineseEEG-to-ZuCo gradient compatibility
+      in the seed-20260823 text-only E5 LoRA query/value subspace, retaining all 17
+      participants and seven frozen NR runs. No target/layer/parameter/nuisance search.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_target_gradient_compatibility_v1.py
+      - --target
+      - zuco
+    approval: automatic
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 32
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/target_gradient_compatibility_v1/zuco/latest/summary.json
+      - outputs/target_gradient_compatibility_v1/zuco/latest/report.txt
+      - outputs/target_gradient_compatibility_v1/zuco/latest/participant_cosines.csv
+      - outputs/target_gradient_compatibility_v1/zuco/latest/parameter_manifest.json
+
+  run_target_gradient_smn4lang_fmri_v1:
+    description: >-
+      Compute the frozen post-confirmatory ChineseEEG-to-SMN4Lang-fMRI gradient
+      compatibility in the seed-20260823 text-only E5 LoRA query/value subspace,
+      retaining all 12 participants and 60 frozen stories. No rescue or search.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_target_gradient_compatibility_v1.py
+      - --target
+      - smn4lang_fmri
+    approval: automatic
+    timeout_minutes: 2880
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 48
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/target_gradient_compatibility_v1/smn4lang_fmri/latest/summary.json
+      - outputs/target_gradient_compatibility_v1/smn4lang_fmri/latest/report.txt
+      - outputs/target_gradient_compatibility_v1/smn4lang_fmri/latest/participant_cosines.csv
+      - outputs/target_gradient_compatibility_v1/smn4lang_fmri/latest/parameter_manifest.json
+
+  run_target_gradient_derco_v1:
+    description: >-
+      Compute the frozen post-confirmatory ChineseEEG-to-DERCo gradient compatibility
+      in the seed-20260823 text-only E5 LoRA query/value subspace, retaining all 22
+      participants and five frozen articles. No rescue or search.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_target_gradient_compatibility_v1.py
+      - --target
+      - derco
+    approval: automatic
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 48
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/target_gradient_compatibility_v1/derco/latest/summary.json
+      - outputs/target_gradient_compatibility_v1/derco/latest/report.txt
+      - outputs/target_gradient_compatibility_v1/derco/latest/participant_cosines.csv
+      - outputs/target_gradient_compatibility_v1/derco/latest/parameter_manifest.json
+
+  run_target_gradient_tmnred_v1:
+    description: >-
+      Compute the frozen post-confirmatory ChineseEEG-to-TMNRED gradient compatibility
+      in the seed-20260823 text-only E5 LoRA query/value subspace, retaining all 29
+      participants and eight frozen sessions. No rescue or search.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_target_gradient_compatibility_v1.py
+      - --target
+      - tmnred
+    approval: automatic
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 48
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/target_gradient_compatibility_v1/tmnred/latest/summary.json
+      - outputs/target_gradient_compatibility_v1/tmnred/latest/report.txt
+      - outputs/target_gradient_compatibility_v1/tmnred/latest/participant_cosines.csv
+      - outputs/target_gradient_compatibility_v1/tmnred/latest/parameter_manifest.json
+
+  run_target_gradient_garnett_v1:
+    description: >-
+      Compute the frozen post-confirmatory ChineseEEG-to-Garnett-Dream gradient
+      compatibility in the seed-20260823 text-only E5 LoRA query/value subspace,
+      retaining all 10 participants and all frozen available chapters. No rescue/search.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_target_gradient_compatibility_v1.py
+      - --target
+      - garnett_dream
+    approval: automatic
+    timeout_minutes: 2880
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 48
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/target_gradient_compatibility_v1/garnett_dream/latest/summary.json
+      - outputs/target_gradient_compatibility_v1/garnett_dream/latest/report.txt
+      - outputs/target_gradient_compatibility_v1/garnett_dream/latest/participant_cosines.csv
+      - outputs/target_gradient_compatibility_v1/garnett_dream/latest/parameter_manifest.json
