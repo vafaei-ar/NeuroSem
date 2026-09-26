@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 OUT=ROOT/"outputs/target_compatibility_dose_preflight_v1/latest"
 TARGET=ROOT/"scripts/robustness/run_target_compatibility_dose_v1.py"
 
