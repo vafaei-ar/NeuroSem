@@ -196,10 +196,9 @@ def target_zuco(model, tok, named_params, source, device):
 
 
 # -------------------- fMRI --------------------
-def torch_fmri_edges(model, tok, ctx: dict, hrf: np.ndarray, device: str):
+def torch_fmri_edges_from_embeddings(emb, ctx: dict, hrf: np.ndarray, device: str):
     import torch
     import torch.nn.functional as F
-    emb = encode_grad(model, tok, list(ctx["prefixes"]), device, max_length=128, batch_size=8)
     idx = np.asarray([int(math.floor(float(s) / FMRI_TR)) for s in ctx["starts"]], dtype=int)
     keep = (idx >= 0) & (idx < int(ctx["n_tp"]))
     idx_t = torch.as_tensor(idx[keep], dtype=torch.long, device=device)
@@ -212,7 +211,83 @@ def torch_fmri_edges(model, tok, ctx: dict, hrf: np.ndarray, device: str):
     drive = drive[0, :, : int(ctx["n_tp"])].T
     valid = torch.as_tensor(np.asarray(ctx["valid_idx"], dtype=int), dtype=torch.long, device=device)
     x = drive[valid]
-    return pairwise_cosine_distance_torch(x), emb
+    return pairwise_cosine_distance_torch(x)
+
+
+def torch_fmri_edges_fullgraph(model, tok, ctx: dict, hrf: np.ndarray, device: str):
+    """Original one-pass implementation retained only for numerical validation on a small story."""
+    emb = encode_grad(model, tok, list(ctx["prefixes"]), device, max_length=128, batch_size=8)
+    return torch_fmri_edges_from_embeddings(emb, ctx, hrf, device), emb
+
+
+def fmri_embedding_gradients(model, tok, ctx: dict, hrf: np.ndarray, design: np.ndarray, neural: dict[str, np.ndarray], device: str):
+    """Compute dL/d(normalized E5 embedding) without retaining transformer activations.
+
+    This is the first half of an exact chain-rule factorization. The frozen E5 is run
+    under no_grad to obtain the same normalized text embeddings. Those embeddings are
+    then treated as leaves for the fMRI event/HRF/RDM objective, producing one
+    embedding-gradient matrix per participant.
+    """
+    import torch
+
+    texts = list(ctx["prefixes"])
+    with torch.no_grad():
+        emb_value = encode_grad(model, tok, texts, device, max_length=128, batch_size=8).detach()
+    leaf = emb_value.clone().detach().requires_grad_(True)
+    edges = torch_fmri_edges_from_embeddings(leaf, ctx, hrf, device)
+
+    participants = sorted(neural)
+    out: dict[str, torch.Tensor] = {}
+    for i, sub in enumerate(participants):
+        loss, _ = loss_from_model_edges(edges, neural[sub], design)
+        (g_emb,) = torch.autograd.grad(
+            loss,
+            leaf,
+            retain_graph=(i < len(participants) - 1),
+            create_graph=False,
+            allow_unused=False,
+        )
+        out[sub] = g_emb.detach().float().cpu()
+        del loss, g_emb
+    del edges, leaf, emb_value
+    torch.cuda.empty_cache()
+    return out
+
+
+def accumulate_embedding_vjps(model, tok, texts: list[str], named_params, embedding_grads: dict[str, object], accum, device: str, batch_size: int = 8):
+    """Apply participant dL/dembedding vectors to E5 in small deterministic batches.
+
+    Recomputing one small transformer batch at a time avoids retaining the activation
+    graph for an entire long story. By the chain rule this yields the same LoRA
+    parameter gradient as the original one-pass computation.
+    """
+    import torch
+
+    params = [p for _, p in named_params]
+    participants = sorted(embedding_grads)
+    for start in range(0, len(texts), batch_size):
+        stop = min(start + batch_size, len(texts))
+        emb = encode_grad(model, tok, texts[start:stop], device, max_length=128, batch_size=batch_size)
+        for i, sub in enumerate(participants):
+            go = embedding_grads[sub][start:stop].to(device=device, dtype=emb.dtype)
+            grads = torch.autograd.grad(
+                emb,
+                params,
+                grad_outputs=go,
+                retain_graph=(i < len(participants) - 1),
+                create_graph=False,
+                allow_unused=False,
+            )
+            off = 0
+            for g in grads:
+                n = g.numel()
+                accum[sub][off:off+n].add_(g.detach().reshape(-1).float().cpu())
+                off += n
+            if off != accum[sub].numel():
+                raise RuntimeError("fMRI streamed VJP parameter length mismatch")
+            del go, grads
+        del emb
+        torch.cuda.empty_cache()
 
 
 def target_fmri(model, tok, named_params, source, device):
@@ -235,18 +310,33 @@ def target_fmri(model, tok, named_params, source, device):
 
     for k, story in enumerate(FMRI_STORIES, 1):
         ctx = contexts[story]
-        edges, emb = torch_fmri_edges(model, tok, ctx, hrf, device)
         A = standard_design_from_columns(list(ctx["nuisance"]))
         npz = np.load(cache / f"story_{story:02d}.npz")
         neural = {s: np.asarray(npz[s.replace("-", "_")], dtype=np.float64) for s in participants}
-        def build(sub):
-            return loss_from_model_edges(edges, neural[sub], A)
-        run_losses_for_unit(participants, build, named_params, accum, counts)
         npz.close()
-        del edges, emb
+
+        embedding_grads = fmri_embedding_gradients(model, tok, ctx, hrf, A, neural, device)
+        accumulate_embedding_vjps(
+            model,
+            tok,
+            list(ctx["prefixes"]),
+            named_params,
+            embedding_grads,
+            accum,
+            device,
+            batch_size=8,
+        )
+        for sub in participants:
+            counts[sub] += 1
+        del embedding_grads, neural
         torch.cuda.empty_cache()
         write_progress(k, len(FMRI_STORIES), "smn4lang_fmri", f"completed story {story:02d}")
-    return finalize(source, accum, counts), {"n_units": len(FMRI_STORIES), "neural_cache": str(cache.relative_to(ROOT))}
+    return finalize(source, accum, counts), {
+        "n_units": len(FMRI_STORIES),
+        "neural_cache": str(cache.relative_to(ROOT)),
+        "gradient_execution": "exact two-pass chain-rule VJP with story-level embedding gradients and batchwise E5 recomputation",
+        "streaming_batch_size": 8,
+    }
 
 
 # -------------------- DERCo --------------------
