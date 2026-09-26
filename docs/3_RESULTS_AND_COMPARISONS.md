@@ -1,6 +1,6 @@
 # 3. Results and Comparisons
 
-**Last updated:** 2026-09-04
+**Last updated:** 2026-09-26
 
 This file is the current numerical evidence summary for NeuroSem. The primary prospective evidence and later post-confirmatory specificity, robustness, dose, model-family, regional and transcriptomic analyses are kept explicitly separate.
 
@@ -91,6 +91,18 @@ Transfer null.
 
 Geometry reliability generalizes, but model-transfer advantage is inconclusive.
 
+### DERCo EEG reliable-negative boundary
+
+DERCo provides the cleanest reliability-versus-transfer dissociation:
+
+- residual LOO reliability approximately **0.15890**;
+- **22/22** participants positive for reliability;
+- frozen E5 `lambda=0.10` minus `lambda=0` mean delta-RSA **-0.000118929**;
+- **4/22** transfer effects positive;
+- 95% CI **[-0.00016944,-0.00007082]**.
+
+Reliability is therefore a measurement prerequisite, not a guarantee of transferability.
+
 ### Directional inner speech
 
 Frozen `lambda=0.10` minus `lambda=0` mean difference approximately **-0.001786**. This is an out-of-task boundary, not a task-matched reading refutation.
@@ -131,6 +143,28 @@ SMN4Lang fMRI seed-level mean delta-RSA:
 - SMN4Lang fMRI: approximately **+0.0000196**, **+0.0000266**, **+0.0000357**.
 
 Interpretation: preserving neural item correspondence contributes substantially more transfer than the matched destroyed-correspondence objective. A small generic relational component remains possible in fMRI. This control does not establish uniqueness relative to every structured non-neural target.
+
+## 3.3a Displacement-matched structured surrogate
+
+A separate frozen protocol matched a structured non-neural MPNet surrogate to the genuine-neural E5 intervention on source-side representational displacement before either external neural outcome was opened.
+
+Selected surrogate dose: **lambda=0.03**.
+
+Mean source-side displacement:
+
+- genuine neural: `1-CKA = 0.00188195`;
+- matched MPNet: `1-CKA = 0.00193669`.
+
+Primary participant-level genuine-neural minus matched-surrogate contrasts, after averaging within participant across the three fixed seeds:
+
+- **ZuCo:** mean **+0.00138471**, 15/17 positive, 95% CI **[+0.00087856,+0.00190007]**, exact two-sided sign-flip **p=6.10e-05**, Holm-adjusted **p=1.22e-04**.
+- **SMN4Lang fMRI:** mean **+0.00189761**, 12/12 positive, 95% CI **[+0.00172727,+0.00204934]**, exact/Holm-adjusted two-sided sign-flip **p=4.88e-04**.
+
+Matched-surrogate minus text-only mean effects were **-0.00011827** on ZuCo (near-zero/inconsistent across seeds) and **-0.00121820** on fMRI (0/12 positive after seed averaging).
+
+Interpretation:
+
+> Specificity relative to this structured non-neural relational target survives displacement matching. This does not establish uniqueness over all possible structured targets.
 
 ## 3.4 Participant x stimulus robustness
 
@@ -277,14 +311,42 @@ No language-versus-control or temporal-versus-nontemporal contrast was prespecif
 
 The prespecified GABAergic, serotonergic and pathway gene-set analyses are null under the frozen participant-level and multiplicity-corrected framework. Exploratory whole-transcriptome and hemispheric/mirroring sensitivities do not revise those nulls. No specific molecular mechanism is established.
 
+## 3.10a Post-confirmatory target-compatibility mechanism study
+
+This is a separate explanatory/technical follow-up under `docs/TARGET_COMPATIBILITY_MECHANISM_V1.md`; it does not alter the prospective status of the original NMI transfer tests.
+
+### Fixed six-dose characterization across all reliable targets
+
+RunRelay job `S4K7M2V9` completed the fixed E5 grid `lambda={0,.01,.03,.10,.30,1}` across ZuCo, SMN4Lang fMRI, DERCo, TMNRED and Garnett Dream. Historical `lambda=0` and `.10` values were reproduced with zero numerical error before new dose values were accepted.
+
+- **ZuCo:** positive from `.01` onward and increases through `1`.
+- **SMN4Lang fMRI:** positive through `.30`, then reverses at `1`.
+- **DERCo:** negative at every nonzero dose; at `.01`, mean delta-RSA **-1.2569e-05**, 95% CI **[-2.0871e-05,-4.4217e-06]**.
+- **TMNRED:** near-zero/heterogeneous across the grid.
+- **Garnett Dream:** weak/inconclusive at low dose, positive at `.30` and `1`.
+
+Thus DERCo is not explained by a simple need for a smaller intervention; Garnett is compatible with a magnitude-threshold account; TMNRED remains weak/heterogeneous.
+
+### Gradient compatibility
+
+The frozen gradient analysis uses the common seed-20260823 text-only E5 reference and the same ordered LoRA query/value parameter coordinates for every target.
+
+Completed results:
+
+- **ZuCo:** mean gradient cosine **+0.0944104**, median **+0.0928263**, **17/17** positive, bootstrap 95% CI **[+0.0760572,+0.1122710]**.
+- **DERCo:** mean gradient cosine **-0.0692558**, median **-0.0925521**, **8/22** positive, bootstrap 95% CI **[-0.1175057,-0.0191199]**.
+
+These two completed targets show the predicted local alignment/conflict pattern. SMN4Lang fMRI is currently running under a numerically validated memory-efficient implementation; TMNRED and Garnett remain to be run sequentially. Their prior workflow-expiry states are operational, not scientific outcomes.
+
 ## 3.11 Joint interpretation
 
 - **Target reliability:** strongly supported in ChineseEEG, ZuCo and SMN4Lang fMRI; failed for the frozen SMN4Lang MEG representation.
 - **Learnability:** supported in ChineseEEG and source-side fMRI calibration.
 - **Primary external transfer:** supported by ZuCo EEG and prospective SMN4Lang fMRI.
 - **Neural item-correspondence specificity:** supported relative to the matched destroyed-correspondence control.
+- **Structured-control specificity at matched displacement:** supported relative to the frozen MPNet surrogate on both ZuCo and SMN4Lang; this does not establish neural uniqueness over all structured targets.
 - **Stimulus robustness:** supported as a post-confirmatory sensitivity over the observed stimulus units.
-- **Dose dependence:** strong within E5, with divergent high-dose behavior across ZuCo and fMRI.
+- **Dose dependence:** strong within E5. Across all five reliable targets, dose curves separate monotonic positive (ZuCo), overshoot/reversal (fMRI), monotonic negative (DERCo), weak/heterogeneous (TMNRED), and higher-dose-emergent positive (Garnett) patterns.
 - **Source-modality bidirectionality:** supported post-confirmatorily within E5 by fMRI -> ZuCo transfer.
 - **Model-family scope:** stable bidirectional transfer reproduced across E5-large and E5-base but not uniformly across other multilingual encoders.
 - **Regional selectivity:** not established; the fMRI displacement is cortex-wide in direction across DK68.
