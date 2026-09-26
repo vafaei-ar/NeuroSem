@@ -2,11 +2,11 @@
 
 NeuroSem tests whether reproducible human neural representational geometry can provide relational supervision for language models and whether the resulting representational change transfers to independent neural measurements.
 
-The project is in a submission freeze. The primary prospective analyses and the planned post-confirmatory robustness, specificity, dose, model-family, boundary, regional, and spatial analyses are complete. No additional outcome-bearing analysis is planned for the current manuscript unless a reviewer or editor asks a specific question that requires it.
+The project is in late NMI submission preparation. The primary prospective analyses are complete. A frozen displacement-matched MPNet specificity experiment has now completed and should be integrated into the next manuscript revision (v1.19.6). A separate post-confirmatory target-compatibility mechanism project is also active; it is a technical follow-up and is not an NMI submission blocker. See [`docs/CURRENT_NMI_AND_MECHANISM_STATUS.md`](docs/CURRENT_NMI_AND_MECHANISM_STATUS.md) for the live separation of these two lanes.
 
 ## Current submission
 
-The current author-review package is **v1.19.5** (main manuscript readability pass; Supplement unchanged from v1.19.4). Word masters are maintained outside Git during final review; their filenames, SHA-256 fingerprints, rendered page counts and submission-readiness checks are recorded in [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md).
+The current external Word master is **v1.19.5** (main manuscript readability pass; Supplement unchanged from v1.19.4). It is now the baseline for a planned **v1.19.6** scientific revision that will integrate the completed displacement-matched MPNet specificity result. Word masters are maintained outside Git; their filenames, SHA-256 fingerprints, rendered page counts and submission-readiness checks are recorded in [`paper/CURRENT_MANUSCRIPT.md`](paper/CURRENT_MANUSCRIPT.md).
 
 The primary evidential chain is unchanged:
 
@@ -14,7 +14,7 @@ The primary evidential chain is unchanged:
 - A frozen multilingual-E5 contrast transfers positively to independent ZuCo reading EEG in 17/17 retained participants.
 - The same frozen contrast transfers prospectively to SMN4Lang fMRI in 12/12 participants after the model-blind reliability gate.
 
-Post-confirmatory analyses define the scope and limits of that result. These include preserved-versus-shuffled neural correspondence, a structured non-neural surrogate, optimization-seed robustness, dose characterization, reverse transfer, model-family portability, model-space diagnostics, DERCo as a higher-reliability negative-transfer boundary, and regional/spatial fMRI analyses. The manuscript keeps these analyses distinct from the two primary external tests.
+Post-confirmatory analyses define the scope and limits of that result. These include preserved-versus-shuffled neural correspondence, a structured non-neural surrogate, the now-completed displacement-matched MPNet surrogate, optimization-seed robustness, dose characterization, reverse transfer, model-family portability, model-space diagnostics, DERCo as a higher-reliability negative-transfer boundary, and regional/spatial fMRI analyses. A separate frozen mechanism protocol is now testing why reliable targets differ in transfer sign; those mechanism analyses remain distinct from the NMI evidential chain.
 
 ## Reproducibility map
 
