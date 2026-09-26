@@ -35,7 +35,6 @@ def main():
       "channel_names":ep.ch_names,
       "bads":list(ep.info.get("bads",[])),
     }
-    ep.close()
 
     pa=read_csv(ROOT/"outputs/derco_e5_transfer_v1/latest/participant_article_results.csv")
     pp=read_csv(ROOT/"outputs/derco_e5_transfer_v1/latest/participant_results.csv")
