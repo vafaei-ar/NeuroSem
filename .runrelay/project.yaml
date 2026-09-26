@@ -838,3 +838,29 @@ tasks:
       - outputs/nmi_matched_mpnet_external_v1/latest/seed_participant_results.csv
       - outputs/nmi_matched_mpnet_external_v1/latest/participant_averaged_results.csv
       - outputs/nmi_matched_mpnet_external_v1/latest/target_summary.csv
+
+
+  preflight_target_compatibility_v1:
+    description: >-
+      Read only already-completed NeuroSem target reliability/transfer summaries,
+      fixed E5 dose-adapter availability, and local file metadata needed to freeze the
+      target-compatibility project. No raw neural arrays, model weights, new transfer
+      outcome, compatibility analysis, or mechanism analysis is computed.
+    command:
+      - .venv/bin/python
+      - scripts/audit/preflight_target_compatibility_v1.py
+    approval: automatic
+    timeout_minutes: 10
+    requires_gpu: false
+    resources:
+      cpu_cores: 1
+      min_ram_gb: 2
+      wait_minutes: 10
+    working_directory: .
+    artifacts:
+      - outputs/target_compatibility_preflight_v1/latest/summary.json
+      - outputs/target_compatibility_preflight_v1/latest/report.txt
+      - outputs/target_compatibility_preflight_v1/latest/target_inventory.csv
+      - outputs/target_compatibility_preflight_v1/latest/dose_adapter_inventory.csv
+      - outputs/target_compatibility_preflight_v1/latest/existing_target_payloads.json
+      - outputs/target_compatibility_preflight_v1/latest/filesystem_inventory.json
