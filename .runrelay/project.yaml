@@ -886,3 +886,31 @@ tasks:
     artifacts:
       - outputs/derco_target_compat_probe_v1/latest/summary.json
       - outputs/derco_target_compat_probe_v1/latest/report.txt
+
+
+  run_target_compatibility_dose_v1:
+    description: >-
+      Run Stage 1 of the frozen target-compatibility mechanism protocol: reuse the
+      completed ZuCo/SMN4Lang six-dose curves and evaluate the same already-trained
+      E5 dose grid on DERCo, TMNRED and Garnett Dream. Each new target must numerically
+      reproduce its historical lambda=0 and lambda=.10 outputs before new doses are
+      accepted. No retraining, target rescue, representation search or dose selection.
+    command:
+      - .venv/bin/python
+      - scripts/robustness/run_target_compatibility_dose_v1.py
+    approval: automatic
+    timeout_minutes: 1440
+    requires_gpu: true
+    resources:
+      cpu_cores: 8
+      min_ram_gb: 32
+      gpu_count: 1
+      min_vram_gb: 24
+      wait_minutes: 720
+    working_directory: .
+    artifacts:
+      - outputs/target_compatibility_dose_v1/latest/summary.json
+      - outputs/target_compatibility_dose_v1/latest/report.txt
+      - outputs/target_compatibility_dose_v1/latest/dose_summary.csv
+      - outputs/target_compatibility_dose_v1/latest/participant_dose_results.csv
+      - outputs/target_compatibility_dose_v1/latest/reproduction_gates.json
