@@ -443,6 +443,12 @@ def main() -> int:
     ap.add_argument("--target", required=True, choices=sorted(TARGET_CLASS))
     args = ap.parse_args()
     target = args.target
+    stage1_path = ROOT / "outputs/target_compatibility_dose_v1/latest/summary.json"
+    if not stage1_path.is_file():
+        raise RuntimeError("Stage-1 target dose characterization has not completed")
+    stage1 = json.loads(stage1_path.read_text(encoding="utf-8"))
+    if stage1.get("status") != "ok" or stage1.get("all_reproduction_gates_passed") is not True:
+        raise RuntimeError("Stage-1 target dose characterization/reproduction gate is not clean")
     if not torch.cuda.is_available():
         raise RuntimeError("Stage-2 gradient compatibility requires CUDA")
     device = "cuda"
