@@ -25,6 +25,19 @@ Current title: **Brain-derived relational supervision transfers language-model r
 
 v1.19.5 is a language-only readability pass over the scientifically locked v1.19.4 package. It introduces no new model training, neural analysis, target definition, dose/model selection, statistical family, figure change, or outcome-bearing inference.
 
+## Post-v1.19.5 result awaiting integration
+
+Since v1.19.5 was produced, the previously frozen displacement-matched MPNet specificity experiment completed. The selected structured surrogate dose was `lambda=0.03`, matched to the genuine-neural arm on source-side `1-CKA` before external outcomes were opened.
+
+The prespecified participant-level genuine-neural minus matched-surrogate contrast was positive on both external targets:
+
+- ZuCo: mean **+0.00138471**, 15/17 positive, 95% CI **[+0.00087856,+0.00190007]**, Holm-adjusted two-sided sign-flip **P=0.00012207**.
+- SMN4Lang fMRI: mean **+0.00189761**, 12/12 positive, 95% CI **[+0.00172727,+0.00204934]**, Holm-adjusted two-sided sign-flip **P=0.00048828**.
+
+The matched surrogate itself was near-zero/inconsistent on ZuCo and negative on fMRI. The defensible interpretation is specificity relative to this structured non-neural control at comparable displacement, not neural uniqueness.
+
+**Planned next Word revision:** v1.19.6 should integrate this result into the specificity figure/text, Results, Methods, Discussion and Supplement. The separate target-compatibility mechanism project is not a prerequisite for v1.19.6 and should not be imported wholesale into the NMI paper. Live status is recorded in `docs/CURRENT_NMI_AND_MECHANISM_STATUS.md`.
+
 The revision shortens and clarifies the title, reduces repetitive framing in the Abstract and Introduction, defines lambda before the primary Results, removes low-value development-stage number lists from the narrative, makes the reverse-transfer transition explicit, simplifies regional and boundary wording, and tightens the Discussion. The Supplement and all scientific figures are unchanged.
 
 ## Supplementary Information
@@ -104,7 +117,7 @@ Embedded PNG SHA-256 fingerprints:
 
 ## Status
 
-v1.19.5 is the final reader-friction pass on the main manuscript. It improves narrative clarity without reopening the scientific analysis; the Supplement remains unchanged from v1.19.4.
+v1.19.5 remains the current external Word master and the completed reader-friction baseline. It is no longer the intended final scientific package because the frozen displacement-matched MPNet specificity result completed afterward. The next intended manuscript package is v1.19.6, limited to integrating that specificity result while keeping the separate mechanism analyses outside the submission unless explicitly decided otherwise.
 
 The remaining author-level submission decision is whether the initial submission is double-anonymized, which determines author/affiliation/contribution/competing-interest metadata in the manuscript file.
 
